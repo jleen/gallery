@@ -11,6 +11,7 @@ import time
 
 sys.path.insert(0, '/home/jmleen/lib/python2.2/site-packages')
 
+import EXIF
 from PIL import Image
 from StringIO import StringIO
 from Cheetah.Template import Template
@@ -19,16 +20,19 @@ if os.environ['SCRIPT_URL'].startswith("/mgb/photos"):
     img_prefix = "/home/mgb/photos/"
     cache_prefix = "/home/jmleen/var/cache/gallery/mgb/"
     browse_prefix = "/mgb/photos/"
+    show_exif = 1
 else:
     img_prefix = "/home/jmleen/saturnvalley.org/photos/"
     cache_prefix = "/home/jmleen/var/cache/gallery/"
     browse_prefix = "/gallery/"
+    show_exif = 0
+
 small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
 scriptfiles = ['gallery.py']
-scriptdir = '/home/jmleen/saturnvalley.org/app/gallery'
+scriptdir = '/home/jmleen/saturnvalley.org/app/mgbgallery'
 
 img_extns = ['.jpeg', '.jpg']
 
@@ -52,6 +56,10 @@ a
     text-decoration: none;
     color: #333333;
 }
+.exiflink
+{
+    font-size: 55%;
+}
 </style>
     
 <title>Saturn Valley Hall of Light: $thisdir</title>
@@ -70,16 +78,42 @@ a
 
 <p><b>$thisdir</b></p>
 <div align="center">
-#for $smallurl, $medurl, $bigurl, $thumburl, $thumb_height, $thumb_width, $caption in $imgurls:
+#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $thumb_height, $thumb_width, $caption in $imgurls:
 <table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="220">
 <a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle" height="$thumb_height" width="$thumb_width"></a><br>
-<a href="$bigurl">$caption</a>
+<a href="$bigurl">$caption</a><br>
+<a class="exiflink" href="$exifurl">exif</a><br>
 </td>
 </tr>
 </table>
 #end for
+</div>
+"""
+
+exif_template = """
+<style>
+body
+{
+    font-family: Georgia, Times New Roman, Times, serif;
+    font-size: 90%;
+    color: #333333;
+    background-color: #eeeeee;
+}
+</style>
+    
+<title>EXIF data: $title</title>
+
+<p>
+<table style="display: inline">
+#for $key, $value in $data.items()
+<tr>
+<td>$key</td>
+<td>$value</td>
+</tr>
+#end for
+</table>
 </div>
 """
 
@@ -89,6 +123,7 @@ def handler():
     extn = os.path.splitext(reqpath)[1]
     if os.path.split(reqpath)[1] == 'index.html': return gallery()
     elif extn.lower() in img_extns: return photo()
+    elif reqpath.lower().endswith('_exif.html'): return exifpage()
     #elif extn == '.html': return photopage(req)
     else: return gallery()
 
@@ -162,6 +197,77 @@ def infer_serial_prefix(fname):
     else: newbasename = basename
     return os.path.join(dir, newbasename)[len(img_prefix):]
 
+def copyIfPresent(dst, dstKey, src, srcKey):
+	if src.has_key(srcKey):
+		dst[dstKey] = src[srcKey]
+
+def fractionToDecimal(fraction):
+	pieces = fraction.split('/')
+	if len(pieces) == 2:
+		return str(float(pieces[0]) / float(pieces[1]))
+	else:
+		return fraction
+	
+
+
+def exifpage():
+    fname = os.environ["PATH_INFO"][2:]
+    img_index = fname.rfind('_')
+    img_path = fname[:img_index]
+    img_fname = os.path.join(img_prefix, infer_serial_prefix(img_path))
+
+    f = open(img_fname, 'rb')
+    tags = EXIF.process_file(f)
+    f.close();
+
+    a = {}
+    template = Template(exif_template, searchList=[a])
+    #ambiguate this name?
+    a['title'] = os.path.basename(img_fname)
+
+    processedTags = {}
+    #copy some of the simple tags
+
+    #light source and metering mode need mappings
+    copyIfPresent(processedTags, 'Light Source', tags, 'EXIF LightSource')
+    copyIfPresent(processedTags, 'Metering Mode', tags, 'EXIF MeteringMode')
+    copyIfPresent(processedTags, 'Date Time', tags, 'EXIF DateTimeOriginal')
+    copyIfPresent(processedTags, 'Image Optimization', tags, 'MakerNote Image Optimization')
+    copyIfPresent(processedTags, 'Hue Adjustment', tags, 'MakerNote HueAdjustment')
+    copyIfPresent(processedTags, 'Exposure Time', tags, 'EXIF ExposureTime')
+    copyIfPresent(processedTags, 'Exposure Program', tags, 'EXIF ExposureProgram')
+    copyIfPresent(processedTags, 'Focus Mode', tags, 'MakerNote FocusMode')
+
+    copyIfPresent(processedTags, 'AutoFlashMode', tags, 'MakerNote AutoFlashMode')
+    copyIfPresent(processedTags, 'Image Sharpening', tags, 'MakerNote ImageSharpening')
+    copyIfPresent(processedTags, 'Tone Compensation', tags, 'MakerNote ToneCompensation')
+    copyIfPresent(processedTags, 'Flash', tags, 'EXIF Flash')
+    copyIfPresent(processedTags, 'Lighting Type', tags, 'MakerNote LightingType')
+    copyIfPresent(processedTags, 'Noise Reduction', tags, 'MakerNote NoiseReduction')
+    copyIfPresent(processedTags, 'Flash Setting', tags, 'MakerNote FlashSetting')
+    copyIfPresent(processedTags, 'Bracketing Mode', tags, 'MakerNote BracketingMode')
+    copyIfPresent(processedTags, 'ISO Setting', tags, 'MakerNote ISOSetting')
+    copyIfPresent(processedTags, 'FlashBracketCompensationApplied', tags, 'MakerNote FlashBracketCompensationApplied')
+    copyIfPresent(processedTags, 'SubSecTimeOriginal', tags, 'EXIF SubSecTimeOriginal')
+    copyIfPresent(processedTags, 'AFFocusPosition', tags, 'MakerNote AFFocusPosition')
+    copyIfPresent(processedTags, 'WhiteBalanceBias', tags, 'MakerNote WhiteBalanceBias')
+    copyIfPresent(processedTags, 'ExposureBiasValue', tags, 'EXIF ExposureBiasValue')
+    copyIfPresent(processedTags, 'Whitebalance', tags, 'MakerNote Whitebalance')
+
+
+    #Map various exif data
+
+    #fractional
+    if tags.has_key('EXIF FNumber'):
+    	processedTags['FNumber'] = fractionToDecimal(tags['EXIF FNumber'].printable)
+    if tags.has_key('EXIF FocalLength'):
+    	processedTags['Focal Length'] = fractionToDecimal(tags['EXIF FocalLength'].printable)
+
+    a['data'] = processedTags
+
+    sys.stdout.write(str(template))
+    return
+    
 def photo():
     fname = os.environ["PATH_INFO"][2:]
     size_index = fname.rfind('_')
@@ -180,7 +286,8 @@ def photo():
 
 def iscached(srcfile, cachefile):
     return (os.path.isfile(cachefile) and
-        os.path.getmtime(cachefile) >= os.path.getmtime(srcfile))
+        os.path.getmtime(cachefile) >= os.path.getmtime(srcfile) and
+        os.path.getmtime(cachefile) >= os.path.getmtime(sys.argv[0]))
 
 def spewphoto(fname, size):
     cachedir = "%s%d" % (cache_prefix, size)
@@ -213,7 +320,19 @@ def img_size(fname, size):
 
 def cache_img(fname, size, cachedir, cachefile, do_output):
     img = Image.open(img_prefix + fname)
+    f = open(img_prefix + fname, 'rb')
+    tags = EXIF.process_file(f)
+
+
+
     img.thumbnail((size,size), Image.ANTIALIAS)
+
+    if tags["Image Orientation"].printable.startswith("Rotated 90 CW"):
+        img = img.rotate(-90, Image.NEAREST)
+    elif tags["Image Orientation"].printable.startswith("Rotated 90 CCW"):
+        img = img.rotate(90, Image.NEAREST)
+
+
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
     if do_output:
@@ -290,10 +409,11 @@ def gallery():
             medurl = imgbase + "_" + med_size + extn
             bigurl = imgbase + "_" + big_size + extn
             thumburl = imgbase + "_" + thumb_size + extn
+            exifurl = imgbase + extn + "_exif.html"
             caption = format_fn_for_display(trim_serials(fnamebase))
             rel_img_path = os.path.join(dir_fname, fname)
             (thumb_width, thumb_height) = img_size(rel_img_path, 200)
-            imgurls.append((smallurl, medurl, bigurl, thumburl,
+            imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl,
                 thumb_height, thumb_width, caption))
 
     subdirs = []
