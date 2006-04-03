@@ -20,19 +20,20 @@ if os.environ['SCRIPT_URL'].startswith("/mgb/photos"):
     img_prefix = "/home/mgb/photos/"
     cache_prefix = "/home/jmleen/var/cache/gallery/mgb/"
     browse_prefix = "/mgb/photos/"
+    scriptdir = '/home/jmleen/saturnvalley.org/app/mgbgallery'
     show_exif = 1
 else:
     img_prefix = "/home/jmleen/saturnvalley.org/photos/"
     cache_prefix = "/home/jmleen/var/cache/gallery/"
     browse_prefix = "/gallery/"
-    show_exif = 0
+    scriptdir = '/home/jmleen/saturnvalley.org/app/gallery'
+    show_exif = 1
 
 small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
 scriptfiles = ['gallery.py']
-scriptdir = '/home/jmleen/saturnvalley.org/app/mgbgallery'
 
 img_extns = ['.jpeg', '.jpg']
 
@@ -321,17 +322,20 @@ def img_size(fname, size):
 def cache_img(fname, size, cachedir, cachefile, do_output):
     img = Image.open(img_prefix + fname)
     f = open(img_prefix + fname, 'rb')
-    tags = EXIF.process_file(f)
-
-
-
+    tags = {}
+    try: tags = EXIF.process_file(f)
+    except: pass
     img.thumbnail((size,size), Image.ANTIALIAS)
 
-    if tags["Image Orientation"].printable.startswith("Rotated 90 CW"):
+    orientation_tag = tags.get('Image Orientation')
+    if orientation_tag == None:
+        orientation_tag = ''
+    else:
+        orientation_tag = orientation_tag.printable
+    if orientation_tag.startswith("Rotated 90 CW"):
         img = img.rotate(-90, Image.NEAREST)
-    elif tags["Image Orientation"].printable.startswith("Rotated 90 CCW"):
+    elif orientation_tag.startswith("Rotated 90 CCW"):
         img = img.rotate(90, Image.NEAREST)
-
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
