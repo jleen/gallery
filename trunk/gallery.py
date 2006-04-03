@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.2
 
-#import cgitb; cgitb.enable()
+import cgitb; cgitb.enable()
 
 import cgi
 import os
@@ -16,24 +16,13 @@ from PIL import Image
 from StringIO import StringIO
 from Cheetah.Template import Template
 
-if os.environ['SCRIPT_URL'].startswith("/mgb/photos"):
-    img_prefix = "/home/mgb/photos/"
-    cache_prefix = "/home/jmleen/var/cache/gallery/mgb/"
-    browse_prefix = "/mgb/photos/"
-    scriptdir = '/home/jmleen/saturnvalley.org/app/mgbgallery'
-    show_exif = 1
-else:
-    img_prefix = "/home/jmleen/saturnvalley.org/photos/"
-    cache_prefix = "/home/jmleen/var/cache/gallery/"
-    browse_prefix = "/gallery/"
-    scriptdir = '/home/jmleen/saturnvalley.org/app/gallery'
-    show_exif = 1
+import gallery_config
 
 small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
-scriptfiles = ['gallery.py']
+scriptfiles = ['gallery.py', gallery_config.__file__]
 
 img_extns = ['.jpeg', '.jpg']
 
@@ -162,12 +151,11 @@ def check_client_cache(content_type, mtime):
 
 def infer_image_path(base):
     for ext in img_extns:
-        if os.path.exists(img_prefix + base + ext): return base + ext
+        if os.path.exists(gallery_config.img_prefix + base + ext): return base + ext
     raise ValueError
 
 def script_mtime():
-    scriptpaths = [ os.path.join(scriptdir, f) for f in scriptfiles ]
-    return max_mtime_for_files(scriptpaths)
+    return max_mtime_for_files(scriptfiles)
 
 def ambiguate_filename(regexp):
     # This is horrifically bogus.  We should have a table or something.
@@ -185,18 +173,18 @@ def degrade_filename(fn):
     return fn
 
 def infer_serial_prefix(fname):
-    fname = os.path.join(img_prefix, fname)
-    if os.path.exists(fname): return fname[len(img_prefix):]
+    fname = os.path.join(gallery_config.img_prefix, fname)
+    if os.path.exists(fname): return fname[len(gallery_config.img_prefix):]
     (dir, basename) = os.path.split(fname)
     if not os.path.exists(dir):
-        newdir = infer_serial_prefix(dir[len(img_prefix):])
-        dir = os.path.join(img_prefix, newdir)
+        newdir = infer_serial_prefix(dir[len(gallery_config.img_prefix):])
+        dir = os.path.join(gallery_config.img_prefix, newdir)
     candidates = os.listdir(dir)
     r = re.compile('^\d+_' + ambiguate_filename(re.escape(basename)) + '$')
     found = [ f for f in candidates if r.search(f) != None ]
     if len(found) > 0: newbasename = found[0]
     else: newbasename = basename
-    return os.path.join(dir, newbasename)[len(img_prefix):]
+    return os.path.join(dir, newbasename)[len(gallery_config.img_prefix):]
 
 def copyIfPresent(dst, dstKey, src, srcKey):
 	if src.has_key(srcKey):
@@ -215,7 +203,7 @@ def exifpage():
     fname = os.environ["PATH_INFO"][2:]
     img_index = fname.rfind('_')
     img_path = fname[:img_index]
-    img_fname = os.path.join(img_prefix, infer_serial_prefix(img_path))
+    img_fname = os.path.join(gallery_config.img_prefix, infer_serial_prefix(img_path))
 
     f = open(img_fname, 'rb')
     tags = EXIF.process_file(f)
@@ -277,23 +265,25 @@ def photo():
     size = fname[size_index+1:extn_index]
     extn = fname[extn_index+1:]
     img_fname = infer_serial_prefix(base + '.' + extn)
-    image_mtime = os.path.getmtime(os.path.join(img_prefix, img_fname))
+    image_mtime = os.path.getmtime(os.path.join(gallery_config.img_prefix, img_fname))
     if check_client_cache("image/jpeg", image_mtime): return
     if size == "full":
-        return spewfile(img_prefix + img_fname)
+        return spewfile(gallery_config.img_prefix + img_fname)
     else:
         size = int(size)
         return spewphoto(img_fname, size)
 
 def iscached(srcfile, cachefile):
-    return (os.path.isfile(cachefile) and
-        os.path.getmtime(cachefile) >= os.path.getmtime(srcfile) and
-        os.path.getmtime(cachefile) >= os.path.getmtime(sys.argv[0]))
+    if not os.path.isfile(cachefile): return 0
+    for dependency in [ srcfile ] + scriptfiles:
+        if os.path.getmtime(cachefile) < os.path.getmtime(dependency):
+            return 0
+    return 1
 
 def spewphoto(fname, size):
-    cachedir = "%s%d" % (cache_prefix, size)
+    cachedir = "%s%d" % (gallery_config.cache_prefix, size)
     cachefile = cachedir + '/' + fname
-    srcfile = img_prefix + fname
+    srcfile = gallery_config.img_prefix + fname
     if iscached(srcfile, cachefile):
         return spewfile(cachefile)
     else:
@@ -310,9 +300,9 @@ def makedirsfor(fname):
     if not os.path.isdir(dirname): os.makedirs(dirname)
 
 def img_size(fname, size):
-    cachedir = "%s%d" % (cache_prefix, size)
+    cachedir = "%s%d" % (gallery_config.cache_prefix, size)
     cachefile = cachedir + '/' + fname
-    srcfile = img_prefix + fname
+    srcfile = gallery_config.img_prefix + fname
     if not iscached(srcfile, cachefile):
         return cache_img(fname, size, cachedir, cachefile, 0)
     else:
@@ -320,22 +310,23 @@ def img_size(fname, size):
         return img.size
 
 def cache_img(fname, size, cachedir, cachefile, do_output):
-    img = Image.open(img_prefix + fname)
-    f = open(img_prefix + fname, 'rb')
+    img = Image.open(gallery_config.img_prefix + fname)
+    f = open(gallery_config.img_prefix + fname, 'rb')
     tags = {}
     try: tags = EXIF.process_file(f)
     except: pass
     img.thumbnail((size,size), Image.ANTIALIAS)
 
-    orientation_tag = tags.get('Image Orientation')
-    if orientation_tag == None:
-        orientation_tag = ''
-    else:
-        orientation_tag = orientation_tag.printable
-    if orientation_tag.startswith("Rotated 90 CW"):
-        img = img.rotate(-90, Image.NEAREST)
-    elif orientation_tag.startswith("Rotated 90 CCW"):
-        img = img.rotate(90, Image.NEAREST)
+    if gallery_config.apply_rotation:
+        orientation_tag = tags.get('Image Orientation')
+        if orientation_tag == None:
+            orientation_tag = ''
+        else:
+            orientation_tag = orientation_tag.printable
+        if orientation_tag.startswith("Rotated 90 CW"):
+            img = img.rotate(-90, Image.NEAREST)
+        elif orientation_tag.startswith("Rotated 90 CCW"):
+            img = img.rotate(90, Image.NEAREST)
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
@@ -365,7 +356,7 @@ def script_path(req):
 def max_mtime_for_files(fnames):
     max_mtime = 0
     for fname in fnames:
-        mtime = os.path.getmtime(os.path.join(dir, fname))
+        mtime = os.path.getmtime(fname)
         if mtime > max_mtime: max_mtime = mtime
     return max_mtime
 
@@ -391,11 +382,11 @@ def gallery():
         return
     trimmed_dir_fname = os.environ["PATH_INFO"][2:]
     dir_fname = infer_serial_prefix(trimmed_dir_fname)
-    img_dir = os.path.join(img_prefix, dir_fname)
+    img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
     fnames = os.listdir(img_dir)
     fnames.sort()
 
-    fs_img_dir = os.path.join(img_prefix, dir_fname)
+    fs_img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
     fs_img_files = [ os.path.join(fs_img_dir, fn) for fn in fnames ]
     if check_client_cache(
             'text/html; charset="UTF-8"',
@@ -408,7 +399,7 @@ def gallery():
         if extn.lower() in img_extns:
             pageurl = ""
             trimmed = degrade_filename(trim_serials(fnamebase))
-            imgbase = os.path.join(browse_prefix, trimmed_dir_fname, trimmed)
+            imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, trimmed)
             smallurl = imgbase + "_" + small_size + extn
             medurl = imgbase + "_" + med_size + extn
             bigurl = imgbase + "_" + big_size + extn
@@ -423,8 +414,8 @@ def gallery():
     subdirs = []
     for fname in fnames:
         dirname = os.path.join(dir_fname, fname)
-        if not os.path.isdir(img_prefix + dirname): continue
-        dir = os.path.join(browse_prefix, trim_serials(dirname), '')
+        if not os.path.isdir(gallery_config.img_prefix + dirname): continue
+        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
         subdirs.append((dir, format_fn_for_display(trim_serials(fname))))
     if len(dir_fname) > 0:
         subdirs.append(('../', '(up)'))
