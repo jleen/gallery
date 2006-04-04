@@ -26,7 +26,7 @@ scriptfiles = ['gallery.py', gallery_config.__file__]
 
 img_extns = ['.jpeg', '.jpg']
 
-trim_serials_regexp = re.compile('^\d+_')
+trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
 
 browse_template = """
 <style>
