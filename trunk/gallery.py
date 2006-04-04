@@ -73,8 +73,10 @@ a
 <tr>
 <td align="center" valign="middle" height="260" width="220">
 <a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle" height="$thumb_height" width="$thumb_width"></a><br>
-<a href="$bigurl">$caption</a><br>
-<a class="exiflink" href="$exifurl">exif</a><br>
+<a href="$bigurl">$caption</a>
+#if $show_exif == 1
+<br><a class="exiflink" href="$exifurl">exif</a><br>
+#end if
 </td>
 </tr>
 </table>
@@ -427,6 +429,7 @@ def gallery():
     a['thisdir'] = format_fn_for_display(trim_serials(leafdir))
     a['imgurls'] = imgurls
     a['subdirs'] = subdirs
+    a['show_exif'] = gallery_config.show_exif
     sys.stdout.write(str(template))
     return
 
