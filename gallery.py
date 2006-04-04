@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.2
 
-import cgitb; cgitb.enable()
+#import cgitb; cgitb.enable()
 
 import cgi
 import os
@@ -132,7 +132,7 @@ def check_client_cache(content_type, mtime):
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
-        sys.stdout.write('Status: 304 Not Modified')
+        sys.stdout.write('Status: 304 Not Modified\r\n\r\n')
         return 1
     else:
         #content_type = 'text/plain'
@@ -210,6 +210,8 @@ def exifpage():
     f = open(img_fname, 'rb')
     tags = EXIF.process_file(f)
     f.close();
+    image_mtime = os.path.getmtime(img_fname)
+    if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
 
     a = {}
     template = Template(exif_template, searchList=[a])
