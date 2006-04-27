@@ -22,7 +22,7 @@ small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
-scriptfiles = ['gallery.py', gallery_config.__file__]
+scriptfiles = ['gallery.py', gallery_config.__file__, 'cache_sentinel']
 
 img_extns = ['.jpeg', '.jpg']
 
