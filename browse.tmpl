@@ -1,0 +1,53 @@
+<style>
+body
+{
+    font-family: Georgia, Times New Roman, Times, serif;
+    font-size: 90%;
+    color: #333333;
+    background-color: #eeeeee;
+}
+img
+{
+    border: solid 2px #333366; 
+}
+a
+{
+    text-decoration: none;
+    color: #333333;
+}
+.exiflink
+{
+    font-size: 55%;
+}
+</style>
+    
+<title>Saturn Valley Hall of Light: $thisdir</title>
+
+<p>
+<b>Navigate:</b>
+#set $first = 1
+#for $dir, $name in $subdirs
+#if $first == 0
+&ndash;
+#end if
+    <a href="<%=dir%>"><%=name%></a>
+#set $first = 0
+#end for
+</p>
+
+<p><b>$thisdir</b></p>
+<div align="center">
+#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $thumb_height, $thumb_width, $caption in $imgurls:
+<table style="display: inline">
+<tr>
+<td align="center" valign="middle" height="260" width="220">
+<a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle" height="$thumb_height" width="$thumb_width"></a><br>
+<a href="$bigurl">$caption</a>
+#if $show_exif == 1
+<br><a class="exiflink" href="$exifurl">exif</a><br>
+#end if
+</td>
+</tr>
+</table>
+#end for
+</div>
