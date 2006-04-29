@@ -103,6 +103,7 @@ my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime);
   return unless (($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,
                   $mtime) = lstat($_));
   return unless $name =~ m/\.(jpg|jpeg|avi)$/i;
+  return if m/^\./i;
   if( -f $_ )
   {
     my $pattern = "^" . quotemeta($targetDir) . "/?";
