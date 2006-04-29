@@ -9,6 +9,7 @@ from Cheetah.Template import Template
 import sys
 
 
+galleryUrlRoot = "http://saturnvalley.org" + gallery_config.browse_prefix
 whatsNewSrc = gallery_config.img_prefix + "/whatsnew.txt"
 whatsNewShort = gallery_config.img_prefix + "/whatsnew.html"
 whatsNewFull = gallery_config.img_prefix + "/whatsnew_all.html"
@@ -37,7 +38,7 @@ def parseSrc(src):
             #ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = "http://saturnvalley.org" + gallery_config.browse_prefix + dir
+                    url = galleryUrlRoot + dir
                     idx = dir.rfind('/')
                     if idx == -1:
                         idx = 0
@@ -73,21 +74,26 @@ a
 <h2>$title</h2>
 #for $entry in $updates
 #if $lastDate != $entry['date']
-    $entry['date']<br>
+    <h3>$entry['date']</h3>
 #end if
 #set lastDate = $entry['date']
 #for $dirname, $url in $entry['dir']
-<a href=$url>$dirname</a><br>
+<h4><a href="$url">$dirname</a></h4>
 #end for
 $entry['desc']<br>
 #end for
+#if $nextLinkTitle
+<br><br><a href="$nextLink">$nextLinkTitle</a>
+#end if
 </body>
 """
 
-def emitWhatsNew(template_str, update_entries, title_str, filename):
+def emitWhatsNew(template_str, update_entries, title_str, nextUrl, nextLinkName, filename):
     search = {}
     search['title'] = title_str
     search['updates'] = update_entries
+    search['nextLinkTitle'] = nextLinkName
+    search['nextLink'] = nextUrl
     template = Template(template_str, searchList=[search])
 
     f = open(filename, "w")
@@ -98,7 +104,7 @@ def emitWhatsNew(template_str, update_entries, title_str, filename):
 
 #main
 update_entries = parseSrc(whatsNewSrc)
-emitWhatsNew(recent_template, update_entries, "All Updates", whatsNewFull)
+emitWhatsNew(recent_template, update_entries, "All Updates", None, None, whatsNewFull)
 
 #slim it down to 10 entries
 if len(update_entries) > 10:
@@ -111,7 +117,9 @@ if len(update_entries) > 10:
 else:
     idx = len(update_entries)
 
-emitWhatsNew(recent_template, update_entries[:idx], "Recent Updates", whatsNewShort)
+emitWhatsNew(recent_template, update_entries[:idx], "Recent Updates",
+             galleryUrlRoot + "whatsnew_all.html", "All Updates",
+             whatsNewShort)
 
 #print update_entries
 
