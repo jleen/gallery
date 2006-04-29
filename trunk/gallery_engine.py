@@ -18,93 +18,12 @@ small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
-scriptfiles = [gallery_config.__file__, 'cache_sentinel']
+cache_dependencies = [gallery_config.__file__, 'cache_sentinel']
+scriptfiles = [gallery_config.__file__, 'browse.tmpl', 'exif.tmpl' ]
 
 img_extns = ['.jpeg', '.jpg']
 
 trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
-
-browse_template = """
-<style>
-body
-{
-    font-family: Georgia, Times New Roman, Times, serif;
-    font-size: 90%;
-    color: #333333;
-    background-color: #eeeeee;
-}
-img
-{
-    border: solid 2px #333366; 
-}
-a
-{
-    text-decoration: none;
-    color: #333333;
-}
-.exiflink
-{
-    font-size: 55%;
-}
-</style>
-    
-<title>Saturn Valley Hall of Light: $thisdir</title>
-
-<p>
-<b>Navigate:</b>
-#set $first = 1
-#for $dir, $name in $subdirs
-#if $first == 0
-&ndash;
-#end if
-    <a href="<%=dir%>"><%=name%></a>
-#set $first = 0
-#end for
-</p>
-
-<p><b>$thisdir</b></p>
-<div align="center">
-#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $thumb_height, $thumb_width, $caption in $imgurls:
-<table style="display: inline">
-<tr>
-<td align="center" valign="middle" height="260" width="220">
-<a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle" height="$thumb_height" width="$thumb_width"></a><br>
-<a href="$bigurl">$caption</a>
-#if $show_exif == 1
-<br><a class="exiflink" href="$exifurl">exif</a><br>
-#end if
-</td>
-</tr>
-</table>
-#end for
-</div>
-"""
-
-exif_template = """
-<style>
-body
-{
-    font-family: Georgia, Times New Roman, Times, serif;
-    font-size: 90%;
-    color: #333333;
-    background-color: #eeeeee;
-}
-</style>
-    
-<title>EXIF data: $title</title>
-
-<p>
-<table style="display: inline">
-#for $key, $value in $data.items()
-<tr>
-<td>$key</td>
-<td>$value</td>
-</tr>
-#end for
-</table>
-</div>
-"""
-
 
 def handler():
     reqpath = os.environ["PATH_INFO"].lower()
@@ -210,7 +129,7 @@ def exifpage():
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
 
     a = {}
-    template = Template(exif_template, searchList=[a])
+    template = Template(file='exif.tmpl', searchList=[a])
     #ambiguate this name?
     a['title'] = os.path.basename(img_fname)
 
@@ -275,7 +194,7 @@ def photo():
 
 def iscached(srcfile, cachefile):
     if not os.path.isfile(cachefile): return 0
-    for dependency in [ srcfile ] + scriptfiles:
+    for dependency in [ srcfile ] + cache_dependencies:
         if os.path.getmtime(cachefile) < os.path.getmtime(dependency):
             return 0
     return 1
@@ -421,7 +340,7 @@ def gallery():
         subdirs.append(('../', '(up)'))
 
     a = {}
-    template = Template(browse_template, searchList=[a])
+    template = Template(file='browse.tmpl', searchList=[a])
     leafdir = os.path.split(dir_fname[:-1])[1]
     if len(leafdir) == 0: leafdir = 'Hall of Light'
     a['thisdir'] = format_fn_for_display(trim_serials(leafdir))
