@@ -29,6 +29,8 @@ def handler():
     reqpath = os.environ["PATH_INFO"].lower()
     extn = os.path.splitext(reqpath)[1]
     if os.path.split(reqpath)[1] == 'index.html': return gallery()
+    elif os.path.split(reqpath)[1] == 'whatsnew.html': return spewhtml(gallery_config.img_prefix + reqpath)
+    elif os.path.split(reqpath)[1] == 'whatsnew_all.html': return spewhtml(gallery_config.img_prefix + reqpath)
     elif extn.lower() in img_extns: return photo()
     elif reqpath.lower().endswith('_exif.html'): return exifpage()
     #elif extn == '.html': return photopage(req)
@@ -208,6 +210,12 @@ def spewphoto(fname, size):
     else:
         cache_img(fname, size, cachedir, cachefile, 1)
         return
+
+def spewhtml(fname):
+    if check_client_cache( 'text/html; charset="UTF-8"',
+            max_mtime_for_files([fname])):
+        return
+    spewfile(fname)
 
 def spewfile(fname):
     fil = file(fname, 'rb')
