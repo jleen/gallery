@@ -1,6 +1,6 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env python2.3
 
-#import cgitb; cgitb.enable()
+import cgitb; cgitb.enable()
 
 import gallery_engine
 gallery_engine.handler()
