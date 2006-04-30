@@ -2,6 +2,7 @@ import cgi
 import os
 import re
 import rfc822
+import stat
 import sys
 import time
 
@@ -18,6 +19,8 @@ small_size = "600"
 med_size = "1024"
 big_size = "full"
 thumb_size = "200"
+preview_size = "100"
+
 cache_dependencies = [gallery_config.__file__, 'cache_sentinel']
 scriptfiles = [gallery_config.__file__, 'browse.tmpl', 'exif.tmpl' ]
 
@@ -76,6 +79,9 @@ def infer_image_path(base):
 def script_mtime():
     return max_mtime_for_files(scriptfiles)
 
+def lmtime(fname):
+    return os.lstat(fname)[stat.ST_MTIME]
+
 def ambiguate_filename(regexp):
     # This is horrifically bogus.  We should have a table or something.
     amb = ''
@@ -127,7 +133,7 @@ def exifpage():
     f = open(img_fname, 'rb')
     tags = EXIF.process_file(f)
     f.close();
-    image_mtime = os.path.getmtime(img_fname)
+    image_mtime = lmtime(img_fname)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
 
     a = {}
@@ -186,7 +192,7 @@ def photo():
     size = fname[size_index+1:extn_index]
     extn = fname[extn_index+1:]
     img_fname = infer_serial_prefix(base + '.' + extn)
-    image_mtime = os.path.getmtime(os.path.join(gallery_config.img_prefix, img_fname))
+    image_mtime = lmtime(os.path.join(gallery_config.img_prefix, img_fname))
     if check_client_cache("image/jpeg", image_mtime): return
     if size == "full":
         return spewfile(gallery_config.img_prefix + img_fname)
@@ -197,10 +203,9 @@ def photo():
 def iscached(srcfile, cachefile):
     if not os.path.isfile(cachefile): return 0
     for dependency in [ srcfile ] + cache_dependencies:
-        if os.path.getmtime(cachefile) < os.path.getmtime(dependency):
+        if lmtime(cachefile) < lmtime(dependency):
             return 0
-    return 1
-
+    return 1 
 def spewphoto(fname, size):
     cachedir = "%s%d" % (gallery_config.cache_prefix, size)
     cachefile = cachedir + '/' + fname
@@ -225,6 +230,20 @@ def spewfile(fname):
 def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
     if not os.path.isdir(dirname): os.makedirs(dirname)
+
+def first_image_fname(dir_fname):
+    img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
+    fnames = os.listdir(img_dir)
+    fnames.sort()
+    for fname in fnames:
+        (base, extn) = os.path.splitext(fname)
+        if extn.lower() not in img_extns: continue
+        if base.startswith('.'): continue
+        return fname
+    # Got this far and didn't find an image.  Let's look in subdirs next.
+    for fname in fnames:
+        if os.path.isdir(os.path.join(img_dir, fname)):
+            return os.path.join(fname, first_image_fname(os.path.join(dir_fname, fname)))
 
 def img_size(fname, size):
     cachedir = "%s%d" % (gallery_config.cache_prefix, size)
@@ -283,7 +302,7 @@ def script_path(req):
 def max_mtime_for_files(fnames):
     max_mtime = 0
     for fname in fnames:
-        mtime = os.path.getmtime(fname)
+        mtime = lmtime(fname)
         if mtime > max_mtime: max_mtime = mtime
     return max_mtime
 
@@ -291,6 +310,7 @@ def trim_serials(fn):
     return trim_serials_regexp.sub('', fn)
 
 def format_fn_for_display(fn):
+    if fn == '.': return gallery_config.short_name
     if fn.startswith('DSC_'): return ''
     fn = fn.replace('_', ' ')
     fn = fn.replace('~', '?')
@@ -323,34 +343,52 @@ def gallery():
     imgurls = []
     for fname in fnames:
         (fnamebase, extn) = os.path.splitext(fname)
-        if extn.lower() in img_extns:
-            pageurl = ""
-            trimmed = degrade_filename(trim_serials(fnamebase))
-            imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, trimmed)
-            smallurl = imgbase + "_" + small_size + extn
-            medurl = imgbase + "_" + med_size + extn
-            bigurl = imgbase + "_" + big_size + extn
-            thumburl = imgbase + "_" + thumb_size + extn
-            exifurl = imgbase + extn + "_exif.html"
-            caption = format_fn_for_display(trim_serials(fnamebase))
-            rel_img_path = os.path.join(dir_fname, fname)
-            (thumb_width, thumb_height) = img_size(rel_img_path, 200)
-            imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl,
-                thumb_height, thumb_width, caption))
+        if extn.lower() not in img_extns: continue
+        if fnamebase.startswith('.'): continue
+        pageurl = ""
+        trimmed = degrade_filename(trim_serials(fnamebase))
+        imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, trimmed)
+        smallurl = imgbase + "_" + small_size + extn
+        medurl = imgbase + "_" + med_size + extn
+        bigurl = imgbase + "_" + big_size + extn
+        thumburl = imgbase + "_" + thumb_size + extn
+        exifurl = imgbase + extn + "_exif.html"
+        caption = format_fn_for_display(trim_serials(fnamebase))
+        rel_img_path = os.path.join(dir_fname, fname)
+        (thumb_width, thumb_height) = img_size(rel_img_path, 200)
+        imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl,
+            thumb_height, thumb_width, caption))
 
     subdirs = []
     for fname in fnames:
         dirname = os.path.join(dir_fname, fname)
         if not os.path.isdir(gallery_config.img_prefix + dirname): continue
         dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
-        subdirs.append((dir, format_fn_for_display(trim_serials(fname))))
-    if len(dir_fname) > 0:
-        subdirs.append(('../', '(up)'))
+        display = format_fn_for_display(trim_serials(fname))
+        # (fnamebase, extn) = os.path.splitext(fname)
+        preview_fname = '.preview.jpeg';
+        if not os.path.exists(os.path.join(gallery_config.img_prefix, dir_fname, fname, preview_fname)):
+            preview_fname = first_image_fname(os.path.join(dir_fname, fname))
+        (preview_base, preview_extn) = os.path.splitext(preview_fname)
+        preview = os.path.join(dir, preview_base + '_' + preview_size + preview_extn)
+        rel_img_path = os.path.join(dir_fname, fname, preview_fname)
+        (preview_width, preview_height) = img_size(rel_img_path, 100)
+        subdirs.append((dir, display, preview, preview_height, preview_width))
+
+    breadcrumbs = []
+    dirname = ''
+    for crumb in ('./' + dir_fname[:-1]).split(os.path.sep):
+        dirname = os.path.join(dirname, crumb)
+        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
+        display = format_fn_for_display(trim_serials(crumb))
+        breadcrumbs.append((dir, display))
 
     a = {}
     template = Template(file='browse.tmpl', searchList=[a])
     leafdir = os.path.split(dir_fname[:-1])[1]
-    if len(leafdir) == 0: leafdir = 'Hall of Light'
+    if len(leafdir) == 0: leafdir = gallery_config.short_name
+    a['title'] = gallery_config.long_name
+    a['breadcrumbs'] = breadcrumbs
     a['thisdir'] = format_fn_for_display(trim_serials(leafdir))
     a['imgurls'] = imgurls
     a['subdirs'] = subdirs

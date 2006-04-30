@@ -1,2 +1,4 @@
-Infrastructural crap:
-    - Can we use Python 2.4?
+whatsnew.html refinements
+better caching
+prefill the cache?
+better error handling
