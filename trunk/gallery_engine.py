@@ -32,8 +32,10 @@ def handler():
     reqpath = os.environ["PATH_INFO"].lower()
     extn = os.path.splitext(reqpath)[1]
     if os.path.split(reqpath)[1] == 'index.html': return gallery()
-    elif os.path.split(reqpath)[1] == 'whatsnew.html': return spewhtml(gallery_config.img_prefix + reqpath)
-    elif os.path.split(reqpath)[1] == 'whatsnew_all.html': return spewhtml(gallery_config.img_prefix + reqpath)
+    elif os.path.split(reqpath)[1] == 'whatsnew.html':
+        return spewhtml(os.path.join(gallery_config.img_prefix, 'whatsnew.html'))
+    elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
+        return spewhtml(os.path.join(gallery_config.img_prefix, 'whatsnew_all.html'))
     elif extn.lower() in img_extns: return photo()
     elif reqpath.lower().endswith('_exif.html'): return exifpage()
     #elif extn == '.html': return photopage(req)
@@ -399,7 +401,7 @@ def gallery():
     if use_wn:
         wn_mtime = time.localtime(os.path.getmtime(os.path.join(gallery_config.img_prefix, "whatsnew.txt")))
         a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
-        a['whatsnew_url'] = "http://www.saturnvalley.org/" + gallery_config.browse_prefix + "whatsnew.html"
+        a['whatsnew_url'] = os.path.join(gallery_config.browse_prefix, "whatsnew.html")
     else:
         a['whatsnew_name'] = None
         a['whatsnew_url'] = None
