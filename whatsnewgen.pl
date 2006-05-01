@@ -98,10 +98,10 @@ exit;
 
 
 sub wanted {
-my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime);
+my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime);
 
   return unless (($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,
-                  $mtime) = lstat($_));
+                  $mtime, $ctime) = lstat($_));
   return unless $name =~ m/\.(jpg|jpeg|avi)$/i;
   return if m/^\./i;
   if( -f $_ )
@@ -111,12 +111,12 @@ my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime);
     $shortDir =~ s/$pattern//o;
     if( exists $lastModifiedByDir{$shortDir} )
     {
-      $lastModifiedByDir{$shortDir} = $mtime
-        if( $lastModifiedByDir{$shortDir} < $mtime );
+      $lastModifiedByDir{$shortDir} = $ctime
+        if( $lastModifiedByDir{$shortDir} < $ctime );
     }
     else
     {
-      $lastModifiedByDir{$shortDir} = $mtime;
+      $lastModifiedByDir{$shortDir} = $ctime;
     }
   }
 }

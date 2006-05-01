@@ -39,12 +39,19 @@ def parseSrc(src):
                 if dir_match:
                     dir = dir_match.group(1)
                     url = galleryUrlRoot + dir
+                    is_movie_dir = 0
+                    if dir.endswith('Movies'):
+                        is_movie_dir = 1
+                        dir = dir[0:dir.rfind('/')]
                     idx = dir.rfind('/')
                     if idx == -1:
                         idx = 0
                     else:
                         idx = idx + 1
                     dir = dir[idx:]
+                    dir = gallery_engine.format_fn_for_display(gallery_engine.trim_serials(dir))
+                    if is_movie_dir:
+                        dir += " - Movies"
                     current_entry['dir'].append((dir, url))
                 else:
                     current_entry['desc'] += line
@@ -52,7 +59,7 @@ def parseSrc(src):
     src.close()
     return update_entries
 
-recent_template = """
+recent_template = """<html>
 <style>
 body
 {
@@ -61,30 +68,73 @@ body
     color: #333333;
     background-color: #eeeeee;
 }
-}
 a
 {
     text-decoration: none;
     color: #333333;
 }
+.datebox
+{
+}
+.datebox h3
+{
+    font-size: medium;
+    font-weight: 900;
+    margin-bottom: 0;
+}
+.datecontents
+{
+    width: 90%;
+    margin-left:5%;
+    margin-right:5%;
+}
+.datetitles
+{
+    width: 90%;
+    margin-left:3%;
+    font-size: larger;
+    font-weight: bold;
+    margin-bottom:.5em;
+    margin-top:1em;
+}
+.datecomment
+{
+    margin-left:6%;
+    margin-right:5%;
+    margin-bottom: 1.5em;
+}
 </style>
-<html><head><title>$title</title></head>
+<head><title>$title</title></head>
 <body>
 #set lastDate = ""
-<h2>$title</h2>
+#set firstTime = 1
+<b><font size=+2>$title</font></b> <i><a href=$nextLink>($nextLinkTitle)</a></i><br><br>
 #for $entry in $updates
 #if $lastDate != $entry['date']
-    <h3>$entry['date']</h3>
+#if not $firstTime
+    </div> <!--end datebox-->
+#else
+#set firstTime = 0
+#end if 
+    <div class="datebox"><hr><h3>$entry['date']</h3>
 #end if
 #set lastDate = $entry['date']
+<div class="datetitles">
 #for $dirname, $url in $entry['dir']
-<h4><a href="$url">$dirname</a></h4>
+<a href="$url">$dirname</a><br>
 #end for
-$entry['desc']<br>
+</div> <!--end datetitles-->
+<div class="datecomment">
+$entry['desc']
+</div> <!--end datecomment-->
+#else
+    </div>
 #end for
+<!--
 #if $nextLinkTitle
-<br><br><a href="$nextLink">$nextLinkTitle</a>
+<br><br><h3><a href="$nextLink">$nextLinkTitle</a></h3>
 #end if
+-->
 </body>
 """
 
@@ -117,8 +167,9 @@ if len(update_entries) > 10:
 else:
     idx = len(update_entries)
 
+all_updates = "All Updates -" + str(len(update_entries)) + " entries"
 emitWhatsNew(recent_template, update_entries[:idx], "Recent Updates",
-             galleryUrlRoot + "whatsnew_all.html", "All Updates",
+             galleryUrlRoot + "whatsnew_all.html", all_updates,
              whatsNewShort)
 
 #print update_entries

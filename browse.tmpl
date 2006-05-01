@@ -24,6 +24,11 @@ a
 <title>$title: $thisdir</title>
 
 <p>
+#if $whatsnew_name
+#set $dir = $breadcrumbs[0][0]
+#set $name = $breadcrumbs[0][1]
+<b><a href="$dir">$name</a></b> &gt;&gt; <a href="$whatsnew_url">$whatsnew_name</a>
+#else
 #set $first = 1
 #for $dir, $name in $breadcrumbs
 #if $first == 0
@@ -32,13 +37,19 @@ a
 <b><a href="$dir">$name</a></b>
 #set $first = 0
 #end for
+#end if
 </p>
 
 <p>
 #for $dir, $name, $preview, $preview_height, $preview_width in $subdirs
 <nobr>
-<table width="350" style="display: inline"><tr><td width="350">
+#set $remain=350-$preview_width
+<table width="350" style="display: inline"><tr><td width="$preview_width">
+#if $preview
 <a href="$dir"><img src="$preview" border="2" align="middle" height="$preview_height" width="$preview_width"></a>
+</td>
+#end if
+<td align="left" width="$remain">
 <a href="$dir">$name</a>
 </td></tr></table>
 </nobr>
