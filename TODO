@@ -4,3 +4,4 @@ prefill the cache?
 better error handling
 Move the whatsnew.html and whatsnew_all.html to the cache?
 Add a .dirinfo to whatsnewgen.pl to override ctime
+Move exif data into a hover over or to the big picture page or something.

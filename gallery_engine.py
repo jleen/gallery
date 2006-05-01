@@ -389,9 +389,14 @@ def gallery():
     a = {}
     template = Template(file='browse.tmpl', searchList=[a])
     leafdir = os.path.split(dir_fname[:-1])[1]
+    use_wn = 0
     if len(leafdir) == 0:
         leafdir = gallery_config.short_name
         #set up the what's new link for the root.
+        wn_txt_path = os.path.join(gallery_config.img_prefix, "whatsnew.txt")
+        if os.path.exists(wn_txt_path):
+            use_wn = 1
+    if use_wn:
         wn_mtime = time.localtime(os.path.getmtime(os.path.join(gallery_config.img_prefix, "whatsnew.txt")))
         a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
         a['whatsnew_url'] = "http://www.saturnvalley.org/" + gallery_config.browse_prefix + "whatsnew.html"
