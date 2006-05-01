@@ -112,16 +112,16 @@ def infer_serial_prefix(fname):
     return os.path.join(dir, newbasename)[len(gallery_config.img_prefix):]
 
 def copyIfPresent(dst, dstKey, src, srcKey):
-	if src.has_key(srcKey):
-		dst[dstKey] = src[srcKey]
+    if src.has_key(srcKey):
+        dst[dstKey] = src[srcKey]
 
 def fractionToDecimal(fraction):
-	pieces = fraction.split('/')
-	if len(pieces) == 2:
-		return str(float(pieces[0]) / float(pieces[1]))
-	else:
-		return fraction
-	
+    pieces = fraction.split('/')
+    if len(pieces) == 2:
+        return str(float(pieces[0]) / float(pieces[1]))
+    else:
+        return fraction
+    
 
 
 def exifpage():
@@ -175,9 +175,9 @@ def exifpage():
 
     #fractional
     if tags.has_key('EXIF FNumber'):
-    	processedTags['FNumber'] = fractionToDecimal(tags['EXIF FNumber'].printable)
+        processedTags['FNumber'] = fractionToDecimal(tags['EXIF FNumber'].printable)
     if tags.has_key('EXIF FocalLength'):
-    	processedTags['Focal Length'] = fractionToDecimal(tags['EXIF FocalLength'].printable)
+        processedTags['Focal Length'] = fractionToDecimal(tags['EXIF FocalLength'].printable)
 
     a['data'] = processedTags
 
@@ -369,11 +369,14 @@ def gallery():
         preview_fname = '.preview.jpeg';
         if not os.path.exists(os.path.join(gallery_config.img_prefix, dir_fname, fname, preview_fname)):
             preview_fname = first_image_fname(os.path.join(dir_fname, fname))
-        (preview_base, preview_extn) = os.path.splitext(preview_fname)
-        preview = os.path.join(dir, preview_base + '_' + preview_size + preview_extn)
-        rel_img_path = os.path.join(dir_fname, fname, preview_fname)
-        (preview_width, preview_height) = img_size(rel_img_path, 100)
-        subdirs.append((dir, display, preview, preview_height, preview_width))
+        if preview_fname:
+            (preview_base, preview_extn) = os.path.splitext(preview_fname)
+            preview = os.path.join(dir, preview_base + '_' + preview_size + preview_extn)
+            rel_img_path = os.path.join(dir_fname, fname, preview_fname)
+            (preview_width, preview_height) = img_size(rel_img_path, 100)
+            subdirs.append((dir, display, preview, preview_height, preview_width))
+        else:
+            subdirs.append((dir, display, None, 0, 0))
 
     breadcrumbs = []
     dirname = ''
@@ -386,12 +389,22 @@ def gallery():
     a = {}
     template = Template(file='browse.tmpl', searchList=[a])
     leafdir = os.path.split(dir_fname[:-1])[1]
-    if len(leafdir) == 0: leafdir = gallery_config.short_name
+    if len(leafdir) == 0:
+        leafdir = gallery_config.short_name
+        #set up the what's new link for the root.
+        wn_mtime = time.localtime(os.path.getmtime(os.path.join(gallery_config.img_prefix, "whatsnew.txt")))
+        a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
+        a['whatsnew_url'] = "http://www.saturnvalley.org/" + gallery_config.browse_prefix + "whatsnew.html"
+    else:
+        a['whatsnew_name'] = None
+        a['whatsnew_url'] = None
+
     a['title'] = gallery_config.long_name
     a['breadcrumbs'] = breadcrumbs
     a['thisdir'] = format_fn_for_display(trim_serials(leafdir))
     a['imgurls'] = imgurls
     a['subdirs'] = subdirs
     a['show_exif'] = gallery_config.show_exif
+
     sys.stdout.write(str(template))
     return
