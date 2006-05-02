@@ -13,7 +13,7 @@ img
 a
 {
     text-decoration: none;
-    color: #333333;
+    color: #333399;
 }
 .exiflink
 {
@@ -24,21 +24,23 @@ a
 <title>$title: $thisdir</title>
 
 <p>
-#if $whatsnew_name
-#set $dir = $breadcrumbs[0][0]
-#set $name = $breadcrumbs[0][1]
-<b><a href="$dir">$name</a></b> &gt;&gt; <a href="$whatsnew_url">$whatsnew_name</a>
-#else
 #set $first = 1
-#for $dir, $name in $breadcrumbs
+#for $is_link, $dir, $name in $breadcrumbs
 #if $first == 0
  &gt;&gt; 
 #end if
+#if $is_link
 <b><a href="$dir">$name</a></b>
+#else
+<b>$name</b>
+#end if
 #set $first = 0
 #end for
-#end if
 </p>
+
+#if $whatsnew_name
+<p><a href="$whatsnew_url">$whatsnew_name</a></p>
+#end if
 
 <p>
 #for $dir, $name, $preview, $preview_height, $preview_width in $subdirs

@@ -383,10 +383,13 @@ def gallery():
     breadcrumbs = []
     dirname = ''
     for crumb in ('./' + dir_fname[:-1]).split(os.path.sep):
+        if len(crumb) < 1: continue
         dirname = os.path.join(dirname, crumb)
         dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
         display = format_fn_for_display(trim_serials(crumb))
-        breadcrumbs.append((dir, display))
+        breadcrumbs.append([1, dir, display])
+    # The last breadcrumb should not be a link
+    breadcrumbs[-1][0] = 0;
 
     a = {}
     template = Template(file='browse.tmpl', searchList=[a])
