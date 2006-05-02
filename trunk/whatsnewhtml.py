@@ -71,7 +71,7 @@ body
 a
 {
     text-decoration: none;
-    color: #333333;
+    color: #333399;
 }
 .datebox
 {
@@ -108,7 +108,15 @@ a
 <body>
 #set lastDate = ""
 #set firstTime = 1
-<b><font size=+2>$title</font></b> <i><a href=$nextLink>($nextLinkTitle)</a></i><br><br>
+<a href="."><b>$gallerytitle</b></a>
+&gt;&gt;
+<b>$title</b>
+
+#if $nextLinkTitle
+<br><br><i>(<a href="$nextLink">$nextLinkTitle)</a></i>
+#end if
+
+<br><br>
 #for $entry in $updates
 #if $lastDate != $entry['date']
 #if not $firstTime
@@ -140,6 +148,7 @@ $entry['desc']
 
 def emitWhatsNew(template_str, update_entries, title_str, nextUrl, nextLinkName, filename):
     search = {}
+    search['gallerytitle'] = gallery_config.short_name
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = nextLinkName
@@ -167,7 +176,7 @@ if len(update_entries) > 10:
 else:
     idx = len(update_entries)
 
-all_updates = "All Updates -" + str(len(update_entries)) + " entries"
+all_updates = "See all updates: " + str(len(update_entries)) + " entries"
 emitWhatsNew(recent_template, update_entries[:idx], "Recent Updates",
              galleryUrlRoot + "whatsnew_all.html", all_updates,
              whatsNewShort)
