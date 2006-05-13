@@ -6,7 +6,7 @@ import stat
 import sys
 import time
 
-sys.path.insert(0, '/home/jmleen/lib/python2.3/site-packages')
+sys.path.insert(0, '/home/jmleen/lib/python2.4/site-packages')
 
 import EXIF
 from PIL import Image
