@@ -397,9 +397,7 @@ def gallery():
         exifurl = imgbase + extn + "_exif.html"
         caption = format_fn_for_display(trim_serials(fnamebase))
         rel_img_path = os.path.join(dir_fname, fname)
-        (thumb_width, thumb_height) = img_size(rel_img_path, 200)
-        imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl,
-            thumb_height, thumb_width, caption))
+        imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl, caption))
 
     subdirs = []
     for fname in fnames:
@@ -415,8 +413,7 @@ def gallery():
             (preview_base, preview_extn) = os.path.splitext(preview_fname)
             preview = os.path.join(dir, preview_base + '_' + preview_size + preview_extn)
             rel_img_path = os.path.join(dir_fname, fname, preview_fname)
-            (preview_width, preview_height) = img_size(rel_img_path, 100)
-            subdirs.append((dir, display, preview, preview_height, preview_width))
+            subdirs.append((dir, display, preview))
         else:
             subdirs.append((dir, display, None, 0, 0))
 
