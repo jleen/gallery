@@ -1,9 +1,12 @@
 #!/usr/bin/perl -w
-use strict;
 use File::Find ();
 use File::Copy;
 use Date::Parse;
+use Getopt::Std;
 
+my %options = ();
+
+getopts('c', \%options);
 my $targetDir;
 
 # Process gallery_config.py
@@ -104,6 +107,16 @@ my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime);
                   $mtime, $ctime) = lstat($_));
   return unless $name =~ m/\.(jpg|jpeg|avi)$/i;
   return if m/^\./i;
+  my $useTime;
+  if( exists $options{'c'} )
+  {
+    $useTime = $ctime;
+  }
+  else
+  {
+    $useTime = $mtime;
+  }
+
   if( -f $_ )
   {
     my $pattern = "^" . quotemeta($targetDir) . "/?";
@@ -111,12 +124,12 @@ my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime);
     $shortDir =~ s/$pattern//o;
     if( exists $lastModifiedByDir{$shortDir} )
     {
-      $lastModifiedByDir{$shortDir} = $ctime
-        if( $lastModifiedByDir{$shortDir} < $ctime );
+      $lastModifiedByDir{$shortDir} = $useTime
+        if( $lastModifiedByDir{$shortDir} < $useTime );
     }
     else
     {
-      $lastModifiedByDir{$shortDir} = $ctime;
+      $lastModifiedByDir{$shortDir} = $useTime;
     }
   }
 }

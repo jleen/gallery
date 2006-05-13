@@ -34,7 +34,7 @@ scriptfiles = [
     scriptdir('exif.tmpl')
 ]
 
-img_extns = ['.jpeg', '.jpg']
+img_extns = ['.jpeg', '.jpg', '.JPG']
 
 trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
 
