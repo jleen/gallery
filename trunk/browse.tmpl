@@ -1,3 +1,30 @@
+#set $side_by_side = 0
+#if len($imgurls) and len($subdirs) > 2
+#set $side_by_side = 1
+#end if
+
+#set $left_side_dominates = 0
+#if $side_by_side
+#if len($imgurls) < len($subdirs)
+#set $left_side_dominates = 1
+#end if
+#end if
+
+
+#if $side_by_side
+#set $lhs_width=250
+#else
+#set $lhs_width=350
+#end if
+
+#if $left_side_dominates
+#set $lhs_side_width = 550
+#else
+#set $lhs_side_width = $lhs_width
+#end if
+
+<html>
+<head>
 <style>
 body
 {
@@ -5,6 +32,7 @@ body
     font-size: 90%;
     color: #333333;
     background-color: #eeeeee;
+    height:100%;
 }
 img
 {
@@ -19,9 +47,62 @@ a
 {
     font-size: 55%;
 }
+#directory_section {
+#if $side_by_side
+    margin-top:2em;
+    float:left;
+    left:auto;
+#if $left_side_dominates
+    width:$lhs_side_width;
+    padding-right:0;
+    margin-right:0;
+#else
+    width:$lhs_width;
+#end if
+    height:100%;
+#else
+
+#if len($imgurls) and len($subdirs)
+    padding-bottom:2em;
+    border-bottom:2px solid #000;
+#end if
+    margin-top:2em;
+
+#end if
+    margin-right:0;
+    padding-right:2em;
+    margin-bottom:2em;
+    line-height:300%;
+}
+#set leftcontent_width = $lhs_side_width + 10
+#image_section {
+#if $side_by_side
+    height:100%;
+    border-left:2px solid #000;
+    padding-left:20px;
+    margin-top:2em;
+
+    margin-left:$leftcontent_width;
+
+
+#else
+    margin-top:3em;
+#end if
+    margin-bottom:0;
+}
+
+#enclosing_body {
+    height:100%
+}
+
 </style>
     
 <title>$title: $thisdir</title>
+</head>
+
+<body>
+
+<div id="enclosing_body">
 
 <p>
 #set $first = 1
@@ -39,26 +120,40 @@ a
 </p>
 
 #if $whatsnew_name
-<p><a href="$whatsnew_url">$whatsnew_name</a></p>
+<a href="$whatsnew_url">$whatsnew_name</a>
 #end if
 
-<p>
+
+
+<div id="directory_section">
+
 #for $dir, $name, $preview, $preview_height, $preview_width in $subdirs
-<nobr>
-#set $remain=350-$preview_width
-<table width="350" style="display: inline"><tr><td width="$preview_width">
+#set $remain=$lhs_width-$preview_width
+<table width="$lhs_width" style="display: inline">
+<tr>
 #if $preview
+<td width="$preview_width">
 <a href="$dir"><img src="$preview" border="2" align="middle" height="$preview_height" width="$preview_width"></a>
 </td>
+#if not $side_by_side
+</tr>
 #end if
-<td align="left" width="$remain">
+
+#end if
+#if not $side_by_side
+<tr>
+#set $name_width=$lhs_width
+#else
+#set $name_width=$lhs_width-$preview_width
+#end if
+<td align="left" width="$name_width">
 <a href="$dir">$name</a>
 </td></tr></table>
-</nobr>
 #end for
-</p>
 
-<div align="center">
+</div>
+
+<div id="image_section">
 #for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $thumb_height, $thumb_width, $caption in $imgurls:
 <table style="display: inline">
 <tr>
@@ -72,4 +167,9 @@ a
 </tr>
 </table>
 #end for
+
 </div>
+
+</div>
+</body>
+</html>
