@@ -38,9 +38,42 @@ def handler():
         return spewhtml(os.path.join(gallery_config.img_prefix, 'whatsnew_all.html'))
     elif extn.lower() in img_extns: return photo()
     elif reqpath.lower().endswith('_exif.html'): return exifpage()
-    #elif extn == '.html': return photopage(req)
+    elif extn == '.html': return photopage()
     else: return gallery()
 
+def photopage():
+    fname = os.environ["PATH_INFO"][1:]
+    (dir, base, extn) = decompose_image_path(fname)
+    img_fname = os.path.join(gallery_config.img_prefix, infer_serial_prefix(os.path.join(dir, base), infer_suffix = 1))
+    image_mtime = lmtime(img_fname)
+    if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
+    infofile = os.path.splitext(img_fname)[0] + '.info'
+    description = ''
+    if os.path.exists(infofile):
+        for line in file(infofile):
+            if line.startswith('Description: '):
+                description = line[len('Description: '):]
+
+    a = {}
+    a['framed_img_url'] = path_to_url(img_fname, size = "700")
+    a['full_img_url'] = path_to_url(img_fname, size = "full")
+    a['gallery_title'] =  gallery_config.short_name
+    a['photo_title'] = format_fn_for_display(trim_serials(base))
+    a['description'] = description
+    template = Template(file='photopage.tmpl', searchList=[a])
+    sys.stdout.write(str(template))
+
+def path_to_url(path, size = None, ext = None):
+    rel_path = path[len(gallery_config.img_prefix):]
+    url = trim_serials(os.path.join(gallery_config.browse_prefix, rel_path))
+    (base, url_ext) = os.path.splitext(url)
+    if size != None:
+        base = base + "_" + size
+    if ext != None:
+        url_ext = "." + ext
+    return base + url_ext
+
+    
 def normalize_date(date):
     if date == None: return None
     return time.asctime(time.gmtime(
@@ -99,7 +132,7 @@ def degrade_filename(fn):
     fn = fn.replace('\xc3\xb6', 'o')
     return fn
 
-def infer_serial_prefix(fname):
+def infer_serial_prefix(fname, infer_suffix = 0):
     fname = os.path.join(gallery_config.img_prefix, fname)
     if os.path.exists(fname): return fname[len(gallery_config.img_prefix):]
     (dir, basename) = os.path.split(fname)
@@ -107,7 +140,11 @@ def infer_serial_prefix(fname):
         newdir = infer_serial_prefix(dir[len(gallery_config.img_prefix):])
         dir = os.path.join(gallery_config.img_prefix, newdir)
     candidates = os.listdir(dir)
-    r = re.compile('^\d+_' + ambiguate_filename(re.escape(basename)) + '$')
+    r = '^(\d+_)?' + ambiguate_filename(re.escape(basename))
+    if infer_suffix:
+        r += '(' + '|'.join(img_extns) + ')'
+    r += '$'
+    r = re.compile(r)
     found = [ f for f in candidates if r.search(f) != None ]
     if len(found) > 0: newbasename = found[0]
     else: newbasename = basename
@@ -124,10 +161,8 @@ def fractionToDecimal(fraction):
     else:
         return fraction
     
-
-
 def exifpage():
-    fname = os.environ["PATH_INFO"][2:]
+    fname = os.environ["PATH_INFO"][1:]
     img_index = fname.rfind('_')
     img_path = fname[:img_index]
     img_fname = os.path.join(gallery_config.img_prefix, infer_serial_prefix(img_path))
@@ -187,7 +222,7 @@ def exifpage():
     return
     
 def photo():
-    fname = os.environ["PATH_INFO"][2:]
+    fname = os.environ["PATH_INFO"][1:]
     size_index = fname.rfind('_')
     extn_index = fname.rfind('.')
     base = fname[:size_index]
@@ -288,7 +323,7 @@ def cache_img(fname, size, cachedir, cachefile, do_output):
     buf.close()
     return img.size
 
-def script_path(req):
+def script_path():
     top_dirname = os.path.split(os.environ["SCRIPT_FILENAME"])[1]
     rest_dirname = os.environ["PATH_INFO"][1:]
     if len(rest_dirname) > 0:
@@ -324,12 +359,18 @@ def format_fn_for_display(fn):
 def send_redirect(new_url):
     sys.stdout.write("Location: http://www.saturnvalley.org" + new_url + "\n\n")
 
+def decompose_image_path(path):
+    (path, fname) = os.path.split(path)
+    (base, extn) = os.path.splitext(fname)
+    base = degrade_filename(trim_serials(base))
+    return (path, base, extn)
+
 def gallery():
     uri = os.environ["REQUEST_URI"]
     if not uri.endswith('/'):
         send_redirect(uri + '/')
         return
-    trimmed_dir_fname = os.environ["PATH_INFO"][2:]
+    trimmed_dir_fname = os.environ["PATH_INFO"][1:]
     dir_fname = infer_serial_prefix(trimmed_dir_fname)
     img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
     fnames = os.listdir(img_dir)
@@ -344,14 +385,13 @@ def gallery():
 
     imgurls = []
     for fname in fnames:
-        (fnamebase, extn) = os.path.splitext(fname)
+        (scratch, fnamebase, extn) = decompose_image_path(fname)
         if extn.lower() not in img_extns: continue
         if fnamebase.startswith('.'): continue
         pageurl = ""
-        trimmed = degrade_filename(trim_serials(fnamebase))
-        imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, trimmed)
+        imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, fnamebase)
         smallurl = imgbase + "_" + small_size + extn
-        medurl = imgbase + "_" + med_size + extn
+        medurl = imgbase + '.html'
         bigurl = imgbase + "_" + big_size + extn
         thumburl = imgbase + "_" + thumb_size + extn
         exifurl = imgbase + extn + "_exif.html"
