@@ -127,24 +127,23 @@ a
 
 <div id="directory_section">
 
-#for $dir, $name, $preview, $preview_height, $preview_width in $subdirs
-#set $remain=$lhs_width-$preview_width
+#for $dir, $name, $preview in $subdirs
+#set $remain=$lhs_width-100
 <table width="$lhs_width" style="display: inline">
 <tr>
 #if $preview
-<td width="$preview_width">
-<a href="$dir"><img src="$preview" border="2" align="middle" height="$preview_height" width="$preview_width"></a>
+<td width="100">
+<a href="$dir"><img src="$preview" border="2" align="middle"></a>
 </td>
 #if not $side_by_side
 </tr>
 #end if
-
 #end if
 #if not $side_by_side
 <tr>
 #set $name_width=$lhs_width
 #else
-#set $name_width=$lhs_width-$preview_width
+#set $name_width=$lhs_width-100
 #end if
 <td align="left" width="$name_width">
 <a href="$dir">$name</a>
@@ -154,11 +153,11 @@ a
 </div>
 
 <div id="image_section">
-#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $thumb_height, $thumb_width, $caption in $imgurls:
+#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $caption in $imgurls:
 <table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="220">
-<a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle" height="$thumb_height" width="$thumb_width"></a><br>
+<a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle"></a><br>
 <a href="$bigurl">$caption</a>
 #if $show_exif == 1
 <br><a class="exiflink" href="$exifurl">exif</a><br>
