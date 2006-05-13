@@ -21,8 +21,18 @@ big_size = "full"
 thumb_size = "200"
 preview_size = "100"
 
-cache_dependencies = [gallery_config.__file__, 'cache_sentinel']
-scriptfiles = [gallery_config.__file__, 'browse.tmpl', 'exif.tmpl' ]
+def scriptdir(fname):
+    return os.path.join(os.path.split(__file__)[0], fname)
+
+cache_dependencies = [
+    gallery_config.__file__,
+    scriptdir('cache_sentinel')
+]
+scriptfiles = [
+    gallery_config.__file__,
+    scriptdir('browse.tmpl'),
+    scriptdir('exif.tmpl')
+]
 
 img_extns = ['.jpeg', '.jpg']
 
@@ -60,7 +70,7 @@ def photopage():
     a['gallery_title'] =  gallery_config.short_name
     a['photo_title'] = format_fn_for_display(trim_serials(base))
     a['description'] = description
-    template = Template(file='photopage.tmpl', searchList=[a])
+    template = Template(file=scriptdir('photopage.tmpl'), searchList=[a])
     sys.stdout.write(str(template))
 
 def path_to_url(path, size = None, ext = None):
@@ -174,7 +184,7 @@ def exifpage():
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
 
     a = {}
-    template = Template(file='exif.tmpl', searchList=[a])
+    template = Template(file=scriptdir('exif.tmpl'), searchList=[a])
     #ambiguate this name?
     a['title'] = os.path.basename(img_fname)
 
@@ -429,7 +439,7 @@ def gallery():
     breadcrumbs[-1][0] = 0;
 
     a = {}
-    template = Template(file='browse.tmpl', searchList=[a])
+    template = Template(file=scriptdir('browse.tmpl'), searchList=[a])
     leafdir = os.path.split(dir_fname[:-1])[1]
     use_wn = 0
     if len(leafdir) == 0:
