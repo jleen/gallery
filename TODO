@@ -1,9 +1,7 @@
 smart symlinks
 _default size
-info page for photos, with smaller thumbnails
 whatsnew.html refinements
 better caching
-prefill the cache?
 better error handling
 Move the whatsnew.html and whatsnew_all.html to the cache?
 Add a .dirinfo to whatsnewgen.pl to override ctime
