@@ -1,3 +1,4 @@
+# vim:sw=4:ts=4
 import cgi
 import os
 import re
@@ -55,6 +56,25 @@ def photopage():
     a['gallery_title'] =  gallery_config.short_name
     a['photo_title'] = format_fn_for_display(trim_serials(base))
     a['description'] = description
+    a['exifurl'] = path_to_url(img_fname) + "_exif.html"
+    a['show_exif'] = gallery_config.show_exif;
+    
+    #A set of breadcrumbs that link back to the containing directory.
+    img_dest_path = os.path.realpath(img_fname)
+    dir_dest_path = os.path.dirname(img_dest_path)
+    #hacky way to prune off the leading path.  The +1 gets rid of the
+    #trailing / to make the path relative.  Also, I need to use realpath to
+    #canonicalize both sides of this heinous equation.
+    pruned_dest = dir_dest_path[len(os.path.realpath(gallery_config.img_prefix)) + 1 :]
+    if os.path.islink(img_fname):
+        a['from_caption'] = format_fn_for_display(trim_serials(os.path.basename(dir_dest_path)))
+        a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
+
+
+    breadcrumbs = breadcrumbs_for_path("./" + pruned_dest, 0)
+    a['breadcrumbs'] = breadcrumbs
+
+
     template = Template(file=scriptdir('photopage.tmpl'), searchList=[a])
     sys.stdout.write(str(template))
 
@@ -185,16 +205,7 @@ def gallery():
         else:
             subdirs.append((dir, display, None, 0, 0))
 
-    breadcrumbs = []
-    dirname = ''
-    for crumb in ('./' + dir_fname[:-1]).split(os.path.sep):
-        if len(crumb) < 1: continue
-        dirname = os.path.join(dirname, crumb)
-        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
-        display = format_fn_for_display(trim_serials(crumb))
-        breadcrumbs.append([1, dir, display])
-    # The last breadcrumb should not be a link
-    breadcrumbs[-1][0] = 0;
+    breadcrumbs = breadcrumbs_for_path('./' + dir_fname[:-1], 0)
 
     a = {}
     template = Template(file=scriptdir('browse.tmpl'), searchList=[a])

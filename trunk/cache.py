@@ -1,3 +1,4 @@
+# vim:sw=4:ts=4
 import gallery_config
 
 import os
