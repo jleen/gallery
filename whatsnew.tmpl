@@ -1,0 +1,82 @@
+## vim:sw=4:ts=4
+<html>
+<style>
+body
+{
+    font-family: Georgia, Times New Roman, Times, serif;
+    font-size: 90%;
+    color: #333333;
+    background-color: #eeeeee;
+}
+a
+{
+    text-decoration: none;
+    color: #333399;
+}
+.datebox
+{
+}
+.datebox h3
+{
+    font-size: medium;
+    font-weight: 900;
+    margin-bottom: 0;
+}
+.datecontents
+{
+    width: 90%;
+    margin-left:5%;
+    margin-right:5%;
+}
+.datetitles
+{
+    width: 90%;
+    margin-left:3%;
+    font-size: larger;
+    font-weight: bold;
+    margin-bottom:.5em;
+    margin-top:1em;
+}
+.datecomment
+{
+    margin-left:6%;
+    margin-right:5%;
+    margin-bottom: 1.5em;
+}
+</style>
+<head><title>$title</title></head>
+<body>
+#set lastDate = ""
+#set firstTime = 1
+<a href="."><b>$gallerytitle</b></a>
+&gt;&gt;
+<b>$title</b>
+
+#if $nextLinkTitle
+<br><br><i>(<a href="$nextLink">$nextLinkTitle)</a></i>
+#end if
+
+<br><br>
+#for $entry in $updates
+#if $lastDate != $entry['date']
+#if not $firstTime
+    </div> <!--end datebox-->
+#else
+#set firstTime = 0
+#end if 
+    <div class="datebox"><hr><h3>$entry['date']</h3>
+#end if
+#set lastDate = $entry['date']
+<div class="datetitles">
+#for $dirname, $url in $entry['dir']
+<a href="$url">$dirname</a><br>
+#end for
+</div> <!--end datetitles-->
+<div class="datecomment">
+$entry['desc']
+</div> <!--end datecomment-->
+#else
+    </div>
+#end for
+</body>
+</html>

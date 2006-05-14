@@ -9,6 +9,7 @@ import time
 from cache import *
 from exif import *
 from paths import *
+import whatsnew
 
 import EXIF
 from StringIO import StringIO
@@ -29,9 +30,9 @@ def handler():
     extn = os.path.splitext(reqpath)[1]
     if os.path.split(reqpath)[1] == 'index.html': return gallery()
     elif os.path.split(reqpath)[1] == 'whatsnew.html':
-        return spewhtml(os.path.join(gallery_config.img_prefix, 'whatsnew.html'))
+        return whatsnew.spew_recent_whats_new()
     elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
-        return spewhtml(os.path.join(gallery_config.img_prefix, 'whatsnew_all.html'))
+        return whatsnew.spew_all_whats_new()
     elif extn.lower() in img_extns: return photo()
     elif reqpath.lower().endswith('_exif.html'): return exifpage()
     elif extn == '.html': return photopage()
@@ -131,6 +132,7 @@ def spewhtml(fname):
         return
     spewfile(fname)
 
+
 def spewfile(fname):
     fil = file(fname, 'rb')
     sys.stdout.write(fil.read())
@@ -215,11 +217,15 @@ def gallery():
         leafdir = gallery_config.short_name
         #set up the what's new link for the root.
         wn_txt_path = os.path.join(gallery_config.img_prefix, "whatsnew.txt")
+        wn_updates = None
         if os.path.exists(wn_txt_path):
+            wn_updates = whatsnew.read_update_entries(whatsnew.whatsnew_src_file())
+        if len(wn_updates) > 0:
             use_wn = 1
     if use_wn:
-        wn_mtime = time.localtime(os.path.getmtime(os.path.join(gallery_config.img_prefix, "whatsnew.txt")))
-        a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
+        wn_mtime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
+        a['whatsnew_name'] = "What's New (updated " +  wn_mtime + ")"
+        #a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
         a['whatsnew_url'] = os.path.join(gallery_config.browse_prefix, "whatsnew.html")
     else:
         a['whatsnew_name'] = None
