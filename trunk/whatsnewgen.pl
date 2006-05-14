@@ -11,7 +11,9 @@ my $targetDir;
 
 # Process gallery_config.py
 # Yes, I know I'm a terrible person
-open CONFIG, "gallery_config.py";
+$configPath = shift;
+die "usage: whatsnewgen.pl [-c] config\n" unless $configPath;
+open CONFIG, $configPath or die "Couldn't open $configPath: $!\n";
 while( <CONFIG> )
 {
   if( m/img_prefix\s+=\s+"([^"]+)"/i )
