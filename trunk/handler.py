@@ -205,7 +205,7 @@ def gallery():
             rel_img_path = os.path.join(dir_fname, fname, preview_fname)
             subdirs.append((dir, display, preview))
         else:
-            subdirs.append((dir, display, None, 0, 0))
+            subdirs.append((dir, display, None))
 
     breadcrumbs = breadcrumbs_for_path('./' + dir_fname[:-1], 0)
 
