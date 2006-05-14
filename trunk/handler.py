@@ -26,6 +26,7 @@ preview_size = "100"
 
 
 def handler():
+    os.umask(0002)
     reqpath = os.environ["PATH_INFO"].lower()
     extn = os.path.splitext(reqpath)[1]
     if os.path.split(reqpath)[1] == 'index.html': return gallery()
