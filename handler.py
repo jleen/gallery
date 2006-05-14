@@ -60,18 +60,18 @@ def photopage():
     a['show_exif'] = gallery_config.show_exif;
     
     #A set of breadcrumbs that link back to the containing directory.
-    img_dest_path = os.path.realpath(img_fname)
-    dir_dest_path = os.path.dirname(img_dest_path)
-    #hacky way to prune off the leading path.  The +1 gets rid of the
-    #trailing / to make the path relative.  Also, I need to use realpath to
-    #canonicalize both sides of this heinous equation.
-    pruned_dest = dir_dest_path[len(os.path.realpath(gallery_config.img_prefix)) + 1 :]
     if os.path.islink(img_fname):
+        img_dest_path = os.path.realpath(img_fname)
+        dir_dest_path = os.path.dirname(img_dest_path)
+        #hacky way to prune off the leading path.  The +1 gets rid of the
+        #trailing / to make the path relative.  Also, I need to use realpath to
+        #canonicalize both sides of this heinous equation.
+        pruned_dest = dir_dest_path[len(os.path.realpath(gallery_config.img_prefix)) + 1 :]
         a['from_caption'] = format_fn_for_display(trim_serials(os.path.basename(dir_dest_path)))
         a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
 
 
-    breadcrumbs = breadcrumbs_for_path("./" + pruned_dest, 0)
+    breadcrumbs = breadcrumbs_for_path("./" + dir, 0)
     a['breadcrumbs'] = breadcrumbs
 
 
