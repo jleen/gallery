@@ -1,4 +1,5 @@
 #!/usr/bin/env python2.2
+# vim:sw=4:ts=4
 
 
 import gallery_engine

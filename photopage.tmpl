@@ -1,3 +1,4 @@
+## vim:sw=4:ts=4
 <style>
 body
 {
@@ -15,6 +16,17 @@ a
     text-decoration: none;
     color: #333399;
 }
+.phototitle
+{
+    text-decoration: none;
+    font-size: 130%;
+}
+.fromlink
+{
+    text-decoration: none;
+    font-size: 75%;
+    color: #333399;
+}
 .exiflink
 {
     font-size: 55%;
@@ -22,8 +34,28 @@ a
 </style>
 
 <title>$gallery_title: $photo_title</title>
-
+#if $varExists('breadcrumbs')
+<p>
+#set $first = 1
+#for $is_link, $dir, $name in $breadcrumbs
+#if $first == 0
+ &gt;&gt; 
+#end if
+<b><a href="$dir">$name</a></b>
+#set $first = 0
+#end for
+</p>
+#end if
 <div align="center">
-<a href="$full_img_url"><img src="$framed_img_url" border="2" vspace="10" align="middle"></a><br>
-$description
+<a href="$full_img_url"><img src="$framed_img_url" border="2" vspace="10" align="middle"></a>
+<div class="phototitle"><b>$photo_title</b></div><br>
+#if $varExists('from_url')
+From <a class="fromlink" href="$from_url">$from_caption</a><br>
+#end if
+#if $description
+$description<br>
+#end if
+#if $show_exif == 1
+<br><a class="exiflink" href="$exifurl">exif</a><br>
+#end if
 </div>

@@ -5,6 +5,19 @@ import os
 
 img_extns = ['.jpeg', '.jpg', '.JPG']
 
+def breadcrumbs_for_path(dir_fname, final_is_link):
+    breadcrumbs = []
+    dirname = ''
+    for crumb in (dir_fname).split(os.path.sep):
+        if len(crumb) < 1: continue
+        dirname = os.path.join(dirname, crumb)
+        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
+        display = format_fn_for_display(trim_serials(crumb))
+        breadcrumbs.append([1, dir, display])
+    # The last breadcrumb might not be a link
+    breadcrumbs[-1][0] = final_is_link;
+    return breadcrumbs
+
 def path_to_url(path, size = None, ext = None):
     rel_path = path[len(gallery_config.img_prefix):]
     url = trim_serials(os.path.join(gallery_config.browse_prefix, rel_path))

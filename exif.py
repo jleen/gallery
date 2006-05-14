@@ -1,3 +1,5 @@
+# vim:sw=4:ts=4
+import EXIF
 def copyIfPresent(dst, dstKey, src, srcKey):
     if src.has_key(srcKey):
         dst[dstKey] = src[srcKey]
@@ -52,3 +54,4 @@ def exif_tags(img_fname):
         processedTags['FNumber'] = fractionToDecimal(tags['EXIF FNumber'].printable)
     if tags.has_key('EXIF FocalLength'):
         processedTags['Focal Length'] = fractionToDecimal(tags['EXIF FocalLength'].printable)
+    return processedTags
