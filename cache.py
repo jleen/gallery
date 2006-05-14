@@ -8,6 +8,7 @@ import time
 import sys
 from PIL import Image
 from StringIO import StringIO
+import EXIF
 
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
