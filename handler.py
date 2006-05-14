@@ -56,7 +56,7 @@ def photopage():
     a['gallery_title'] =  gallery_config.short_name
     a['photo_title'] = format_fn_for_display(trim_serials(base))
     a['description'] = description
-    a['exifurl'] = path_to_url(img_fname) + "_exif.html"
+    a['exifdata'] = exif_tags(img_fname)
     a['show_exif'] = gallery_config.show_exif;
     
     #A set of breadcrumbs that link back to the containing directory.
