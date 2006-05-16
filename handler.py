@@ -132,25 +132,25 @@ def spewhtml(abs):
         return
     spewfile(abs)
 
-
 def spewfile(abs):
     fil = file(abs, 'rb')
     sys.stdout.write(fil.read())
     fil.close()
 
-def first_image_fname(dir_fname):
-    img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
-    fnames = os.listdir(img_dir)
-    fnames.sort()
-    for fname in fnames:
-        (base, extn) = os.path.splitext(fname)
-        if extn.lower() not in img_extns: continue
+def first_image_in_dir(rel_dir):
+    abs_dir = rel_to_abs(rel_dir)
+    items = os.listdir(abs_dir)
+    items.sort()
+    for dir_item in items:
+        (base, ext) = os.path.splitext(dir_item)
+        if ext.lower() not in img_extns: continue
         if base.startswith('.'): continue
-        return fname
+        return dir_item
     # Got this far and didn't find an image.  Let's look in subdirs next.
-    for fname in fnames:
-        if os.path.isdir(os.path.join(img_dir, fname)):
-            return os.path.join(fname, first_image_fname(os.path.join(dir_fname, fname)))
+    for dir_item in items:
+        if os.path.isdir(os.path.join(abs_dir, dir_item)):
+            recurse = first_image_in_dir(os.path.join(rel_dir, dir_item))
+            return os.path.join(dir_item, recurse)
 
 def send_redirect(new_url):
     sys.stdout.write("Location: http://www.saturnvalley.org" + new_url + "\n\n")
@@ -165,61 +165,57 @@ def gallery():
     ensure_trailing_slash()
 
     url_dir = os.environ["PATH_INFO"][1:]
-    dir_fname = url_to_rel(url_dir)
-    img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
-    fnames = os.listdir(img_dir)
-    fnames.sort()
+    rel_dir = url_to_rel(url_dir)
+    abs_dir = rel_to_abs(rel_dir)
+    items = os.listdir(abs_dir)
+    items.sort()
 
-    fs_img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
-    fs_img_files = [ os.path.join(fs_img_dir, fn) for fn in fnames ]
+    abs_images = [ os.path.join(abs_dir, item) for item in items ]
     if check_client_cache(
             'text/html; charset="UTF-8"',
-            max_mtime_for_files([fs_img_dir] + fs_img_files)):
+            max_mtime_for_files([abs_dir] + abs_images)):
         return
 
-    imgurls = []
-    for fname in fnames:
-        (scratch, fnamebase, extn) = split_path_ext(fname)
-        if extn.lower() not in img_extns: continue
-        if fnamebase.startswith('.'): continue
-        pageurl = ""
-        imgbase = os.path.join(gallery_config.browse_prefix, url_dir, fnamebase)
-        smallurl = imgbase + "_" + small_size + extn
-        medurl = imgbase + '.html'
-        bigurl = imgbase + "_" + big_size + extn
-        thumburl = imgbase + "_" + thumb_size + extn
-        exifurl = imgbase + extn + "_exif.html"
-        caption = format_for_display(fnamebase)
-        rel_img_path = os.path.join(dir_fname, fname)
-        imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl, caption))
+    image_records = []
+    for item in items:
+        (scratch, base, ext) = split_path_ext(item)
+        if ext.lower() not in img_extns: continue
+        if base.startswith('.'): continue
 
-    subdirs = []
-    for fname in fnames:
-        dirname = os.path.join(dir_fname, fname)
-        if not os.path.isdir(gallery_config.img_prefix + dirname): continue
-        dir = rel_to_url(dirname, trailing_slash = 1)
-        display = format_for_display(fname)
-        # (fnamebase, extn) = os.path.splitext(fname)
-        preview_fname = '.preview.jpeg';
-        if not os.path.exists(os.path.join(gallery_config.img_prefix, dir_fname, fname, preview_fname)):
-            preview_fname = first_image_fname(os.path.join(dir_fname, fname))
-        if preview_fname:
-            (preview_base, preview_extn) = os.path.splitext(preview_fname)
-            preview = os.path.join(dir, preview_base + '_' + preview_size + preview_extn)
-            rel_img_path = os.path.join(dir_fname, fname, preview_fname)
-            subdirs.append((dir, display, preview))
+        rel_image = os.path.join(rel_dir, item)
+        url_medium = rel_to_url(rel_image, ext = 'html')
+        url_big = rel_to_url(rel_image, size = big_size)
+        url_thumb = rel_to_url(rel_image, size = thumb_size)
+        caption = format_for_display(item)
+        image_records.append((url_medium, url_big, url_thumb, caption))
+
+    subdir_records = []
+    for item in items:
+        rel_subdir = os.path.join(rel_dir, item)
+        if not os.path.isdir(rel_to_abs(rel_subdir)): continue
+        url_subdir = rel_to_url(rel_subdir, trailing_slash = 1)
+        caption = format_for_display(item)
+        rel_preview = os.path.join(rel_subdir, '.preview.jpeg')
+        if not os.path.exists(rel_to_abs(rel_preview)):
+            rel_preview = os.path.join(
+                    url_subdir,
+                    first_image_in_dir(rel_subdir))
+        if rel_preview:
+            (preview_base, preview_ext) = os.path.splitext(rel_preview)
+            preview = os.path.join(url_subdir, rel_to_url(preview_base + '_' + preview_size + preview_ext))
+            subdir_records.append((url_subdir, caption, preview))
         else:
-            subdirs.append((dir, display, None))
+            subdir_records.append((url_subdir, caption, None))
 
-    breadcrumbs = breadcrumbs_for_path('./' + dir_fname[:-1], 0)
+    breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0)
 
     a = {}
     template = Template(file=scriptdir('browse.tmpl'), searchList=[a])
-    leafdir = os.path.split(dir_fname[:-1])[1]
+    leafdir = os.path.split(rel_dir[:-1])[1]
     use_wn = 0
     if len(leafdir) == 0:
         leafdir = gallery_config.short_name
-        #set up the what's new link for the root.
+        # Set up the What's New link for the root.
         wn_txt_path = os.path.join(gallery_config.img_prefix, "whatsnew.txt")
         wn_updates = None
         if os.path.exists(wn_txt_path):
@@ -229,7 +225,6 @@ def gallery():
     if use_wn:
         wn_mtime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
         a['whatsnew_name'] = "What's New (updated " +  wn_mtime + ")"
-        #a['whatsnew_name'] = "What's New (updated " + time.strftime('%B %d', wn_mtime) + ")"
         a['whatsnew_url'] = os.path.join(gallery_config.browse_prefix, "whatsnew.html")
     else:
         a['whatsnew_name'] = None
@@ -238,9 +233,8 @@ def gallery():
     a['title'] = gallery_config.long_name
     a['breadcrumbs'] = breadcrumbs
     a['thisdir'] = format_for_display(leafdir)
-    a['imgurls'] = imgurls
-    a['subdirs'] = subdirs
-    a['show_exif'] = gallery_config.show_exif
+    a['imgurls'] = image_records
+    a['subdirs'] = subdir_records
 
     sys.stdout.write(str(template))
     return
