@@ -59,7 +59,6 @@ def photopage():
     a['photo_title'] = format_for_display(base)
     a['description'] = description
     a['exifdata'] = exif_tags(abs_image)
-    a['show_exif'] = gallery_config.show_exif;
     
     # A set of breadcrumbs that link back to the containing directory.
     if os.path.islink(abs_image):
