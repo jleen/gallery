@@ -52,7 +52,7 @@ def read_update_entries(fname):
                     else:
                         idx = idx + 1
                     dir = dir[idx:]
-                    dir = paths.format_fn_for_display(paths.trim_serials(dir))
+                    dir = paths.format_for_display(dir)
                     if is_movie_dir:
                         dir += " - Movies"
                     current_entry['dir'].append((dir, url))

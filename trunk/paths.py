@@ -11,21 +11,35 @@ def breadcrumbs_for_path(dir_fname, final_is_link):
     for crumb in (dir_fname).split(os.path.sep):
         if len(crumb) < 1: continue
         dirname = os.path.join(dirname, crumb)
-        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
-        display = format_fn_for_display(trim_serials(crumb))
+        dir = rel_to_url(dirname, trailing_slash = 1)
+        display = format_for_display(crumb)
         breadcrumbs.append([1, dir, display])
     # The last breadcrumb might not be a link
     breadcrumbs[-1][0] = final_is_link;
     return breadcrumbs
 
-def path_to_url(path, size = None, ext = None):
-    rel_path = path[len(gallery_config.img_prefix):]
-    url = trim_serials(os.path.join(gallery_config.browse_prefix, rel_path))
+def rel_to_abs(rel):
+    return os.path.join(gallery_config.img_prefix, rel)
+
+def abs_to_rel(abs):
+    return abs[len(gallery_config.img_prefix):]
+
+def abs_to_url(abs, size = None, ext = None):
+    return rel_to_url(
+            abs_to_rel(abs),
+            size = size,
+            ext = ext,
+            trailing_slash = 0)
+
+def rel_to_url(rel, size = None, ext = None, trailing_slash = 0):
+    url = trim_serials(os.path.join(gallery_config.browse_prefix, rel))
     (base, url_ext) = os.path.splitext(url)
     if size != None:
         base = base + "_" + size
     if ext != None:
         url_ext = "." + ext
+    if trailing_slash:
+        url_ext = os.path.join(url_ext, '')
     return base + url_ext
 
 def infer_image_path(base):
@@ -48,13 +62,21 @@ def degrade_filename(fn):
     fn = fn.replace('\xc3\xb6', 'o')
     return fn
 
-def infer_serial_prefix(fname, infer_suffix = 0):
-    fname = os.path.join(gallery_config.img_prefix, fname)
+def url_to_rel(url, infer_suffix = 0):
+    fname = os.path.join(gallery_config.img_prefix, url)
+    
+    # Handle the trivial case first
     if os.path.exists(fname): return fname[len(gallery_config.img_prefix):]
+
     (dir, basename) = os.path.split(fname)
+
+    # Recursively try to disambiguate the parent directory
     if not os.path.exists(dir):
-        newdir = infer_serial_prefix(dir[len(gallery_config.img_prefix):])
+        newdir = url_to_rel(dir[len(gallery_config.img_prefix):])
         dir = os.path.join(gallery_config.img_prefix, newdir)
+
+    # By induction, all but the leaf are now unambiguous.  So let's
+    # disambiguate the leaf within the parent.
     candidates = os.listdir(dir)
     r = '^(\d+_)?' + ambiguate_filename(re.escape(basename))
     if infer_suffix:
@@ -69,10 +91,11 @@ def infer_serial_prefix(fname, infer_suffix = 0):
 
 trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
 
-def trim_serials(fn):
-    return trim_serials_regexp.sub('', fn)
+def trim_serials(path):
+    return trim_serials_regexp.sub('', path)
 
-def format_fn_for_display(fn):
+def format_for_display(fn):
+    fn = trim_serials(fn)
     if fn == '.': return gallery_config.short_name
     if fn.startswith('DSC_'): return ''
     fn = fn.replace('_', ' ')
