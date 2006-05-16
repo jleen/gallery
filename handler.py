@@ -42,7 +42,7 @@ def handler():
 def photopage():
     fname = os.environ["PATH_INFO"][1:]
     (dir, base, extn) = decompose_image_path(fname)
-    img_fname = os.path.join(gallery_config.img_prefix, infer_serial_prefix(os.path.join(dir, base), infer_suffix = 1))
+    img_fname = os.path.join(gallery_config.img_prefix, url_to_rel(os.path.join(dir, base), infer_suffix = 1))
     image_mtime = lmtime(img_fname)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
     infofile = os.path.splitext(img_fname)[0] + '.info'
@@ -53,10 +53,10 @@ def photopage():
                 description = line[len('Description: '):]
 
     a = {}
-    a['framed_img_url'] = path_to_url(img_fname, size = "700")
-    a['full_img_url'] = path_to_url(img_fname, size = "full")
+    a['framed_img_url'] = abs_to_url(img_fname, size = "700")
+    a['full_img_url'] = abs_to_url(img_fname, size = "full")
     a['gallery_title'] =  gallery_config.short_name
-    a['photo_title'] = format_fn_for_display(trim_serials(base))
+    a['photo_title'] = format_for_display(base)
     a['description'] = description
     a['exifdata'] = exif_tags(img_fname)
     a['show_exif'] = gallery_config.show_exif;
@@ -69,7 +69,7 @@ def photopage():
         #trailing / to make the path relative.  Also, I need to use realpath to
         #canonicalize both sides of this heinous equation.
         pruned_dest = dir_dest_path[len(os.path.realpath(gallery_config.img_prefix)) + 1 :]
-        a['from_caption'] = format_fn_for_display(trim_serials(os.path.basename(dir_dest_path)))
+        a['from_caption'] = format_for_display(os.path.basename(dir_dest_path))
         a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
 
 
@@ -84,7 +84,7 @@ def exifpage():
     fname = os.environ["PATH_INFO"][1:]
     img_index = fname.rfind('_')
     img_path = fname[:img_index]
-    img_fname = os.path.join(gallery_config.img_prefix, infer_serial_prefix(img_path))
+    img_fname = os.path.join(gallery_config.img_prefix, url_to_rel(img_path))
 
     image_mtime = lmtime(img_fname)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
@@ -108,7 +108,7 @@ def photo():
     base = fname[:size_index]
     size = fname[size_index+1:extn_index]
     extn = fname[extn_index+1:]
-    img_fname = infer_serial_prefix(base + '.' + extn)
+    img_fname = url_to_rel(base + '.' + extn)
     image_mtime = lmtime(os.path.join(gallery_config.img_prefix, img_fname))
     if check_client_cache("image/jpeg", image_mtime): return
     if size == "full":
@@ -156,13 +156,17 @@ def first_image_fname(dir_fname):
 def send_redirect(new_url):
     sys.stdout.write("Location: http://www.saturnvalley.org" + new_url + "\n\n")
 
-def gallery():
+def ensure_trailing_slash():
     uri = os.environ["REQUEST_URI"]
     if not uri.endswith('/'):
         send_redirect(uri + '/')
         return
-    trimmed_dir_fname = os.environ["PATH_INFO"][1:]
-    dir_fname = infer_serial_prefix(trimmed_dir_fname)
+
+def gallery():
+    ensure_trailing_slash()
+
+    url_dir = os.environ["PATH_INFO"][1:]
+    dir_fname = url_to_rel(url_dir)
     img_dir = os.path.join(gallery_config.img_prefix, dir_fname)
     fnames = os.listdir(img_dir)
     fnames.sort()
@@ -180,13 +184,13 @@ def gallery():
         if extn.lower() not in img_extns: continue
         if fnamebase.startswith('.'): continue
         pageurl = ""
-        imgbase = os.path.join(gallery_config.browse_prefix, trimmed_dir_fname, fnamebase)
+        imgbase = os.path.join(gallery_config.browse_prefix, url_dir, fnamebase)
         smallurl = imgbase + "_" + small_size + extn
         medurl = imgbase + '.html'
         bigurl = imgbase + "_" + big_size + extn
         thumburl = imgbase + "_" + thumb_size + extn
         exifurl = imgbase + extn + "_exif.html"
-        caption = format_fn_for_display(trim_serials(fnamebase))
+        caption = format_for_display(fnamebase)
         rel_img_path = os.path.join(dir_fname, fname)
         imgurls.append((smallurl, medurl, bigurl, thumburl, exifurl, caption))
 
@@ -194,8 +198,8 @@ def gallery():
     for fname in fnames:
         dirname = os.path.join(dir_fname, fname)
         if not os.path.isdir(gallery_config.img_prefix + dirname): continue
-        dir = os.path.join(gallery_config.browse_prefix, trim_serials(dirname), '')
-        display = format_fn_for_display(trim_serials(fname))
+        dir = rel_to_url(dirname, trailing_slash = 1)
+        display = format_for_display(fname)
         # (fnamebase, extn) = os.path.splitext(fname)
         preview_fname = '.preview.jpeg';
         if not os.path.exists(os.path.join(gallery_config.img_prefix, dir_fname, fname, preview_fname)):
@@ -234,7 +238,7 @@ def gallery():
 
     a['title'] = gallery_config.long_name
     a['breadcrumbs'] = breadcrumbs
-    a['thisdir'] = format_fn_for_display(trim_serials(leafdir))
+    a['thisdir'] = format_for_display(leafdir)
     a['imgurls'] = imgurls
     a['subdirs'] = subdirs
     a['show_exif'] = gallery_config.show_exif
