@@ -154,15 +154,12 @@ a
 </div>
 
 <div id="image_section">
-#for $smallurl, $medurl, $bigurl, $thumburl, $exifurl, $caption in $imgurls:
+#for $medurl, $bigurl, $thumburl, $caption in $imgurls:
 <table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="220">
 <a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle"></a><br>
 <a href="$bigurl">$caption</a>
-#if 0
-<br><a class="exiflink" href="$exifurl">exif</a><br>
-#end if
 </td>
 </tr>
 </table>
