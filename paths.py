@@ -62,6 +62,9 @@ def degrade_filename(fn):
     fn = fn.replace('\xc3\xb6', 'o')
     return fn
 
+def url_to_abs(url, infer_suffix = 0):
+    return rel_to_abs(url_to_rel(url, infer_suffix = infer_suffix))
+
 def url_to_rel(url, infer_suffix = 0):
     fname = os.path.join(gallery_config.img_prefix, url)
     
@@ -105,7 +108,7 @@ def format_for_display(fn):
     fn = fn.replace('{a:}', '\xc3\xa4')
     return fn
 
-def decompose_image_path(path):
+def split_path_ext(path):
     (path, fname) = os.path.split(path)
     (base, extn) = os.path.splitext(fname)
     base = degrade_filename(trim_serials(base))
