@@ -40,61 +40,60 @@ def handler():
     else: return gallery()
 
 def photopage():
-    fname = os.environ["PATH_INFO"][1:]
-    (dir, base, extn) = decompose_image_path(fname)
-    img_fname = os.path.join(gallery_config.img_prefix, url_to_rel(os.path.join(dir, base), infer_suffix = 1))
-    image_mtime = lmtime(img_fname)
+    url = os.environ["PATH_INFO"][1:]
+    (url_dir, base, extn) = split_path_ext(url)
+    abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
+    image_mtime = lmtime(abs_image)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
-    infofile = os.path.splitext(img_fname)[0] + '.info'
+    abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
-    if os.path.exists(infofile):
-        for line in file(infofile):
+    if os.path.exists(abs_info):
+        for line in file(abs_info):
             if line.startswith('Description: '):
                 description = line[len('Description: '):]
 
     a = {}
-    a['framed_img_url'] = abs_to_url(img_fname, size = "700")
-    a['full_img_url'] = abs_to_url(img_fname, size = "full")
+    a['framed_img_url'] = abs_to_url(abs_image, size = "700")
+    a['full_img_url'] = abs_to_url(abs_image, size = "full")
     a['gallery_title'] =  gallery_config.short_name
     a['photo_title'] = format_for_display(base)
     a['description'] = description
-    a['exifdata'] = exif_tags(img_fname)
+    a['exifdata'] = exif_tags(abs_image)
     a['show_exif'] = gallery_config.show_exif;
     
-    #A set of breadcrumbs that link back to the containing directory.
-    if os.path.islink(img_fname):
-        img_dest_path = os.path.realpath(img_fname)
+    # A set of breadcrumbs that link back to the containing directory.
+    if os.path.islink(abs_image):
+        img_dest_path = os.path.realpath(abs_image)
         dir_dest_path = os.path.dirname(img_dest_path)
-        #hacky way to prune off the leading path.  The +1 gets rid of the
-        #trailing / to make the path relative.  Also, I need to use realpath to
-        #canonicalize both sides of this heinous equation.
-        pruned_dest = dir_dest_path[len(os.path.realpath(gallery_config.img_prefix)) + 1 :]
+        # Hacky way to prune off the leading path.  The +1 gets rid of the
+        # trailing / to make the path relative.  Also, I need to use realpath
+        # to canonicalize both sides of this heinous equation.
+        pruned_dest = dir_dest_path[len(os.path.realpath(
+            gallery_config.img_prefix)) + 1 :]
         a['from_caption'] = format_for_display(os.path.basename(dir_dest_path))
         a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
 
-
-    breadcrumbs = breadcrumbs_for_path("./" + dir, 0)
+    breadcrumbs = breadcrumbs_for_path("./" + url_dir, 0)
     a['breadcrumbs'] = breadcrumbs
-
 
     template = Template(file=scriptdir('photopage.tmpl'), searchList=[a])
     sys.stdout.write(str(template))
 
 def exifpage():
-    fname = os.environ["PATH_INFO"][1:]
-    img_index = fname.rfind('_')
-    img_path = fname[:img_index]
-    img_fname = os.path.join(gallery_config.img_prefix, url_to_rel(img_path))
+    url = os.environ["PATH_INFO"][1:]
+    img_index = url.rfind('_')
+    img_path = url[:img_index]
+    abs_image = url_to_abs(img_path)
 
-    image_mtime = lmtime(img_fname)
+    image_mtime = lmtime(abs_image)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
 
     a = {}
     template = Template(file=scriptdir('exif.tmpl'), searchList=[a])
     #ambiguate this name?
-    a['title'] = os.path.basename(img_fname)
+    a['title'] = os.path.basename(abs_image)
 
-    processedTags = exif_tags(img_fname)
+    processedTags = exif_tags(abs_image)
 
     a['data'] = processedTags
 
@@ -102,40 +101,40 @@ def exifpage():
     return
     
 def photo():
-    fname = os.environ["PATH_INFO"][1:]
-    size_index = fname.rfind('_')
-    extn_index = fname.rfind('.')
-    base = fname[:size_index]
-    size = fname[size_index+1:extn_index]
-    extn = fname[extn_index+1:]
-    img_fname = url_to_rel(base + '.' + extn)
-    image_mtime = lmtime(os.path.join(gallery_config.img_prefix, img_fname))
+    url = os.environ["PATH_INFO"][1:]
+    size_index = url.rfind('_')
+    ext_index = url.rfind('.')
+    base = url[:size_index]
+    size = url[size_index+1:ext_index]
+    ext = url[ext_index+1:]
+    rel_image = url_to_rel(base + '.' + ext)
+    image_mtime = lmtime(rel_to_abs(rel_image))
     if check_client_cache("image/jpeg", image_mtime): return
     if size == "full":
-        return spewfile(gallery_config.img_prefix + img_fname)
+        return spewfile(rel_to_abs(rel_image))
     else:
         size = int(size)
-        return spewphoto(img_fname, size)
+        return spewphoto(rel_image, size)
 
-def spewphoto(fname, size):
-    cachedir = "%s%d" % (gallery_config.cache_prefix, size)
-    cachefile = cachedir + '/' + fname
-    srcfile = gallery_config.img_prefix + fname
-    if iscached(srcfile, cachefile):
-        return spewfile(cachefile)
+def spewphoto(rel, size):
+    abs_cachedir = os.path.join(gallery_config.cache_prefix, "%d" % size)
+    abs_cachefile = os.path.join(abs_cachedir, rel)
+    abs_raw_image = rel_to_abs(rel)
+    if iscached(abs_raw_image, abs_cachefile):
+        return spewfile(abs_cachefile)
     else:
-        cache_img(fname, size, cachedir, cachefile, 1)
+        cache_img(rel, size, abs_cachedir, abs_cachefile, 1)
         return
 
-def spewhtml(fname):
+def spewhtml(abs):
     if check_client_cache( 'text/html; charset="UTF-8"',
-            max_mtime_for_files([fname])):
+            max_mtime_for_files([abs])):
         return
-    spewfile(fname)
+    spewfile(abs)
 
 
-def spewfile(fname):
-    fil = file(fname, 'rb')
+def spewfile(abs):
+    fil = file(abs, 'rb')
     sys.stdout.write(fil.read())
     fil.close()
 
@@ -180,7 +179,7 @@ def gallery():
 
     imgurls = []
     for fname in fnames:
-        (scratch, fnamebase, extn) = decompose_image_path(fname)
+        (scratch, fnamebase, extn) = split_path_ext(fname)
         if extn.lower() not in img_extns: continue
         if fnamebase.startswith('.'): continue
         pageurl = ""
