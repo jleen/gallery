@@ -219,7 +219,7 @@ def gallery():
         wn_updates = None
         if os.path.exists(wn_txt_path):
             wn_updates = whatsnew.read_update_entries(whatsnew.whatsnew_src_file())
-        if len(wn_updates) > 0:
+        if wn_updates != None and len(wn_updates) > 0:
             use_wn = 1
     if use_wn:
         wn_mtime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
