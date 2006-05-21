@@ -26,6 +26,10 @@ preview_size = "100"
 
 
 def handler():
+    #sys.stderr = sys.stdout
+    #print "Content-Type: text/plain"
+    #print
+
     os.umask(0002)
     reqpath = os.environ["PATH_INFO"].lower()
     extn = os.path.splitext(reqpath)[1]
@@ -42,6 +46,7 @@ def handler():
 def photopage():
     url = os.environ["PATH_INFO"][1:]
     (url_dir, base, extn) = split_path_ext(url)
+    rel_dir = url_to_rel(url_dir)
     abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
     image_mtime = lmtime(abs_image)
     if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
@@ -56,7 +61,7 @@ def photopage():
     a['framed_img_url'] = abs_to_url(abs_image, size = "700")
     a['full_img_url'] = abs_to_url(abs_image, size = "full")
     a['gallery_title'] =  gallery_config.short_name
-    a['photo_title'] = format_for_display(base)
+    a['photo_title'] = get_displayname_for_file(abs_image)
     a['description'] = description
     a['exifdata'] = exif_tags(abs_image)
     
@@ -72,7 +77,7 @@ def photopage():
         a['from_caption'] = format_for_display(os.path.basename(dir_dest_path))
         a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
 
-    breadcrumbs = breadcrumbs_for_path("./" + url_dir, 0)
+    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, 0)
     a['breadcrumbs'] = breadcrumbs
 
     template = Template(file=scriptdir('photopage.tmpl'), searchList=[a])
@@ -138,18 +143,18 @@ def spewfile(abs):
 
 def first_image_in_dir(rel_dir):
     abs_dir = rel_to_abs(rel_dir)
-    items = os.listdir(abs_dir)
-    items.sort()
-    for dir_item in items:
-        (base, ext) = os.path.splitext(dir_item)
-        if ext.lower() not in img_extns: continue
-        if base.startswith('.'): continue
-        return dir_item
+    items = get_directory_tuples(abs_dir)
+    for item in items:
+        (scratch, base, ext) = split_path_ext(item['filename'])
+        if ext.lower() in img_extns:
+            return item['filename']
+    
     # Got this far and didn't find an image.  Let's look in subdirs next.
     for dir_item in items:
-        if os.path.isdir(os.path.join(abs_dir, dir_item)):
-            recurse = first_image_in_dir(os.path.join(rel_dir, dir_item))
-            return os.path.join(dir_item, recurse)
+        dir_fname = dir_item['filename']
+        if os.path.isdir(os.path.join(abs_dir, dir_fname)):
+            recurse = first_image_in_dir(os.path.join(rel_dir, dir_fname))
+            return os.path.join(dir_fname, recurse)
 
 def send_redirect(new_url):
     sys.stdout.write("Location: http://www.saturnvalley.org" + new_url + "\n\n")
@@ -166,10 +171,13 @@ def gallery():
     url_dir = os.environ["PATH_INFO"][1:]
     rel_dir = url_to_rel(url_dir)
     abs_dir = rel_to_abs(rel_dir)
-    items = os.listdir(abs_dir)
-    items.sort()
+    items = get_directory_tuples(abs_dir)
 
-    abs_images = [ os.path.join(abs_dir, item) for item in items ]
+    abs_images = []
+    for item in items:
+        fname = item['filename']
+        abs_images.append(os.path.join(abs_dir, fname))
+
     if check_client_cache(
             'text/html; charset="UTF-8"',
             max_mtime_for_files([abs_dir] + abs_images)):
@@ -177,31 +185,34 @@ def gallery():
 
     image_records = []
     for item in items:
-        (scratch, base, ext) = split_path_ext(item)
+        fname = item['filename']
+        displayname = item['displayname']
+        (scratch, base, ext) = split_path_ext(fname)
         if ext.lower() not in img_extns: continue
-        if base.startswith('.'): continue
 
-        rel_image = os.path.join(rel_dir, item)
+        rel_image = os.path.join(rel_dir, fname)
         url_medium = rel_to_url(rel_image, ext = 'html')
         url_big = rel_to_url(rel_image, size = big_size)
         url_thumb = rel_to_url(rel_image, size = thumb_size)
-        caption = format_for_display(item)
+        caption = displayname
         image_records.append((url_medium, url_big, url_thumb, caption))
 
     subdir_records = []
     for item in items:
-        rel_subdir = os.path.join(rel_dir, item)
+        fname = item['filename']
+        displayname = item['displayname']
+        rel_subdir = os.path.join(rel_dir, fname)
         if not os.path.isdir(rel_to_abs(rel_subdir)): continue
         url_subdir = rel_to_url(rel_subdir, trailing_slash = 1)
-        caption = format_for_display(item)
+        caption = displayname
         rel_preview = os.path.join(rel_subdir, '.preview.jpeg')
         if not os.path.exists(rel_to_abs(rel_preview)):
-            rel_preview = os.path.join(
-                    url_subdir,
-                    first_image_in_dir(rel_subdir))
+            rel_preview = first_image_in_dir(rel_subdir)
+            if rel_preview:
+                rel_preview = os.path.join(rel_subdir, rel_preview)
         if rel_preview:
             (preview_base, preview_ext) = os.path.splitext(rel_preview)
-            preview = os.path.join(url_subdir, rel_to_url(preview_base + '_' + preview_size + preview_ext))
+            preview = os.path.join(url_subdir, rel_to_url(preview_base, size = preview_size, ext = preview_ext.strip('.')))
             subdir_records.append((url_subdir, caption, preview))
         else:
             subdir_records.append((url_subdir, caption, None))

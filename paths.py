@@ -1,3 +1,4 @@
+# vim:sw=4:ts=4
 import gallery_config
 
 import re
@@ -12,7 +13,12 @@ def breadcrumbs_for_path(dir_fname, final_is_link):
         if len(crumb) < 1: continue
         dirname = os.path.join(dirname, crumb)
         dir = rel_to_url(dirname, trailing_slash = 1)
-        display = format_for_display(crumb)
+        #BUGBUG Too many places know about '.' I think.  Can this be the only
+        #place?
+        if dirname == '.':
+            display = format_for_display(dirname)
+        else:
+            display = get_displayname_for_file(rel_to_abs(dirname))
         breadcrumbs.append([1, dir, display])
     # The last breadcrumb might not be a link
     breadcrumbs[-1][0] = final_is_link;
@@ -32,12 +38,39 @@ def abs_to_url(abs, size = None, ext = None):
             trailing_slash = 0)
 
 def rel_to_url(rel, size = None, ext = None, trailing_slash = 0):
-    url = trim_serials(os.path.join(gallery_config.browse_prefix, rel))
-    (base, url_ext) = os.path.splitext(url)
-    if size != None:
-        base = base + "_" + size
+    #first, break up the relative path and prepare each section of the url for
+    #display.
+    url = ""
+    target_is_dir = os.path.isdir(rel_to_abs(rel))
+    if rel.startswith(gallery_config.browse_prefix):
+        url += gallery_config.browse_prefix;
+        rel = rel[len(gallery_config.browse_prefix):]
+
+    if target_is_dir:
+        dir = rel
+        fname = ""
+    else:
+        (dir, fname) = os.path.split(rel);
+    abs = rel_to_abs("")
+    components = dir.split(os.path.sep)
+    for component in components + [fname]:
+        if not len(component): continue
+        if component == '.': continue
+        abs = os.path.join(abs, component)
+        #special case.  If component starts with a '.', then don't format it,
+        #since we confuse the fname for an extension
+        if component.startswith('.'):
+            url = os.path.join( url, component )
+        else:
+            url = os.path.join( url, get_urlname_for_file(abs) )
+    url = os.path.join(gallery_config.browse_prefix, url )
+
+    (base, fname, url_ext) = split_path_ext(url)
+    base = os.path.join(base, fname)
     if ext != None:
         url_ext = "." + ext
+    if size != None:
+        base = base + "_" + size
     if trailing_slash:
         url_ext = os.path.join(url_ext, '')
     return base + url_ext
@@ -80,15 +113,20 @@ def url_to_rel(url, infer_suffix = 0):
 
     # By induction, all but the leaf are now unambiguous.  So let's
     # disambiguate the leaf within the parent.
-    candidates = os.listdir(dir)
-    r = '^(\d+_)?' + ambiguate_filename(re.escape(basename))
-    if infer_suffix:
-        r += '(' + '|'.join(img_extns) + ')'
-    r += '$'
-    r = re.compile(r)
-    found = [ f for f in candidates if r.search(f) != None ]
-    if len(found) > 0: newbasename = found[0]
-    else: newbasename = basename
+    newbasename = None #basename
+    tuples = get_directory_tuples(dir, ignore_dotfiles = fname.startswith('.'))
+    for tuple in tuples:
+        if infer_suffix:
+            is_match = tuple['urlname'].startswith(basename)
+        else:
+            is_match = tuple['urlname'] == basename
+        if is_match:
+            newbasename = tuple['filename']
+            break
+    if not len(basename):
+        newbasename = basename
+    if newbasename == None:
+        raise basename
     return os.path.join(dir, newbasename)[len(gallery_config.img_prefix):]
 
 
@@ -97,10 +135,21 @@ trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
 def trim_serials(path):
     return trim_serials_regexp.sub('', path)
 
+def format_for_url(fn):
+    fn = trim_serials(fn)
+    fn = fn.replace(' ', '_')
+    fn = fn.replace('?', '~')
+    fn = fn.replace('&rsquo;', "'",)
+    fn = fn.replace('\xc3\xb6', '{o:}' )
+    fn = fn.replace('\xc3\xa4', '{a:}' )
+    return fn
+
 def format_for_display(fn):
     fn = trim_serials(fn)
     if fn == '.': return gallery_config.short_name
     if fn.startswith('DSC_'): return ''
+    if fn.startswith('_DSC'): return ''
+    if fn.startswith('CIMG'): return ''
     fn = fn.replace('_', ' ')
     fn = fn.replace('~', '?')
     fn = fn.replace("'", '&rsquo;')
@@ -111,6 +160,97 @@ def format_for_display(fn):
 def split_path_ext(path):
     (path, fname) = os.path.split(path)
     (base, extn) = os.path.splitext(fname)
+    if len(base) == 0 and len(extn) > 0 and fname.startswith('.'):
+        base = extn
+        extn = ""
+
     base = degrade_filename(trim_serials(base))
     return (path, base, extn)
 
+def dirent_compare(lhs, rhs):
+    lhsKey = lhs['sortkey']
+    rhsKey = rhs['sortkey']
+    if lhsKey < rhsKey: return -1
+    if lhsKey > rhsKey: return 1
+    return 0
+
+def dir_needs_tuples(dir_path):
+    return os.path.exists(os.path.join(dir_path, ".dirinfo"))
+
+#returns a sorted sequence of dictionaries.  Each dictionary contains:
+#   sortkey -       The key to use for sorting
+#   filename -      The filename.
+#   displayname -   The display name for the file.
+dir_tuple_cache = {}
+def get_directory_tuples(path, ignore_dotfiles = 1):
+    cache_key = path + " "
+    #canonicalize the key
+    if ignore_dotfiles:
+        cache_key = cache_key + "ignore_dotfiles"
+    if dir_tuple_cache.has_key(cache_key):
+        return dir_tuple_cache[cache_key]
+    tuples = get_directory_tuples_internal(path, ignore_dotfiles)
+
+    dir_tuple_cache[cache_key] = tuples
+
+    return tuples
+def get_directory_tuples_internal(path, ignore_dotfiles):
+    #print "get_directory_tuples called for " + path + " with ignore_dotfiles " + str(ignore_dotfiles)
+    #parse the dirinfo file
+    dirinfo_entries = {}
+    if os.path.exists(os.path.join(path, ".dirinfo")):
+        dirinfo = open(os.path.join(path, ".dirinfo"), "r")
+        for line in dirinfo:
+            line = line.rstrip("\n")
+            entry = line.split('|')
+            sortkey = entry[0]
+            fname = entry[1]
+            if len(entry) == 3:
+                displayname = entry[2]
+            else:
+                displayname = format_for_display(fname)
+            sortkey = sortkey + "_" + trim_serials(fname)
+            dirinfo_entries[fname] = [sortkey, displayname]
+
+        dirinfo.close()
+
+    # Load the directory
+    filenames = os.listdir(path)
+
+    #create the tuples
+    tuples = []
+    for fname in filenames:
+        (base, ext) = os.path.splitext(fname)
+        if ignore_dotfiles:
+            if base.startswith('.'): continue
+
+        if dirinfo_entries.has_key(fname):
+            urlname = format_for_url(dirinfo_entries[fname][1])
+            url_ext = os.path.splitext(fname)[1]
+            urlname = urlname + url_ext
+            tuple = {'sortkey':dirinfo_entries[fname][0], 'filename':fname, 'displayname':dirinfo_entries[fname][1], 'urlname':urlname }
+        else:
+            tuple = {'sortkey':fname, 'filename':fname, 'displayname':format_for_display(os.path.splitext(fname)[0]), 'urlname':format_for_url(fname)}
+        tuples.append(tuple)
+    tuples.sort(dirent_compare)
+    return tuples
+
+def get_name_for_file(full_fname, key, format_fn):
+    (dir, fname, ext) = split_path_ext(full_fname.rstrip(os.path.sep))
+    if not dir_needs_tuples(dir):
+        return format_fn(fname + ext)
+    
+
+    #Obviously, this doesn't properly support dot directories
+    dirtuples = get_directory_tuples(dir, ignore_dotfiles = (not fname.startswith('.')))
+    for tuple in dirtuples:
+        if tuple['filename'].startswith(fname):
+            return tuple[key]
+    raise fname
+    return None #Never reached.
+
+def get_urlname_for_file(full_fname):
+    return get_name_for_file(full_fname, 'urlname', format_for_url)
+
+def get_displayname_for_file(full_fname):
+    return get_name_for_file(full_fname, 'displayname', format_for_display)
