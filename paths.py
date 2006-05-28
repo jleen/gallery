@@ -225,7 +225,11 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
             if base.startswith('.'): continue
 
         if dirinfo_entries.has_key(fname):
-            urlname = format_for_url(dirinfo_entries[fname][1])
+            displayname = dirinfo_entries[fname][1]
+            if len(displayname):
+                urlname = format_for_url(displayname)
+            else:
+                urlname = format_for_url(fname)
             url_ext = os.path.splitext(fname)[1]
             urlname = urlname + url_ext
             tuple = {'sortkey':dirinfo_entries[fname][0], 'filename':fname, 'displayname':dirinfo_entries[fname][1], 'urlname':urlname }
