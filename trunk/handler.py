@@ -197,6 +197,14 @@ def gallery():
         caption = displayname
         image_records.append((url_medium, url_big, url_thumb, caption))
 
+    index_html = None
+    rel_index = os.path.join(rel_dir, 'index.html')
+    abs_index = rel_to_abs(rel_index)
+    if os.path.exists(abs_index):
+        fh = file(abs_index, 'r')
+        index_html = fh.read()
+        fh.close()
+
     subdir_records = []
     for item in items:
         fname = item['filename']
@@ -245,6 +253,7 @@ def gallery():
     a['thisdir'] = format_for_display(leafdir)
     a['imgurls'] = image_records
     a['subdirs'] = subdir_records
+    a['index_html'] = index_html
 
     sys.stdout.write(str(template))
     return
