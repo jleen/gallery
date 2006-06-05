@@ -226,8 +226,7 @@ def gallery():
             if rel_preview:
                 rel_preview = os.path.join(rel_subdir, rel_preview)
         if rel_preview:
-            (preview_base, preview_ext) = os.path.splitext(rel_preview)
-            preview = os.path.join(url_subdir, rel_to_url(preview_base, size = preview_size, ext = preview_ext.strip('.')))
+            preview = os.path.join(url_subdir, rel_to_url(rel_preview, size = preview_size))
             subdir_records.append((url_subdir, caption, preview))
         else:
             subdir_records.append((url_subdir, caption, None))
