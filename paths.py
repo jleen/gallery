@@ -117,9 +117,9 @@ def url_to_rel(url, infer_suffix = 0):
     tuples = get_directory_tuples(dir, ignore_dotfiles = fname.startswith('.'))
     for tuple in tuples:
         if infer_suffix:
-            is_match = tuple['urlname'].startswith(basename)
+            is_match = tuple['urlname'].lower().startswith(basename.lower())
         else:
-            is_match = tuple['urlname'] == basename
+            is_match = tuple['urlname'].lower() == basename.lower()
         if is_match:
             newbasename = tuple['filename']
             break
