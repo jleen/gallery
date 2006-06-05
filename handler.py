@@ -165,6 +165,13 @@ def ensure_trailing_slash():
         send_redirect(uri + '/')
         return
 
+def find_preview(rel_dir):
+    abs_dir = rel_to_abs(rel_dir)
+    for fn in os.listdir(abs_dir):
+        if fn == ".preview.jpeg" or fn.lower() == "preview.jpg":
+            return os.path.join(rel_dir, fn)
+    return None
+
 def gallery():
     ensure_trailing_slash()
 
@@ -213,8 +220,8 @@ def gallery():
         if not os.path.isdir(rel_to_abs(rel_subdir)): continue
         url_subdir = rel_to_url(rel_subdir, trailing_slash = 1)
         caption = displayname
-        rel_preview = os.path.join(rel_subdir, '.preview.jpeg')
-        if not os.path.exists(rel_to_abs(rel_preview)):
+        rel_preview = find_preview(rel_subdir)
+        if not rel_preview:
             rel_preview = first_image_in_dir(rel_subdir)
             if rel_preview:
                 rel_preview = os.path.join(rel_subdir, rel_preview)

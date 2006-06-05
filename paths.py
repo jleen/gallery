@@ -194,6 +194,7 @@ def get_directory_tuples(path, ignore_dotfiles = 1):
     dir_tuple_cache[cache_key] = tuples
 
     return tuples
+
 def get_directory_tuples_internal(path, ignore_dotfiles):
     #print "get_directory_tuples called for " + path + " with ignore_dotfiles " + str(ignore_dotfiles)
     #parse the dirinfo file
@@ -223,6 +224,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
         (base, ext) = os.path.splitext(fname)
         if ignore_dotfiles:
             if base.startswith('.'): continue
+            if fname.lower() == 'preview.jpg': continue
 
         if dirinfo_entries.has_key(fname):
             displayname = dirinfo_entries[fname][1]
