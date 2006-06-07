@@ -6,6 +6,8 @@ import os
 
 img_extns = ['.jpeg', '.jpg', '.JPG']
 
+class UnableToDisambiguateException(Exception): pass
+
 def breadcrumbs_for_path(dir_fname, final_is_link):
     breadcrumbs = []
     dirname = ''
@@ -126,7 +128,7 @@ def url_to_rel(url, infer_suffix = 0):
     if not len(basename):
         newbasename = basename
     if newbasename == None:
-        raise basename
+        raise UnableToDisambiguateException
     return os.path.join(dir, newbasename)[len(gallery_config.img_prefix):]
 
 
