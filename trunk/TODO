@@ -3,5 +3,3 @@ whatsnew.html refinements
 better caching
 better error handling
 Add a .dirinfo to whatsnewgen.pl to override ctime
-Better error handling including actual 404 pages and stuff (as opposed to big
-	messy cgi errors)
