@@ -1,5 +1,5 @@
+Next/prev buttons
 _default size
 whatsnew.html refinements
 better caching
 better error handling
-Add a .dirinfo to whatsnewgen.pl to override ctime
