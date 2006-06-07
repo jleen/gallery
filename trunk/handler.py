@@ -68,7 +68,7 @@ def photopage():
                 description = line[len('Description: '):]
 
     a = {}
-    a['framed_img_url'] = abs_to_url(abs_image, size = "700")
+    a['framed_img_url'] = abs_to_url(abs_image, size = "700x500")
     a['full_img_url'] = abs_to_url(abs_image, size = "full")
     a['gallery_title'] =  gallery_config.short_name
     a['photo_title'] = get_displayname_for_file(abs_image)
@@ -127,17 +127,20 @@ def photo():
     if size == "full":
         return spewfile(rel_to_abs(rel_image))
     else:
-        size = int(size)
         return spewphoto(rel_image, size)
 
 def spewphoto(rel, size):
-    abs_cachedir = os.path.join(gallery_config.cache_prefix, "%d" % size)
+    abs_cachedir = os.path.join(gallery_config.cache_prefix, size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
     abs_raw_image = rel_to_abs(rel)
     if iscached(abs_raw_image, abs_cachefile):
         return spewfile(abs_cachefile)
     else:
-        cache_img(rel, size, abs_cachedir, abs_cachefile, 1)
+        dims = size.split("x")
+        width = int(dims[0])
+        if len(size) > 1: height = int(dims[1])
+        else: height = width
+        cache_img(rel, width, height, abs_cachedir, abs_cachefile, 1)
         return
 
 def spewhtml(abs):

@@ -89,13 +89,13 @@ def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
     if not os.path.isdir(dirname): os.makedirs(dirname)
 
-def cache_img(fname, size, cachedir, cachefile, do_output):
+def cache_img(fname, width, height, cachedir, cachefile, do_output):
     img = Image.open(gallery_config.img_prefix + fname)
     f = open(gallery_config.img_prefix + fname, 'rb')
     tags = {}
     try: tags = EXIF.process_file(f)
     except: pass
-    img.thumbnail((size,size), Image.ANTIALIAS)
+    img.thumbnail((width,height), Image.ANTIALIAS)
 
     if gallery_config.apply_rotation:
         orientation_tag = tags.get('Image Orientation')
