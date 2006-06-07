@@ -3,6 +3,7 @@ import cgi
 import os
 import re
 import stat
+import string
 import sys
 import time
 
@@ -23,7 +24,8 @@ big_size = "full"
 thumb_size = "200"
 preview_size = "100"
 
-
+thumb_size_int = string.atoi(thumb_size)
+preview_size_int = string.atoi(preview_size)
 
 def handler():
     #sys.stderr = sys.stdout
@@ -202,7 +204,8 @@ def gallery():
         url_big = rel_to_url(rel_image, size = big_size)
         url_thumb = rel_to_url(rel_image, size = thumb_size)
         caption = displayname
-        image_records.append((url_medium, url_big, url_thumb, caption))
+        (width, height) = img_size(rel_image, thumb_size_int)
+        image_records.append((url_medium, url_big, url_thumb, caption, width, height))
 
     index_html = None
     rel_index = os.path.join(rel_dir, 'index.html')
@@ -225,11 +228,15 @@ def gallery():
             rel_preview = first_image_in_dir(rel_subdir)
             if rel_preview:
                 rel_preview = os.path.join(rel_subdir, rel_preview)
+
+        preview = None
+        width = 0
+        height = 0
         if rel_preview:
             preview = os.path.join(url_subdir, rel_to_url(rel_preview, size = preview_size))
-            subdir_records.append((url_subdir, caption, preview))
-        else:
-            subdir_records.append((url_subdir, caption, None))
+            (width, height) = img_size(rel_preview, 100)
+
+        subdir_records.append((url_subdir, caption, preview, width, height))
 
     breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0)
 

@@ -133,13 +133,13 @@ $index_html
 
 <div id="directory_section">
 
-#for $dir, $name, $preview in $subdirs
+#for $dir, $name, $preview, $width, $height in $subdirs
 #set $remain=$lhs_width-100
 <table width="$lhs_width" style="display: inline">
 <tr>
 #if $preview
 <td width="100">
-<a href="$dir"><img src="$preview" border="2" align="middle"></a>
+<a href="$dir"><img src="$preview" border="2" align="middle" width="$width" height="$height"></a>
 </td>
 #if not $side_by_side
 </tr>
@@ -158,12 +158,12 @@ $index_html
 
 </div>
 
-<div id="image_section">
-#for $medurl, $bigurl, $thumburl, $caption in $imgurls:
+<div id="image_section" align="center">
+#for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
 <table style="display: inline">
 <tr>
-<td align="center" valign="middle" height="260" width="220">
-<a href="$medurl"><img src="$thumburl" border="2" vspace="10" align="middle"></a><br>
+<td align="center" valign="middle" height="260" width="250">
+<a href="$medurl"><img src="$thumburl" border="2" width="$width" height="$height" vspace="10" align="middle"></a><br>
 <a href="$bigurl">$caption</a>
 </td>
 </tr>
