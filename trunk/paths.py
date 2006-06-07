@@ -241,11 +241,11 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
     tuples.sort(dirent_compare)
     return tuples
 
-def get_name_for_file(full_fname, key, format_fn):
+def get_name_for_file(full_fname, key, format_fn, use_ext):
     (dir, fname, ext) = split_path_ext(full_fname.rstrip(os.path.sep))
     if not dir_needs_tuples(dir):
-        return format_fn(fname + ext)
-    
+        if use_ext: return format_fn(fname + ext)
+        else: return format_fn(fname)
 
     #Obviously, this doesn't properly support dot directories
     dirtuples = get_directory_tuples(dir, ignore_dotfiles = (not fname.startswith('.')))
@@ -256,7 +256,7 @@ def get_name_for_file(full_fname, key, format_fn):
     return None #Never reached.
 
 def get_urlname_for_file(full_fname):
-    return get_name_for_file(full_fname, 'urlname', format_for_url)
+    return get_name_for_file(full_fname, 'urlname', format_for_url, use_ext = 1)
 
 def get_displayname_for_file(full_fname):
-    return get_name_for_file(full_fname, 'displayname', format_for_display)
+    return get_name_for_file(full_fname, 'displayname', format_for_display, use_ext = 0)
