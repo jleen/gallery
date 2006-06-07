@@ -32,18 +32,26 @@ def handler():
     #print "Content-Type: text/plain"
     #print
 
-    os.umask(0002)
-    reqpath = os.environ["PATH_INFO"].lower()
-    extn = os.path.splitext(reqpath)[1]
-    if os.path.split(reqpath)[1] == 'index.html': return gallery()
-    elif os.path.split(reqpath)[1] == 'whatsnew.html':
-        return whatsnew.spew_recent_whats_new()
-    elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
-        return whatsnew.spew_all_whats_new()
-    elif extn.lower() in img_extns: return photo()
-    elif reqpath.lower().endswith('_exif.html'): return exifpage()
-    elif extn == '.html': return photopage()
-    else: return gallery()
+    try:
+        os.umask(0002)
+        reqpath = os.environ["PATH_INFO"].lower()
+        extn = os.path.splitext(reqpath)[1]
+        if os.path.split(reqpath)[1] == 'index.html': return gallery()
+        elif os.path.split(reqpath)[1] == 'whatsnew.html':
+            return whatsnew.spew_recent_whats_new()
+        elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
+            return whatsnew.spew_all_whats_new()
+        elif extn.lower() in img_extns: return photo()
+        elif reqpath.lower().endswith('_exif.html'): return exifpage()
+        elif extn == '.html': return photopage()
+        elif extn in img_extns or len(extn) < 1: return gallery()
+        else: send_404()
+    except UnableToDisambiguateException: send_404()
+
+def send_404():
+    sys.stdout.write("Status: 404 Not Found\n")
+    sys.stdout.write("Content-type: text/html\n\n")
+    spewfile("/home/jmleen/saturnvalley.org/errors/404.html")
 
 def photopage():
     url = os.environ["PATH_INFO"][1:]
