@@ -44,7 +44,7 @@ def handler():
         elif extn.lower() in img_extns: return photo()
         elif reqpath.lower().endswith('_exif.html'): return exifpage()
         elif extn == '.html': return photopage()
-        elif extn in img_extns or len(extn) < 1: return gallery()
+        elif extn.lower() in img_extns or len(extn) < 1: return gallery()
         else: send_404()
     except UnableToDisambiguateException: send_404()
 
@@ -138,7 +138,7 @@ def spewphoto(rel, size):
     else:
         dims = size.split("x")
         width = int(dims[0])
-        if len(size) > 1: height = int(dims[1])
+        if len(dims) > 1: height = int(dims[1])
         else: height = width
         cache_img(rel, width, height, abs_cachedir, abs_cachefile, 1)
         return
