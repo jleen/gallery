@@ -74,6 +74,11 @@ def photopage():
     a['photo_title'] = get_displayname_for_file(abs_image)
     a['description'] = description
     a['exifdata'] = exif_tags(abs_image)
+    (prev, next) = get_nearby_for_file(abs_image)
+    if prev: prev = abs_to_url(prev, ext = 'html')
+    if next: next = abs_to_url(next, ext = 'html')
+    a['prev'] = prev
+    a['next'] = next
     
     # A set of breadcrumbs that link back to the containing directory.
     if os.path.islink(abs_image):
