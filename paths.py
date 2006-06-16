@@ -262,3 +262,34 @@ def get_urlname_for_file(full_fname):
 
 def get_displayname_for_file(full_fname):
     return get_name_for_file(full_fname, 'displayname', format_for_display, use_ext = 0)
+
+def get_nearby_for_file(full_fname):
+    (dir, fname) = os.path.split(full_fname);
+    dirtuples = get_directory_tuples(dir)
+    before = None
+    after = None
+
+    #prune out all files with non-image extensions
+    newtuples = []
+    for tuple in dirtuples:
+        ext = os.path.splitext(tuple['filename'])[1]
+        if ext in img_extns: newtuples.append(tuple)
+
+    tempiter = iter(newtuples)
+    while True:
+        try:
+            current = tempiter.next()
+            current_fname = current['filename']
+            if current['filename'].startswith(fname):
+                after = tempiter.next()['filename']
+                break
+            else:
+                before = current['filename']
+        except StopIteration: break
+    
+    #Found the files.  Now make absolute names out of the before and after that
+    #I found
+    if before: before = os.path.join(dir, before)
+    if after: after = os.path.join(dir, after)
+
+    return (before, after)
