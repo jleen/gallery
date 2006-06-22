@@ -60,17 +60,19 @@ def img_size(rel_image, max_size):
     abs_cachedir = os.path.join(gallery_config.cache_prefix, "%d" % max_size)
     abs_cachefile = os.path.join(abs_cachedir, rel_image)
     abs_raw_image = rel_to_abs(rel_image)
-    if iscached(abs_raw_image, abs_cachefile):
-        cache_image = Image.open(abs_cachefile)
-        return cache_image.size
-    else:
-        raw_image = Image.open(abs_raw_image)
-        (width, height) = raw_image.size
-        if width < max_size and height < max_size: return (width, height)
-        if width > height:
-            return (max_size, (max_size * height) / width)
+    try:
+        if iscached(abs_raw_image, abs_cachefile):
+            cache_image = Image.open(abs_cachefile)
+            return cache_image.size
         else:
-            return ((max_size * width) / height, max_size)
+            raw_image = Image.open(abs_raw_image)
+            (width, height) = raw_image.size
+            if width < max_size and height < max_size: return (width, height)
+            if width > height:
+                return (max_size, (max_size * height) / width)
+            else:
+                return ((max_size * width) / height, max_size)
+    except IOError: return (50, 50)
 
 def script_mtime():
     return max_mtime_for_files(scriptfiles)
