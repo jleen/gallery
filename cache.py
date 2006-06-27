@@ -1,4 +1,5 @@
 # vim:sw=4:ts=4
+# -*- coding: latin-1 -*-
 import gallery_config
 from paths import *
 
@@ -8,8 +9,11 @@ import stat
 import time
 import sys
 from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
+from PIL import ImageStat
 from StringIO import StringIO
-import EXIF
+import exif
 
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
@@ -66,7 +70,17 @@ def img_size(rel_image, max_size):
             return cache_image.size
         else:
             raw_image = Image.open(abs_raw_image)
-            (width, height) = raw_image.size
+
+            #Here's the problem.  Without checking the EXIF tags, I can't
+            #properly compute the dimensions.  However, if I do this step, the
+            #server sometimes times out.
+            rotation_amount = None
+            #rotation_amount = compute_rotation_amount(exif.exif_tags_raw(abs_raw_image))
+            if rotation_amount and (rotation_amount == 90 or rotation_amount == -90):
+                (height, width) = raw_image.size #swap them
+            else:
+                (width, height) = raw_image.size
+
             if width < max_size and height < max_size: return (width, height)
             if width > height:
                 return (max_size, (max_size * height) / width)
@@ -91,24 +105,94 @@ def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
     if not os.path.isdir(dirname): os.makedirs(dirname)
 
-def cache_img(fname, width, height, cachedir, cachefile, do_output):
-    img = Image.open(gallery_config.img_prefix + fname)
-    f = open(gallery_config.img_prefix + fname, 'rb')
-    tags = {}
-    try: tags = EXIF.process_file(f)
-    except: pass
-    img.thumbnail((width,height), Image.ANTIALIAS)
-
-    if gallery_config.apply_rotation:
+def compute_rotation_amount(tags):
+    rotation_amount = 0
+    if gallery_config.apply_rotation and tags:
         orientation_tag = tags.get('Image Orientation')
         if orientation_tag == None:
             orientation_tag = ''
         else:
             orientation_tag = orientation_tag.printable
+
         if orientation_tag.startswith("Rotated 90 CW"):
-            img = img.rotate(-90, Image.NEAREST)
+            rotation_amount = -90
         elif orientation_tag.startswith("Rotated 90 CCW"):
-            img = img.rotate(90, Image.NEAREST)
+            rotation_amount = 90
+    return rotation_amount
+
+def get_image_for_display(fname, width = 0, height = 0):
+    img = Image.open(fname)
+    tags = exif.exif_tags_raw(fname)
+
+    if width > 0 and height > 0:
+        img.thumbnail((width,height), Image.ANTIALIAS)
+    else:
+        (width, height) = img.size
+
+    rotation_amount = compute_rotation_amount(tags)
+    if rotation_amount: img = img.rotate(rotation_amount, Image.NEAREST)
+
+    try :
+        copyright_name = gallery_config.copyright_name 
+        copyright_font = gallery_config.copyright_font
+    except AttributeError:
+        copyright_name = None
+        copyright_font = None
+
+    if copyright_name and copyright_font and width > 200 and height > 200 :
+        if tags and tags.get('EXIF DateTimeOriginal'):
+            dtstr = tags.get('EXIF DateTimeOriginal')
+            dt = time.strptime(str(dtstr), '%Y:%m:%d %H:%M:%S')
+            year = dt[0]
+        else:
+            year = 0 #use the mtime as a fallback
+        copyright_string = '© ' + str(year) + ' ' + gallery_config.copyright_name
+        (imgwidth, imgheight) = img.size;
+        font = ImageFont.truetype( copyright_font, int(round(imgheight * .02)) )
+
+        draw = ImageDraw.Draw(img)
+        draw.setfont(font)
+        #outline_value = "#000000"
+        (textwidth, textheight) = draw.textsize(copyright_string)
+
+        winset = imgwidth * .01
+        hinset = imgheight * .01
+        textstartw = imgwidth - textwidth - winset;
+        textstarth = imgheight - textheight - hinset
+
+        #create a mask image for the insanity of computing the inverse color
+        #for the copyright image.
+        mask = Image.new( "1", (imgwidth, imgheight), 0 )
+        maskdraw = ImageDraw.Draw(mask)
+        maskdraw.rectangle( [(textstartw, textstarth), (textstartw + textwidth, textstarth + textheight)], fill=1 )
+        del maskdraw
+
+        stats = ImageStat.Stat(img, mask)
+        sketchy_counter = 0
+        for band in stats.median:
+            if band > 100 : sketchy_counter = sketchy_counter + 1
+            else : sketchy_counter = sketchy_counter - 1
+
+        if sketchy_counter > 0:
+            fill_value = "#000000"
+            shadow_fill_value = "#ffffff"
+        else :
+            fill_value = "#ffffff"
+            shadow_fill_value = "#000000"
+
+        drop_shadow_offset = int(round(textheight * 0.03))
+        if drop_shadow_offset < 1: drop_shadow_offset = 1
+
+        draw.text( (textstartw+drop_shadow_offset, textstarth+drop_shadow_offset), copyright_string, fill=shadow_fill_value )
+        draw.text( (textstartw, textstarth), copyright_string, fill=fill_value )
+        del draw
+
+    return img
+
+
+def cache_img(fname, width, height, cachedir, cachefile, do_output):
+
+    img = get_image_for_display(gallery_config.img_prefix + fname, width, height)
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)

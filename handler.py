@@ -58,8 +58,9 @@ def photopage():
     (url_dir, base, extn) = split_path_ext(url)
     rel_dir = url_to_rel(url_dir)
     abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
-    image_mtime = lmtime(abs_image)
-    if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
+    if check_client_cache('text/html; charset="UTF-8"',
+        max_mtime_for_files([abs_image, scriptdir('photopage.tmpl')])): return
+
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
     if os.path.exists(abs_info):
@@ -129,7 +130,14 @@ def photo():
     rel_image = url_to_rel(base + '.' + ext)
     image_mtime = lmtime(rel_to_abs(rel_image))
     if check_client_cache("image/jpeg", image_mtime): return
+    try: allow_original = gallery_config.allow_original
+    except AttributeError:
+        allow_original = 1
+    if size == "original" and not allow_original:
+        size = "full"
     if size == "full":
+        return spewuncachedphoto(rel_image)
+    elif size == "original":
         return spewfile(rel_to_abs(rel_image))
     else:
         return spewphoto(rel_image, size)
@@ -153,6 +161,9 @@ def spewhtml(abs):
             max_mtime_for_files([abs])):
         return
     spewfile(abs)
+
+def spewuncachedphoto(rel):
+    get_image_for_display(rel_to_abs(rel)).save(sys.stdout, "JPEG", quality = 95)
 
 def spewfile(abs):
     fil = file(abs, 'rb')
@@ -205,7 +216,7 @@ def gallery():
 
     if check_client_cache(
             'text/html; charset="UTF-8"',
-            max_mtime_for_files([abs_dir] + abs_images)):
+                    max_mtime_for_files([abs_dir] + [scriptdir('browse.tmpl')] + abs_images)):
         return
 
     image_records = []
