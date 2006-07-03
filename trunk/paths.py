@@ -211,7 +211,8 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
             if len(entry) == 3:
                 displayname = entry[2]
             else:
-                displayname = format_for_display(fname)
+                displayname = format_for_display(os.path.splitext(fname)[0])
+
             sortkey = sortkey + "_" + trim_serials(fname)
             dirinfo_entries[fname] = [sortkey, displayname]
 
@@ -230,12 +231,13 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
 
         if dirinfo_entries.has_key(fname):
             displayname = dirinfo_entries[fname][1]
+
             if len(displayname):
                 urlname = format_for_url(displayname)
+                url_ext = os.path.splitext(fname)[1]
+                urlname = urlname + url_ext
             else:
                 urlname = format_for_url(fname)
-            url_ext = os.path.splitext(fname)[1]
-            urlname = urlname + url_ext
             tuple = {'sortkey':dirinfo_entries[fname][0], 'filename':fname, 'displayname':dirinfo_entries[fname][1], 'urlname':urlname }
         else:
             tuple = {'sortkey':fname, 'filename':fname, 'displayname':format_for_display(os.path.splitext(fname)[0]), 'urlname':format_for_url(fname)}
