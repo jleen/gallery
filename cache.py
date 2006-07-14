@@ -24,8 +24,7 @@ cache_dependencies = [
 ]
 scriptfiles = [
     gallery_config.__file__,
-    scriptdir('browse.tmpl'),
-    scriptdir('exif.tmpl')
+    scriptdir('templates/browse.tmpl')
 ]
 
 def normalize_date(date):

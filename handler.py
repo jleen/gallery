@@ -11,10 +11,11 @@ from cache import *
 from exif import *
 from paths import *
 import whatsnew
+import templates.browse
+import templates.photopage
 
 import EXIF
 from StringIO import StringIO
-from Cheetah.Template import Template
 
 import gallery_config
 
@@ -42,7 +43,6 @@ def handler():
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
             return whatsnew.spew_all_whats_new()
         elif extn.lower() in img_extns: return photo()
-        elif reqpath.lower().endswith('_exif.html'): return exifpage()
         elif extn == '.html': return photopage()
         elif extn.lower() in img_extns or len(extn) < 1: return gallery()
         else: send_404()
@@ -59,7 +59,7 @@ def photopage():
     rel_dir = url_to_rel(url_dir)
     abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
     if check_client_cache('text/html; charset="UTF-8"',
-        max_mtime_for_files([abs_image, scriptdir('photopage.tmpl')])): return
+        max_mtime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -96,30 +96,9 @@ def photopage():
     breadcrumbs = breadcrumbs_for_path("./" + rel_dir, 0)
     a['breadcrumbs'] = breadcrumbs
 
-    template = Template(file=scriptdir('photopage.tmpl'), searchList=[a])
+    template = templates.photopage.photopage(searchList=[a])
     sys.stdout.write(str(template))
 
-def exifpage():
-    url = os.environ["PATH_INFO"][1:]
-    img_index = url.rfind('_')
-    img_path = url[:img_index]
-    abs_image = url_to_abs(img_path)
-
-    image_mtime = lmtime(abs_image)
-    if check_client_cache('text/html; charset="UTF-8"', image_mtime): return
-
-    a = {}
-    template = Template(file=scriptdir('exif.tmpl'), searchList=[a])
-    #ambiguate this name?
-    a['title'] = os.path.basename(abs_image)
-
-    processedTags = exif_tags(abs_image)
-
-    a['data'] = processedTags
-
-    sys.stdout.write(str(template))
-    return
-    
 def photo():
     url = os.environ["PATH_INFO"][1:]
     size_index = url.rfind('_')
@@ -216,7 +195,7 @@ def gallery():
 
     if check_client_cache(
             'text/html; charset="UTF-8"',
-                    max_mtime_for_files([abs_dir] + [scriptdir('browse.tmpl')] + abs_images)):
+                    max_mtime_for_files([abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
         return
 
     image_records = []
@@ -268,7 +247,7 @@ def gallery():
     breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0)
 
     a = {}
-    template = Template(file=scriptdir('browse.tmpl'), searchList=[a])
+    template = templates.browse.browse(searchList=[a])
     leafdir = os.path.split(rel_dir[:-1])[1]
     use_wn = 0
     if len(leafdir) == 0:
