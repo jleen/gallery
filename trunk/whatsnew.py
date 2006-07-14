@@ -9,6 +9,7 @@ import os
 import paths
 import cache
 import gallery_config
+import templates.whatsnewpage
 
 galleryUrlRoot = "http://saturnvalley.org" + gallery_config.browse_prefix
 whatsNewSrc = gallery_config.img_prefix + "/whatsnew.txt"
@@ -70,7 +71,7 @@ def spew_whats_new(update_entries, title_str, next_url, next_link_name):
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    template = Template(file=cache.scriptdir('whatsnewpage.tmpl'), searchList=[search])
+    template = templates.whatsnewpage.whatsnewpage(searchList=[search])
 
     sys.stdout.write(str(template))
 
