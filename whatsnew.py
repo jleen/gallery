@@ -70,7 +70,7 @@ def spew_whats_new(update_entries, title_str, next_url, next_link_name):
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    template = Template(file=cache.scriptdir('whatsnew.tmpl'), searchList=[search])
+    template = Template(file=cache.scriptdir('whatsnewpage.tmpl'), searchList=[search])
 
     sys.stdout.write(str(template))
 
