@@ -69,6 +69,7 @@ def exif_tags_raw(img_fname):
 
 def exif_tags(img_fname):
     tags = exif_tags_raw(img_fname)
+    if tags == None: return ()
 
     processedTags = {}
     #copy some of the simple tags
