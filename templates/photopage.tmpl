@@ -88,6 +88,7 @@ From <a class="fromlink" href="$from_url">$from_caption</a><br>
 $description<br>
 #end if
 
+#if $exifdata
 <a class="exiflink" href="javascript:toggleexif('exifblock');">+ exif</a>
 <div id="exifblock" class="collapsedexif">
 <p>
@@ -101,6 +102,7 @@ $description<br>
 </table>
 </p>
 </div>
+#end if
 </div>
 </td>
 <td align="right" valign="top">
