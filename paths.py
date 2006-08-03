@@ -82,14 +82,11 @@ def infer_image_path(base):
         if os.path.exists(gallery_config.img_prefix + base + ext): return base + ext
     raise ValueError
 
-def ambiguate_filename(regexp):
+def ambiguate_filename(fn):
     # This is horrifically bogus.  We should have a table or something.
-    amb = ''
-    for ch in regexp:
-        if   ch == 'a': amb += '(a|\xc3\xa4)'
-        elif ch == 'o': amb += '(o|\xc3\xb6)'
-        else: amb += ch
-    return amb
+    fn = fn.replace('{o:}', 'o')
+    fn = fn.replace('{a:}', 'a')
+    return fn.lower()
 
 def degrade_filename(fn):
     # By a similar token, this function is a crock.
@@ -118,10 +115,12 @@ def url_to_rel(url, infer_suffix = 0):
     newbasename = None #basename
     tuples = get_directory_tuples(dir, ignore_dotfiles = fname.startswith('.'))
     for tuple in tuples:
+        amb_urlname = ambiguate_filename(tuple['urlname'])
+        amb_basename = ambiguate_filename(basename)
         if infer_suffix:
-            is_match = tuple['urlname'].lower().startswith(basename.lower())
+            is_match = amb_urlname.startswith(amb_basename)
         else:
-            is_match = tuple['urlname'].lower() == basename.lower()
+            is_match = amb_urlname == amb_basename
         if is_match:
             newbasename = tuple['filename']
             break
