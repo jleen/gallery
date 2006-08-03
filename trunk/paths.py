@@ -137,6 +137,7 @@ def trim_serials(path):
     return trim_serials_regexp.sub('', path)
 
 def format_for_url(fn):
+    fn = degrade_filename(fn)
     fn = trim_serials(fn)
     fn = fn.replace(' ', '_')
     fn = fn.replace('?', '~')
@@ -159,13 +160,17 @@ def format_for_display(fn):
     return fn
 
 def split_path_ext(path):
+    (path, base, extn) = split_path_ext_no_degrade(path)
+    base = degrade_filename(trim_serials(base))
+    return (path, base, extn)
+
+def split_path_ext_no_degrade(path):
     (path, fname) = os.path.split(path)
     (base, extn) = os.path.splitext(fname)
     if len(base) == 0 and len(extn) > 0 and fname.startswith('.'):
         base = extn
         extn = ""
 
-    base = degrade_filename(trim_serials(base))
     return (path, base, extn)
 
 def dirent_compare(lhs, rhs):
@@ -245,7 +250,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
     return tuples
 
 def get_name_for_file(full_fname, key, format_fn, use_ext):
-    (dir, fname, ext) = split_path_ext(full_fname.rstrip(os.path.sep))
+    (dir, fname, ext) = split_path_ext_no_degrade(full_fname.rstrip(os.path.sep))
     if not dir_needs_tuples(dir):
         if use_ext: return format_fn(fname + ext)
         else: return format_fn(fname)
