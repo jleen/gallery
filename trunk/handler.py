@@ -59,7 +59,7 @@ def photopage():
     rel_dir = url_to_rel(url_dir)
     abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
     if check_client_cache('text/html; charset="UTF-8"',
-        max_mtime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
+        max_ctime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -107,8 +107,8 @@ def photo():
     size = url[size_index+1:ext_index]
     ext = url[ext_index+1:]
     rel_image = url_to_rel(base + '.' + ext)
-    image_mtime = lmtime(rel_to_abs(rel_image))
-    if check_client_cache("image/jpeg", image_mtime): return
+    image_ctime = lctime(rel_to_abs(rel_image))
+    if check_client_cache("image/jpeg", image_ctime): return
     try: allow_original = gallery_config.allow_original
     except AttributeError:
         allow_original = 1
@@ -137,7 +137,7 @@ def spewphoto(rel, size):
 
 def spewhtml(abs):
     if check_client_cache( 'text/html; charset="UTF-8"',
-            max_mtime_for_files([abs])):
+            max_ctime_for_files([abs])):
         return
     spewfile(abs)
 
@@ -195,7 +195,7 @@ def gallery():
 
     if check_client_cache(
             'text/html; charset="UTF-8"',
-                    max_mtime_for_files([abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
+                    max_ctime_for_files([abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
         return
 
     image_records = []
@@ -260,8 +260,8 @@ def gallery():
         if wn_updates != None and len(wn_updates) > 0:
             use_wn = 1
     if use_wn:
-        wn_mtime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
-        a['whatsnew_name'] = "What's New (updated " +  wn_mtime + ")"
+        wn_ctime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
+        a['whatsnew_name'] = "What's New (updated " +  wn_ctime + ")"
         a['whatsnew_url'] = os.path.join(gallery_config.browse_prefix, "whatsnew.html")
     else:
         a['whatsnew_name'] = None
