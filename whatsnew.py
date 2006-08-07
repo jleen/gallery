@@ -92,7 +92,7 @@ def spew_recent_whats_new():
         idx = len(update_entries)
 
     if cache.check_client_cache( 'text/html; charset="UTF-8"',
-            cache.max_mtime_for_files([fname])):
+            cache.max_ctime_for_files([fname])):
         return
     spew_whats_new(update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(gallery_config.browse_prefix, "whatsnew_all.html")), all_updates)
 
@@ -101,7 +101,7 @@ def spew_all_whats_new():
     update_entries = read_update_entries(fname)
 
     if cache.check_client_cache( 'text/html; charset="UTF-8"',
-            cache.max_mtime_for_files([fname])):
+            cache.max_ctime_for_files([fname])):
         return
 
     spew_whats_new(update_entries, "All Updates", None, None)

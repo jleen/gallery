@@ -22,21 +22,16 @@ cache_dependencies = [
     gallery_config.__file__,
     scriptdir('cache_sentinel')
 ]
-scriptfiles = [
-    gallery_config.__file__,
-    scriptdir('templates/browse.tmpl')
-]
 
 def normalize_date(date):
     if date == None: return None
     return time.asctime(time.gmtime(
         rfc822.mktime_tz(rfc822.parsedate_tz(date))))
 
-def check_client_cache(content_type, mtime):
-    mtime = max(mtime, script_mtime())
+def check_client_cache(content_type, ctime):
     client_date = normalize_date(os.environ.get('HTTP_IF_MODIFIED_SINCE'))
     client_etag = os.environ.get('HTTP_IF_NONE_MATCH')
-    server_date = time.asctime(time.gmtime(mtime))
+    server_date = time.asctime(time.gmtime(ctime))
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
@@ -87,18 +82,15 @@ def img_size(rel_image, max_size):
                 return ((max_size * width) / height, max_size)
     except IOError: return (50, 50)
 
-def script_mtime():
-    return max_mtime_for_files(scriptfiles)
-
 def iscached(srcfile, cachefile):
     if not os.path.isfile(cachefile): return 0
     for dependency in [ srcfile ] + cache_dependencies:
-        if lmtime(cachefile) < lmtime(dependency):
+        if lctime(cachefile) < lctime(dependency):
             return 0
     return 1 
 
-def lmtime(fname):
-    return os.lstat(fname)[stat.ST_MTIME]
+def lctime(fname):
+    return os.lstat(fname)[stat.ST_CTIME]
 
 def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
@@ -144,7 +136,7 @@ def get_image_for_display(fname, width = 0, height = 0):
             dt = time.strptime(str(dtstr), '%Y:%m:%d %H:%M:%S')
             year = dt[0]
         else:
-            year = 0 #use the mtime as a fallback
+            year = 0 #use the ctime as a fallback
         copyright_string = '© ' + str(year) + ' ' + gallery_config.copyright_name
         (imgwidth, imgheight) = img.size;
         font = ImageFont.truetype( copyright_font, int(round(imgheight * .02)) )
@@ -205,10 +197,10 @@ def cache_img(fname, width, height, cachedir, cachefile, do_output):
     buf.close()
     return img.size
 
-def max_mtime_for_files(fnames):
-    max_mtime = 0
+def max_ctime_for_files(fnames):
+    max_ctime = 0
     for fname in fnames:
-        mtime = lmtime(fname)
-        if mtime > max_mtime: max_mtime = mtime
-    return max_mtime
+        ctime = lctime(fname)
+        if ctime > max_ctime: max_ctime = ctime
+    return max_ctime
 
