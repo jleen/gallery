@@ -17,41 +17,44 @@ import templates.photopage
 import EXIF
 from StringIO import StringIO
 
+import jon.cgi as cgi
+
 import gallery_config
 
 small_size = "600"
 med_size = "1024"
-big_size = "full"
+big_size = "original"
 thumb_size = "200"
 preview_size = "100"
 
 thumb_size_int = string.atoi(thumb_size)
 preview_size_int = string.atoi(preview_size)
 
-def handler():
-    #sys.stderr = sys.stdout
-    #print "Content-Type: text/plain"
-    #print
+class GalleryHandler(cgi.Handler):
+    def process(self, req):
+        handler(req)
 
+def handler(req):
+    req.set_buffering(0)
     try:
         os.umask(0002)
-        reqpath = os.environ["PATH_INFO"].lower()
+        reqpath = req.environ["PATH_INFO"].lower()
         extn = os.path.splitext(reqpath)[1]
-        if os.path.split(reqpath)[1] == 'index.html': return gallery()
+        if os.path.split(reqpath)[1] == 'index.html': return gallery(req)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
-            return whatsnew.spew_recent_whats_new()
+            return whatsnew.spew_recent_whats_new(req)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
-            return whatsnew.spew_all_whats_new()
-        elif extn.lower() in img_extns: return photo()
-        elif extn == '.html': return photopage()
-        elif extn.lower() in img_extns or len(extn) < 1: return gallery()
-        else: send_404()
-    except UnableToDisambiguateException: send_404()
+            return whatsnew.spew_all_whats_new(req)
+        elif extn.lower() in img_extns: return photo(req)
+        elif extn == '.html': return photopage(req)
+        elif extn.lower() in img_extns or len(extn) < 1: return gallery(req)
+        else: send_404(req)
+    except UnableToDisambiguateException: send_404(req)
 
-def send_404():
-    sys.stdout.write("Status: 404 Not Found\n")
-    sys.stdout.write("Content-type: text/html\n\n")
-    spewfile("/home/jmleen/saturnvalley.org/errors/404.html")
+def send_404(req):
+    req.set_header('Status', '404 Not Found')
+    req.set_header('Content-type', 'text/html')
+    spewfile(req, "/home/jmleen/saturnvalley.org/errors/404.html")
 
 def photopage():
     url = os.environ["PATH_INFO"][1:]
@@ -99,8 +102,8 @@ def photopage():
     template = templates.photopage.photopage(searchList=[a])
     sys.stdout.write(str(template))
 
-def photo():
-    url = os.environ["PATH_INFO"][1:]
+def photo(req):
+    url = req.environ["PATH_INFO"][1:]
     size_index = url.rfind('_')
     ext_index = url.rfind('.')
     base = url[:size_index]
@@ -108,7 +111,7 @@ def photo():
     ext = url[ext_index+1:]
     rel_image = url_to_rel(base + '.' + ext)
     image_ctime = lctime(rel_to_abs(rel_image))
-    if check_client_cache("image/jpeg", image_ctime): return
+    if check_client_cache(req, "image/jpeg", image_ctime): return
     try: allow_original = gallery_config.allow_original
     except AttributeError:
         allow_original = 1
@@ -117,22 +120,22 @@ def photo():
     if size == "full":
         return spewuncachedphoto(rel_image)
     elif size == "original":
-        return spewfile(rel_to_abs(rel_image))
+        return spewfile(req, rel_to_abs(rel_image))
     else:
-        return spewphoto(rel_image, size)
+        return spewphoto(req, rel_image, size)
 
-def spewphoto(rel, size):
+def spewphoto(req, rel, size):
     abs_cachedir = os.path.join(gallery_config.cache_prefix, size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
     abs_raw_image = rel_to_abs(rel)
     if iscached(abs_raw_image, abs_cachefile):
-        return spewfile(abs_cachefile)
+        return spewfile(req, abs_cachefile)
     else:
         dims = size.split("x")
         width = int(dims[0])
         if len(dims) > 1: height = int(dims[1])
         else: height = width
-        cache_img(rel, width, height, abs_cachedir, abs_cachefile, 1)
+        cache_img(req, rel, width, height, abs_cachedir, abs_cachefile, 1)
         return
 
 def spewhtml(abs):
@@ -144,9 +147,9 @@ def spewhtml(abs):
 def spewuncachedphoto(rel):
     get_image_for_display(rel_to_abs(rel)).save(sys.stdout, "JPEG", quality = 95)
 
-def spewfile(abs):
+def spewfile(req, abs):
     fil = file(abs, 'rb')
-    sys.stdout.write(fil.read())
+    req.write(fil.read())
     fil.close()
 
 def first_image_in_dir(rel_dir):
@@ -180,10 +183,10 @@ def find_preview(rel_dir):
             return os.path.join(rel_dir, fn)
     return None
 
-def gallery():
+def gallery(req):
     ensure_trailing_slash()
 
-    url_dir = os.environ["PATH_INFO"][1:]
+    url_dir = req.environ["PATH_INFO"][1:]
     rel_dir = url_to_rel(url_dir)
     abs_dir = rel_to_abs(rel_dir)
     items = get_directory_tuples(abs_dir)
@@ -194,8 +197,10 @@ def gallery():
         abs_images.append(os.path.join(abs_dir, fname))
 
     if check_client_cache(
+            req,
             'text/html; charset="UTF-8"',
-                    max_ctime_for_files([abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
+            max_ctime_for_files(
+                [abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
         return
 
     image_records = []
@@ -274,5 +279,5 @@ def gallery():
     a['subdirs'] = subdir_records
     a['index_html'] = index_html
 
-    sys.stdout.write(str(template))
+    req.write(str(template))
     return
