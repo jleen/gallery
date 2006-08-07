@@ -28,30 +28,20 @@ def normalize_date(date):
     return time.asctime(time.gmtime(
         rfc822.mktime_tz(rfc822.parsedate_tz(date))))
 
-def check_client_cache(content_type, ctime):
-    client_date = normalize_date(os.environ.get('HTTP_IF_MODIFIED_SINCE'))
-    client_etag = os.environ.get('HTTP_IF_NONE_MATCH')
+def check_client_cache(req, content_type, ctime):
+    client_date = normalize_date(req.environ.get('HTTP_IF_MODIFIED_SINCE'))
+    client_etag = req.environ.get('HTTP_IF_NONE_MATCH')
     server_date = time.asctime(time.gmtime(ctime))
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
-        sys.stdout.write('Status: 304 Not Modified\r\n\r\n')
+        req.set_header('Status', '304 Not Modified')
         return 1
     else:
         #content_type = 'text/plain'
-        sys.stdout.write("Content-type: " + content_type + "\n")
-        sys.stdout.write('Last-Modified: ' + server_date + '\n')
-        sys.stdout.write('ETag: ' + server_date + '\n')
-        sys.stdout.write('\n')
-        #sys.stdout.write('Last-Modified: ' + server_date + '\n')
-        #sys.stdout.write('ETag: ' + server_date + '\n')
-        #print 'client raw date', os.environ.get('HTTP_IF_MODIFIED_SINCE')
-        #print 'client raw etag', os.environ.get('HTTP_IF_NONE_MATCH')
-        #print "client date", client_date
-        #print 'client etag', client_etag
-        #print 'server date', server_date
-        #print 'server etag', server_date
-        #sys.stdout.write('\n')
+        req.set_header('Content-type', content_type)
+        req.set_header('Last-Modified', server_date)
+        req.set_header('ETag', server_date)
         return 0
 
 def img_size(rel_image, max_size):
@@ -181,14 +171,14 @@ def get_image_for_display(fname, width = 0, height = 0):
     return img
 
 
-def cache_img(fname, width, height, cachedir, cachefile, do_output):
+def cache_img(req, fname, width, height, cachedir, cachefile, do_output):
 
     img = get_image_for_display(gallery_config.img_prefix + fname, width, height)
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
     if do_output:
-        sys.stdout.write(buf.getvalue())
+        req.write(buf.getvalue())
     if os.path.isdir(cachedir):
         makedirsfor(cachefile)
         fil = file(cachefile, 'wb')
