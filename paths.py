@@ -20,7 +20,7 @@ def breadcrumbs_for_path(dir_fname, final_is_link):
         if dirname == '.':
             display = format_for_display(dirname)
         else:
-            display = get_displayname_for_file(rel_to_abs(dirname))
+            display = format_for_display(os.path.split(dirname)[1])
         breadcrumbs.append([1, dir, display])
     # The last breadcrumb might not be a link
     breadcrumbs[-1][0] = final_is_link;
@@ -244,7 +244,12 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
                 urlname = format_for_url(fname)
             tuple = {'sortkey':dirinfo_entries[fname][0], 'filename':fname, 'displayname':dirinfo_entries[fname][1], 'urlname':urlname }
         else:
-            tuple = {'sortkey':fname, 'filename':fname, 'displayname':format_for_display(os.path.splitext(fname)[0]), 'urlname':format_for_url(fname)}
+            for_display = ''
+            if os.path.isdir(os.path.join(path, fname)):
+                for_display = fname
+            else:
+                for_display = os.path.splitext(fname)[0]
+            tuple = {'sortkey':fname, 'filename':fname, 'displayname':format_for_display(for_display), 'urlname':format_for_url(fname)}
         tuples.append(tuple)
     tuples.sort(dirent_compare)
     return tuples
