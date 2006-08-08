@@ -166,14 +166,16 @@ def first_image_in_dir(rel_dir):
             return os.path.join(dir_fname, recurse)
 
 def send_redirect(req, new_url):
-    #req.set_header('Location', "http://www.saturnvalley.org" + new_url)
-    req.environ['PATH_INFO'] += '/'
+    new_full_url = 'http://www.saturnvalley.org' + new_url
+    req.set_header('Content-type', 'text/html')
+    req.write('<meta http-equiv="refresh" content="0;%s">' % new_full_url)
 
-def ensure_trailing_slash(req):
+def ensure_trailing_slash_and_check_needs_refresh(req):
     uri = req.environ["REQUEST_URI"]
     if not uri.endswith('/'):
         send_redirect(req, uri + '/')
-        return
+        return 1
+    return 0
 
 def find_preview(rel_dir):
     abs_dir = rel_to_abs(rel_dir)
@@ -183,7 +185,7 @@ def find_preview(rel_dir):
     return None
 
 def gallery(req):
-    ensure_trailing_slash(req)
+    if ensure_trailing_slash_and_check_needs_refresh(req): return
 
     url_dir = req.environ["PATH_INFO"][1:]
     rel_dir = url_to_rel(url_dir)
