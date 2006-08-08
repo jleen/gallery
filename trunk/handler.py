@@ -54,7 +54,7 @@ def handler(req):
 def send_404(req):
     req.set_header('Status', '404 Not Found')
     req.set_header('Content-type', 'text/html')
-    spewfile(req, "/home/jmleen/saturnvalley.org/errors/404.html")
+    spew_file(req, "/home/jmleen/saturnvalley.org/errors/404.html")
 
 def photopage(req):
     url = req.environ["PATH_INFO"][1:]
@@ -117,37 +117,35 @@ def photo(req):
         allow_original = 1
     if size == "original" and not allow_original:
         size = "full"
-    if size == "full":
-        return spewuncachedphoto(rel_image)
-    elif size == "original":
-        return spewfile(req, rel_to_abs(rel_image))
+    if size == "original":
+        return spew_file(req, rel_to_abs(rel_image))
     else:
-        return spewphoto(req, rel_image, size)
+        return spew_photo(req, rel_image, size)
 
-def spewphoto(req, rel, size):
+def spew_photo(req, rel, size):
     abs_cachedir = os.path.join(gallery_config.cache_prefix, size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
     abs_raw_image = rel_to_abs(rel)
     if iscached(abs_raw_image, abs_cachefile):
-        return spewfile(req, abs_cachefile)
+        return spew_file(req, abs_cachefile)
     else:
-        dims = size.split("x")
-        width = int(dims[0])
-        if len(dims) > 1: height = int(dims[1])
-        else: height = width
+        width = 0
+        height = 0
+        if size != "full":
+            dims = size.split("x")
+            width = int(dims[0])
+            if len(dims) > 1: height = int(dims[1])
+            else: height = width
         cache_img(req, rel, width, height, abs_cachedir, abs_cachefile, 1)
         return
 
-def spewhtml(abs):
+def spew_html(abs):
     if check_client_cache( 'text/html; charset="UTF-8"',
             max_ctime_for_files([abs])):
         return
-    spewfile(abs)
+    spew_file(abs)
 
-def spewuncachedphoto(rel):
-    get_image_for_display(rel_to_abs(rel)).save(sys.stdout, "JPEG", quality = 95)
-
-def spewfile(req, abs):
+def spew_file(req, abs):
     fil = file(abs, 'rb')
     req.write(fil.read())
     fil.close()
