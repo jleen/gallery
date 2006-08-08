@@ -73,9 +73,10 @@ def rel_to_url(rel, size = None, ext = None, trailing_slash = 0):
         url_ext = "." + ext
     if size != None:
         base = base + "_" + size
+    url = base + url_ext
     if trailing_slash:
-        url_ext = os.path.join(url_ext, '')
-    return base + url_ext
+        url = os.path.join(url, '')
+    return url
 
 def infer_image_path(base):
     for ext in img_extns:

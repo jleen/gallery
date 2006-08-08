@@ -96,7 +96,7 @@ def photopage(req):
         a['from_caption'] = format_for_display(os.path.basename(dir_dest_path))
         a['from_url'] = os.path.join(gallery_config.browse_prefix, pruned_dest)
 
-    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, 0)
+    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, final_is_link = 0)
     a['breadcrumbs'] = breadcrumbs
 
     template = templates.photopage.photopage(searchList=[a])
