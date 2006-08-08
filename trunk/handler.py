@@ -56,12 +56,12 @@ def send_404(req):
     req.set_header('Content-type', 'text/html')
     spewfile(req, "/home/jmleen/saturnvalley.org/errors/404.html")
 
-def photopage():
-    url = os.environ["PATH_INFO"][1:]
+def photopage(req):
+    url = req.environ["PATH_INFO"][1:]
     (url_dir, base, extn) = split_path_ext(url)
     rel_dir = url_to_rel(url_dir)
     abs_image = url_to_abs(os.path.join(url_dir, base), infer_suffix = 1)
-    if check_client_cache('text/html; charset="UTF-8"',
+    if check_client_cache(req, 'text/html; charset="UTF-8"',
         max_ctime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
@@ -100,7 +100,7 @@ def photopage():
     a['breadcrumbs'] = breadcrumbs
 
     template = templates.photopage.photopage(searchList=[a])
-    sys.stdout.write(str(template))
+    req.write(str(template))
 
 def photo(req):
     url = req.environ["PATH_INFO"][1:]
@@ -167,13 +167,14 @@ def first_image_in_dir(rel_dir):
             recurse = first_image_in_dir(os.path.join(rel_dir, dir_fname))
             return os.path.join(dir_fname, recurse)
 
-def send_redirect(new_url):
-    sys.stdout.write("Location: http://www.saturnvalley.org" + new_url + "\n\n")
+def send_redirect(req, new_url):
+    #req.set_header('Location', "http://www.saturnvalley.org" + new_url)
+    req.environ['PATH_INFO'] += '/'
 
-def ensure_trailing_slash():
-    uri = os.environ["REQUEST_URI"]
+def ensure_trailing_slash(req):
+    uri = req.environ["REQUEST_URI"]
     if not uri.endswith('/'):
-        send_redirect(uri + '/')
+        send_redirect(req, uri + '/')
         return
 
 def find_preview(rel_dir):
@@ -184,7 +185,7 @@ def find_preview(rel_dir):
     return None
 
 def gallery(req):
-    ensure_trailing_slash()
+    ensure_trailing_slash(req)
 
     url_dir = req.environ["PATH_INFO"][1:]
     rel_dir = url_to_rel(url_dir)
