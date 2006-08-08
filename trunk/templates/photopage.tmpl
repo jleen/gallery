@@ -58,16 +58,14 @@ a
 </script>
 
 <title>$gallery_title: $photo_title</title>
+<div>
 #if $varExists('breadcrumbs')
 <p>
-#set $first = 1
 #for $is_link, $dir, $name in $breadcrumbs
-#if $first == 0
- &gt;&gt; 
-#end if
 <b><a href="$dir">$name</a></b>
-#set $first = 0
+ &gt;&gt; 
 #end for
+<b>$photo_title</b>
 </p>
 #end if
 <table width="100%">
@@ -116,6 +114,4 @@ next
 #end if
 </td>
 </table>
-
-
-
+</div>
