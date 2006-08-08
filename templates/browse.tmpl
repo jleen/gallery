@@ -140,7 +140,7 @@ $index_html
 <tr>
 #if $preview
 <td width="100">
-<a href="$dir"><img src="$preview" border="2" align="middle" width="$width" height="$height"></a>
+<a href="$dir/"><img src="$preview" border="2" align="middle" width="$width" height="$height"></a>
 </td>
 #if not $side_by_side
 </tr>
@@ -153,7 +153,7 @@ $index_html
 #set $name_width=$lhs_width-100
 #end if
 <td align="left" width="$name_width">
-<a href="$dir">$name</a>
+<a href="$dir/">$name</a>
 </td></tr></table>
 #end for
 
