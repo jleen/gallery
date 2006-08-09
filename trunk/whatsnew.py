@@ -64,7 +64,7 @@ def read_update_entries(fname):
     return update_entries
 
 
-def spew_whats_new(update_entries, title_str, next_url, next_link_name):
+def spew_whats_new(req, update_entries, title_str, next_url, next_link_name):
     search = {}
     search['gallerytitle'] = gallery_config.short_name
     search['title'] = title_str
@@ -73,10 +73,10 @@ def spew_whats_new(update_entries, title_str, next_url, next_link_name):
     search['nextLink'] = next_url
     template = templates.whatsnewpage.whatsnewpage(searchList=[search])
 
-    sys.stdout.write(str(template))
+    req.write(str(template))
 
 
-def spew_recent_whats_new():
+def spew_recent_whats_new(req):
     fname = whatsnew_src_file()
     update_entries = read_update_entries(fname)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
@@ -91,18 +91,18 @@ def spew_recent_whats_new():
     else:
         idx = len(update_entries)
 
-    if cache.check_client_cache( 'text/html; charset="UTF-8"',
+    if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
-    spew_whats_new(update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(gallery_config.browse_prefix, "whatsnew_all.html")), all_updates)
+    spew_whats_new(req, update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(gallery_config.browse_prefix, "whatsnew_all.html")), all_updates)
 
-def spew_all_whats_new():
+def spew_all_whats_new(req):
     fname = whatsnew_src_file()
     update_entries = read_update_entries(fname)
 
-    if cache.check_client_cache( 'text/html; charset="UTF-8"',
+    if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
 
-    spew_whats_new(update_entries, "All Updates", None, None)
+    spew_whats_new(req, update_entries, "All Updates", None, None)
 
