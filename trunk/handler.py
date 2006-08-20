@@ -75,7 +75,7 @@ def photopage(req, config):
 
     a = {}
     a['framed_img_url'] = abs_to_url(abs_image, config, size = "700x500")
-    a['full_img_url'] = abs_to_url(abs_image, config, size = "full")
+    a['full_img_url'] = abs_to_url(abs_image, config, size = big_size)
     a['gallery_title'] =  config['short_name']
     a['photo_title'] = get_displayname_for_file(abs_image, config)
     a['description'] = description
