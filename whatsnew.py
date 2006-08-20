@@ -8,19 +8,12 @@ import os
 
 import paths
 import cache
-import gallery_config
 import templates.whatsnewpage
 
-galleryUrlRoot = "http://saturnvalley.org" + gallery_config.browse_prefix
-whatsNewSrc = gallery_config.img_prefix + "/whatsnew.txt"
-whatsNewShort = gallery_config.img_prefix + "/whatsnew.html"
-whatsNewFull = gallery_config.img_prefix + "/whatsnew_all.html"
+def whatsnew_src_file(config):
+    return os.path.join(config['img_prefix'], "whatsnew.txt")
 
-
-def whatsnew_src_file():
-    return os.path.join(gallery_config.img_prefix, "whatsnew.txt")
-
-def read_update_entries(fname):
+def read_update_entries(fname, config):
     src = open(fname, "r")
 
     update_entries = []
@@ -42,7 +35,7 @@ def read_update_entries(fname):
             #ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = galleryUrlRoot + dir
+                    url = "http://saturnvalley.org" + config['browse_prefix']
                     is_movie_dir = 0
                     if dir.endswith('Movies'):
                         is_movie_dir = 1
@@ -53,7 +46,7 @@ def read_update_entries(fname):
                     else:
                         idx = idx + 1
                     dir = dir[idx:]
-                    dir = paths.format_for_display(dir)
+                    dir = paths.format_for_display(dir, config)
                     if is_movie_dir:
                         dir += " - Movies"
                     current_entry['dir'].append((dir, url))
@@ -64,9 +57,9 @@ def read_update_entries(fname):
     return update_entries
 
 
-def spew_whats_new(req, update_entries, title_str, next_url, next_link_name):
+def spew_whats_new(req, update_entries, title_str, next_url, next_link_name, config):
     search = {}
-    search['gallerytitle'] = gallery_config.short_name
+    search['gallerytitle'] = config['short_name']
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
@@ -76,9 +69,9 @@ def spew_whats_new(req, update_entries, title_str, next_url, next_link_name):
     req.write(str(template))
 
 
-def spew_recent_whats_new(req):
-    fname = whatsnew_src_file()
-    update_entries = read_update_entries(fname)
+def spew_recent_whats_new(req, config):
+    fname = whatsnew_src_file(config)
+    update_entries = read_update_entries(fname, config)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
     #slim it down to 10 entries
     if len(update_entries) > 10:
@@ -94,15 +87,14 @@ def spew_recent_whats_new(req):
     if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
-    spew_whats_new(req, update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(gallery_config.browse_prefix, "whatsnew_all.html")), all_updates)
+    spew_whats_new(req, update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(config['browse_prefix'], "whatsnew_all.html")), all_updates, config)
 
-def spew_all_whats_new(req):
-    fname = whatsnew_src_file()
-    update_entries = read_update_entries(fname)
+def spew_all_whats_new(req, config):
+    fname = whatsnew_src_file(config)
+    update_entries = read_update_entries(fname, config)
 
     if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
 
-    spew_whats_new(req, update_entries, "All Updates", None, None)
-
+    spew_whats_new(req, update_entries, "All Updates", None, None, config)

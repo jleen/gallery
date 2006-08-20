@@ -1,6 +1,5 @@
 # vim:sw=4:ts=4
 # -*- coding: latin-1 -*-
-import gallery_config
 from paths import *
 
 import os
@@ -19,7 +18,6 @@ def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
 
 cache_dependencies = [
-    gallery_config.__file__,
     scriptdir('cache_sentinel')
 ]
 
@@ -44,10 +42,10 @@ def check_client_cache(req, content_type, ctime):
         req.set_header('ETag', server_date)
         return 0
 
-def img_size(rel_image, max_size):
-    abs_cachedir = os.path.join(gallery_config.cache_prefix, "%d" % max_size)
+def img_size(rel_image, max_size, config):
+    abs_cachedir = os.path.join(config['cache_prefix'], "%d" % max_size)
     abs_cachefile = os.path.join(abs_cachedir, rel_image)
-    abs_raw_image = rel_to_abs(rel_image)
+    abs_raw_image = rel_to_abs(rel_image, config)
     try:
         if iscached(abs_raw_image, abs_cachefile):
             cache_image = Image.open(abs_cachefile)
@@ -59,7 +57,7 @@ def img_size(rel_image, max_size):
             #properly compute the dimensions.  However, if I do this step, the
             #server sometimes times out.
             rotation_amount = None
-            #rotation_amount = compute_rotation_amount(exif.exif_tags_raw(abs_raw_image))
+            #rotation_amount = compute_rotation_amount(exif.exif_tags_raw(abs_raw_image), config)
             if rotation_amount and (rotation_amount == 90 or rotation_amount == -90):
                 (height, width) = raw_image.size #swap them
             else:
@@ -86,9 +84,9 @@ def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
     if not os.path.isdir(dirname): os.makedirs(dirname)
 
-def compute_rotation_amount(tags):
+def compute_rotation_amount(tags, config):
     rotation_amount = 0
-    if gallery_config.apply_rotation and tags:
+    if config['apply_rotation'] and tags:
         orientation_tag = tags.get('Image Orientation')
         if orientation_tag == None:
             orientation_tag = ''
@@ -101,7 +99,7 @@ def compute_rotation_amount(tags):
             rotation_amount = 90
     return rotation_amount
 
-def get_image_for_display(fname, width = 0, height = 0):
+def get_image_for_display(fname, config, width = 0, height = 0):
     img = Image.open(fname)
     tags = exif.exif_tags_raw(fname)
 
@@ -110,13 +108,13 @@ def get_image_for_display(fname, width = 0, height = 0):
     else:
         (width, height) = img.size
 
-    rotation_amount = compute_rotation_amount(tags)
+    rotation_amount = compute_rotation_amount(tags, config)
     if rotation_amount: img = img.rotate(rotation_amount, Image.NEAREST)
 
     try :
-        copyright_name = gallery_config.copyright_name 
-        copyright_font = gallery_config.copyright_font
-    except AttributeError:
+        copyright_name = config['copyright_name'] 
+        copyright_font = config['copyright_font']
+    except KeyError:
         copyright_name = None
         copyright_font = None
 
@@ -127,7 +125,7 @@ def get_image_for_display(fname, width = 0, height = 0):
             year = dt[0]
         else:
             year = 0 #use the ctime as a fallback
-        copyright_string = '© ' + str(year) + ' ' + gallery_config.copyright_name
+        copyright_string = '© ' + str(year) + ' ' + config['copyright_name']
         (imgwidth, imgheight) = img.size;
         font = ImageFont.truetype( copyright_font, int(round(imgheight * .02)) )
 
@@ -171,9 +169,9 @@ def get_image_for_display(fname, width = 0, height = 0):
     return img
 
 
-def cache_img(req, fname, width, height, cachedir, cachefile, do_output):
+def cache_img(req, fname, width, height, cachedir, cachefile, do_output, config):
 
-    img = get_image_for_display(gallery_config.img_prefix + fname, width, height)
+    img = get_image_for_display(config['img_prefix'] + fname, config, width, height)
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
