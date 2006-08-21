@@ -187,9 +187,15 @@ def find_preview(rel_dir, config):
     return None
 
 def gallery(req, config):
-    if ensure_trailing_slash_and_check_needs_refresh(req): return
+    # HACK: Since IE can't seem to handle meta refresh properly, I've
+    # disabled redirect and instead we'll just patch up PATH_INFO to
+    # pretend we got a trailing slash.
+
+    #if ensure_trailing_slash_and_check_needs_refresh(req): return
 
     url_dir = req.environ["PATH_INFO"][1:]
+    if url_dir.startswith('/home'): url_dir = '/'
+    if not url_dir.endswith('/'): url_dir += '/'
     rel_dir = url_to_rel(url_dir, config)
     abs_dir = rel_to_abs(rel_dir, config)
     items = get_directory_tuples(abs_dir, config)
