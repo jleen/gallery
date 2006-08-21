@@ -4,7 +4,7 @@ configs = {
         'long_name': "Saturn Valley Hall of Light",
         'img_prefix': "/home/jmleen/photos/",
         'cache_prefix': "/home/jmleen/var/cache/gallery/",
-        'browse_prefix': "/try/gallery/",
+        'browse_prefix': "/gallery/",
         'apply_rotation': 0,
         'show_exif': 1
         },
