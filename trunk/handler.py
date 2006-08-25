@@ -120,7 +120,7 @@ def photo(req, config):
     if size == "original" and not allow_original:
         size = "full"
     if size == "original":
-        return spew_file(req, rel_to_abs(rel_image), config)
+        return spew_file(req, rel_to_abs(rel_image, config))
     else:
         return spew_photo(req, rel_image, size, config)
 
