@@ -56,7 +56,7 @@ def handler(req):
 def send_404(req):
     req.set_header('Status', '404 Not Found')
     req.set_header('Content-type', 'text/html')
-    spew_file(req, "/home/jmleen/saturnvalley.org/errors/404.html")
+    spew_file(req, "/home/mrsaturn/saturnvalley.org/errors/404.html")
 
 def photopage(req, config):
     url = req.environ["PATH_INFO"][1:]

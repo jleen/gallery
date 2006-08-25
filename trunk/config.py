@@ -8,6 +8,15 @@ configs = {
         'apply_rotation': 0,
         'show_exif': 1
         },
+    'jleen_try': {
+        'short_name': "Hall of Light",
+        'long_name': "Saturn Valley Hall of Light",
+        'img_prefix': "/home/jmleen/photos/",
+        'cache_prefix': "/home/jmleen/var/cache/gallery/",
+        'browse_prefix': "/try/gallery/",
+        'apply_rotation': 0,
+        'show_exif': 1
+        },
     'randy': {
         'short_name': "Randy&rsquo;s House of Stuff",
         'long_name': "Randy&rsquo;s House of Stuff",
