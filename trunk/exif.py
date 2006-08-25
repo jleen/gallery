@@ -4,14 +4,18 @@ def copyIfPresent(dst, dstKey, src, srcKey):
     if src.has_key(srcKey):
         dst[dstKey] = src[srcKey]
 
+def safe_divide(numer, denom):
+    if denom == 0: return 0
+    return numer / denom
+
 def fractionToDecimal(fraction):
     pieces = fraction.split('/')
     if len(pieces) == 2:
-        computed = float(pieces[0]) / float(pieces[1])
+        computed = safe_divide(float(pieces[0]), float(pieces[1]))
         if computed < 0.25001 and computed > 0:
             return '1/%d' % int(0.5 + (1/computed))
         else:
-            return str(float(pieces[0]) / float(pieces[1]))
+            return str(safe_divide(float(pieces[0]), float(pieces[1])))
     else:
         return fraction
 
@@ -28,7 +32,7 @@ def fractionToEntity(fractionStr):
 def improperToProper(fraction):
     pieces = fraction.split('/')
     if len(pieces) == 2:
-        rational = float(pieces[0]) / float(pieces[1])
+        rational = safe_divide(float(pieces[0]), float(pieces[1]))
         if rational < 0:
             isNegative = 1
             rational = rational * -1.0
