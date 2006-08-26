@@ -46,6 +46,14 @@ configs = {
         'browse_prefix': "/momnpop/",
         'apply_rotation': 1
         },
+    'momnpop_try': {
+        'short_name': "John and Winnie&rsquo;s Pictures",
+        'long_name': "John and Winnie&rsquo;s Pictures",
+        'img_prefix': "/home/momnpop/photos/",
+        'cache_prefix': "/home/jmleen/var/cache/gallery/momnpop",
+        'browse_prefix': "/try/momnpop/",
+        'apply_rotation': 1
+        },
     'roussel': {
         'short_name': 'Corey &amp; Lauren in Japan',
         'long_name': 'Corey &amp; Lauren in Japan',
