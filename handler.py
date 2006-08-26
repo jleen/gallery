@@ -39,17 +39,18 @@ def handler(req):
     try:
         os.umask(0002)
         config = configs[req.params['config']]
+        tuple_cache = new_tuple_cache()
         reqpath = req.environ["PATH_INFO"].lower()
         extn = os.path.splitext(reqpath)[1]
         if os.path.split(reqpath)[1] == 'index.html':
-            return gallery(req, config)
+            return gallery(req, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
             return whatsnew.spew_recent_whats_new(req, config)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
             return whatsnew.spew_all_whats_new(req, config)
-        elif extn.lower() in img_extns: return photo(req, config)
-        elif extn == '.html': return photopage(req, config)
-        elif extn.lower() in img_extns or len(extn) < 1: return gallery(req, config)
+        elif extn.lower() in img_extns: return photo(req, config, tuple_cache)
+        elif extn == '.html': return photopage(req, config, tuple_cache)
+        elif extn.lower() in img_extns or len(extn) < 1: return gallery(req, config, tuple_cache)
         else: send_404(req)
     except UnableToDisambiguateException: send_404(req)
 
@@ -58,11 +59,11 @@ def send_404(req):
     req.set_header('Content-type', 'text/html')
     spew_file(req, "/home/mrsaturn/saturnvalley.org/errors/404.html")
 
-def photopage(req, config):
+def photopage(req, config, tuples):
     url = req.environ["PATH_INFO"][1:]
     (url_dir, base, extn) = split_path_ext(url)
-    rel_dir = url_to_rel(url_dir, config)
-    abs_image = url_to_abs(os.path.join(url_dir, base), config, infer_suffix = 1)
+    rel_dir = url_to_rel(url_dir, config, tuples)
+    abs_image = url_to_abs(os.path.join(url_dir, base), config, tuples, infer_suffix = 1)
     if check_client_cache(req, 'text/html; charset="UTF-8"',
         max_ctime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
 
@@ -74,15 +75,15 @@ def photopage(req, config):
                 description = line[len('Description: '):]
 
     a = {}
-    a['framed_img_url'] = abs_to_url(abs_image, config, size = "700x500")
-    a['full_img_url'] = abs_to_url(abs_image, config, size = big_size)
+    a['framed_img_url'] = abs_to_url(abs_image, config, tuples, size = "700x500")
+    a['full_img_url'] = abs_to_url(abs_image, config, tuples, size = big_size)
     a['gallery_title'] =  config['short_name']
-    a['photo_title'] = get_displayname_for_file(abs_image, config)
+    a['photo_title'] = get_displayname_for_file(abs_image, config, tuples)
     a['description'] = description
     a['exifdata'] = exif_tags(abs_image)
-    (prev, next) = get_nearby_for_file(abs_image, config)
-    if prev: prev = abs_to_url(prev, config, ext = 'html')
-    if next: next = abs_to_url(next, config, ext = 'html')
+    (prev, next) = get_nearby_for_file(abs_image, config, tuples)
+    if prev: prev = abs_to_url(prev, config, tuples, ext = 'html')
+    if next: next = abs_to_url(next, config, tuples, ext = 'html')
     a['prev'] = prev
     a['next'] = next
     
@@ -98,20 +99,20 @@ def photopage(req, config):
         a['from_caption'] = format_for_display(os.path.basename(dir_dest_path), config)
         a['from_url'] = os.path.join(config['browse_prefix'], pruned_dest)
 
-    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, final_is_link = 0, config = config)
+    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, final_is_link = 0, config = config, tuples = tuples)
     a['breadcrumbs'] = breadcrumbs
 
     template = templates.photopage.photopage(searchList=[a])
     req.write(str(template))
 
-def photo(req, config):
+def photo(req, config, tuples):
     url = req.environ["PATH_INFO"][1:]
     size_index = url.rfind('_')
     ext_index = url.rfind('.')
     base = url[:size_index]
     size = url[size_index+1:ext_index]
     ext = url[ext_index+1:]
-    rel_image = url_to_rel(base + '.' + ext, config)
+    rel_image = url_to_rel(base + '.' + ext, config, tuples)
     image_ctime = lctime(rel_to_abs(rel_image, config))
     if check_client_cache(req, "image/jpeg", image_ctime): return
     try: allow_original = config['allow_original']
@@ -152,9 +153,9 @@ def spew_file(req, abs):
     req.write(fil.read())
     fil.close()
 
-def first_image_in_dir(rel_dir, config):
+def first_image_in_dir(rel_dir, config, tuples):
     abs_dir = rel_to_abs(rel_dir, config)
-    items = get_directory_tuples(abs_dir, config)
+    items = get_directory_tuples(abs_dir, config, tuples)
     for item in items:
         (scratch, base, ext) = split_path_ext(item['filename'])
         if ext.lower() in img_extns:
@@ -164,7 +165,7 @@ def first_image_in_dir(rel_dir, config):
     for dir_item in items:
         dir_fname = dir_item['filename']
         if os.path.isdir(os.path.join(abs_dir, dir_fname)):
-            recurse = first_image_in_dir(os.path.join(rel_dir, dir_fname), config)
+            recurse = first_image_in_dir(os.path.join(rel_dir, dir_fname), config, tuples)
             return os.path.join(dir_fname, recurse)
 
 def send_redirect(req, new_url):
@@ -186,7 +187,7 @@ def find_preview(rel_dir, config):
             return os.path.join(rel_dir, fn)
     return None
 
-def gallery(req, config):
+def gallery(req, config, tuples):
     # HACK: Since IE can't seem to handle meta refresh properly, I've
     # disabled redirect and instead we'll just patch up PATH_INFO to
     # pretend we got a trailing slash.
@@ -196,9 +197,9 @@ def gallery(req, config):
     url_dir = req.environ["PATH_INFO"][1:]
     if url_dir.startswith('/home'): url_dir = '/'
     if not url_dir.endswith('/'): url_dir += '/'
-    rel_dir = url_to_rel(url_dir, config)
+    rel_dir = url_to_rel(url_dir, config, tuples)
     abs_dir = rel_to_abs(rel_dir, config)
-    items = get_directory_tuples(abs_dir, config)
+    items = get_directory_tuples(abs_dir, config, tuples)
 
     abs_images = []
     for item in items:
@@ -220,9 +221,9 @@ def gallery(req, config):
         if ext.lower() not in img_extns: continue
 
         rel_image = os.path.join(rel_dir, fname)
-        url_medium = rel_to_url(rel_image, config, ext = 'html')
-        url_big = rel_to_url(rel_image, config, size = big_size)
-        url_thumb = rel_to_url(rel_image, config, size = thumb_size)
+        url_medium = rel_to_url(rel_image, config, tuples, ext = 'html')
+        url_big = rel_to_url(rel_image, config, tuples, size = big_size)
+        url_thumb = rel_to_url(rel_image, config, tuples, size = thumb_size)
         caption = displayname
         (width, height) = img_size(rel_image, thumb_size_int, config)
         image_records.append((url_medium, url_big, url_thumb, caption, width, height))
@@ -241,11 +242,11 @@ def gallery(req, config):
         displayname = item['displayname']
         rel_subdir = os.path.join(rel_dir, fname)
         if not os.path.isdir(rel_to_abs(rel_subdir, config)): continue
-        url_subdir = rel_to_url(rel_subdir, config, trailing_slash = 1)
+        url_subdir = rel_to_url(rel_subdir, config, tuples, trailing_slash = 1)
         caption = displayname
         rel_preview = find_preview(rel_subdir, config)
         if not rel_preview:
-            rel_preview = first_image_in_dir(rel_subdir, config)
+            rel_preview = first_image_in_dir(rel_subdir, config, tuples)
             if rel_preview:
                 rel_preview = os.path.join(rel_subdir, rel_preview)
 
@@ -253,12 +254,12 @@ def gallery(req, config):
         width = 0
         height = 0
         if rel_preview:
-            preview = os.path.join(url_subdir, rel_to_url(rel_preview, config, size = preview_size))
+            preview = os.path.join(url_subdir, rel_to_url(rel_preview, config, tuples, size = preview_size))
             (width, height) = img_size(rel_preview, 100, config)
 
         subdir_records.append((url_subdir, caption, preview, width, height))
 
-    breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0, config)
+    breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0, config, tuples)
 
     a = {}
     template = templates.browse.browse(searchList=[a])
