@@ -1,18 +1,20 @@
 # vim:sw=4:ts=4
 # -*- coding: latin-1 -*-
-from paths import *
+
+from   paths import *
 
 import os
 import rfc822
 import stat
-import time
+from   StringIO import StringIO
 import sys
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-from PIL import ImageStat
-from StringIO import StringIO
+import time
+
 import exif
+from   PIL import Image
+from   PIL import ImageDraw
+from   PIL import ImageFont
+from   PIL import ImageStat
 
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
@@ -53,12 +55,14 @@ def img_size(rel_image, max_size, config):
         else:
             raw_image = Image.open(abs_raw_image)
 
-            #Here's the problem.  Without checking the EXIF tags, I can't
-            #properly compute the dimensions.  However, if I do this step, the
-            #server sometimes times out.
+            # Here's the problem.  Without checking the EXIF tags, I can't
+            # properly compute the dimensions.  However, if I do this step, the
+            # server sometimes times out.
             rotation_amount = None
-            #rotation_amount = compute_rotation_amount(exif.exif_tags_raw(abs_raw_image), config)
-            if rotation_amount and (rotation_amount == 90 or rotation_amount == -90):
+            #rotation_amount = compute_rotation_amount(
+            #        exif.exif_tags_raw(abs_raw_image), config)
+            if (rotation_amount and
+                    (rotation_amount == 90 or rotation_amount == -90)):
                 (height, width) = raw_image.size #swap them
             else:
                 (width, height) = raw_image.size
@@ -127,7 +131,7 @@ def get_image_for_display(fname, config, width = 0, height = 0):
             year = 0 #use the ctime as a fallback
         copyright_string = '© ' + str(year) + ' ' + config['copyright_name']
         (imgwidth, imgheight) = img.size;
-        font = ImageFont.truetype( copyright_font, int(round(imgheight * .02)) )
+        font = ImageFont.truetype(copyright_font, int(round(imgheight * .02)))
 
         draw = ImageDraw.Draw(img)
         draw.setfont(font)
@@ -139,11 +143,14 @@ def get_image_for_display(fname, config, width = 0, height = 0):
         textstartw = imgwidth - textwidth - winset;
         textstarth = imgheight - textheight - hinset
 
-        #create a mask image for the insanity of computing the inverse color
-        #for the copyright image.
+        # Create a mask image for the insanity of computing the inverse color
+        # for the copyright image.
         mask = Image.new( "1", (imgwidth, imgheight), 0 )
         maskdraw = ImageDraw.Draw(mask)
-        maskdraw.rectangle( [(textstartw, textstarth), (textstartw + textwidth, textstarth + textheight)], fill=1 )
+        maskdraw.rectangle([
+                (textstartw, textstarth),
+                (textstartw + textwidth, textstarth + textheight)],
+                fill=1)
         del maskdraw
 
         stats = ImageStat.Stat(img, mask)
@@ -162,20 +169,36 @@ def get_image_for_display(fname, config, width = 0, height = 0):
         drop_shadow_offset = int(round(textheight * 0.03))
         if drop_shadow_offset < 1: drop_shadow_offset = 1
 
-        draw.text( (textstartw+drop_shadow_offset, textstarth+drop_shadow_offset), copyright_string, fill=shadow_fill_value )
-        draw.text( (textstartw, textstarth), copyright_string, fill=fill_value )
+        draw.text((
+            textstartw + drop_shadow_offset,
+            textstarth + drop_shadow_offset),
+            copyright_string,
+            fill = shadow_fill_value )
+        draw.text(
+                (textstartw, textstarth),
+                copyright_string,
+                fill = fill_value )
         del draw
 
     return img
 
 
-def cache_img(req, fname, width, height, cachedir, cachefile, do_output, config):
-
-    img = get_image_for_display(config['img_prefix'] + fname, config, width, height)
+def cache_img(req, rel, size, config):
+    width = 0
+    height = 0
+    if size != "full":
+        dims = size.split("x")
+        width = int(dims[0])
+        if len(dims) > 1: height = int(dims[1])
+        else: height = width
+    abs_cachedir = os.path.join(config['cache_prefix'], size)
+    abs_cachefile = os.path.join(abs_cachedir, rel)
+    abs_img = rel_to_abs(rel, config)
+    img = get_image_for_display(abs_img, config, width, height)
 
     buf = StringIO()
     img.save(buf, "JPEG", quality = 95)
-    if do_output:
+    if req:
         req.write(buf.getvalue())
     if os.path.isdir(cachedir):
         makedirsfor(cachefile)

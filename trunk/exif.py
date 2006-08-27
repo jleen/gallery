@@ -1,5 +1,7 @@
 # vim:sw=4:ts=4
+
 import EXIF
+
 def copyIfPresent(dst, dstKey, src, srcKey):
     if src.has_key(srcKey):
         dst[dstKey] = src[srcKey]
@@ -82,37 +84,60 @@ def exif_tags(img_fname):
     copyIfPresent(processedTags, 'Light Source', tags, 'EXIF LightSource')
     copyIfPresent(processedTags, 'Metering Mode', tags, 'EXIF MeteringMode')
     copyIfPresent(processedTags, 'Date Time', tags, 'EXIF DateTimeOriginal')
-    copyIfPresent(processedTags, 'Image Optimization', tags, 'MakerNote Image Optimization')
-    copyIfPresent(processedTags, 'Hue Adjustment', tags, 'MakerNote HueAdjustment')
+    copyIfPresent(processedTags, 'Image Optimization',
+            tags, 'MakerNote Image Optimization')
+    copyIfPresent(processedTags, 'Hue Adjustment',
+            tags, 'MakerNote HueAdjustment')
     if tags.has_key('EXIF ExposureTime'):
-        processedTags['Shutter Speed'] = fractionToDecimal(tags['EXIF ExposureTime'].printable)
+        processedTags['Shutter Speed'] = fractionToDecimal(
+                tags['EXIF ExposureTime'].printable)
     if tags.has_key('EXIF ExposureBiasValue'):
-        processedTags['Exposure Compensation'] = improperToProper(tags['EXIF ExposureBiasValue'].printable)
+        processedTags['Exposure Compensation'] = improperToProper(
+                tags['EXIF ExposureBiasValue'].printable)
 
-    copyIfPresent(processedTags, 'Exposure Program', tags, 'EXIF ExposureProgram')
-    copyIfPresent(processedTags, 'Focus Mode', tags, 'MakerNote FocusMode')
+    copyIfPresent(processedTags, 'Exposure Program',
+            tags, 'EXIF ExposureProgram')
+    copyIfPresent(processedTags, 'Focus Mode',
+            tags, 'MakerNote FocusMode')
 
-    copyIfPresent(processedTags, 'AutoFlashMode', tags, 'MakerNote AutoFlashMode')
-    copyIfPresent(processedTags, 'Image Sharpening', tags, 'MakerNote ImageSharpening')
-    copyIfPresent(processedTags, 'Tone Compensation', tags, 'MakerNote ToneCompensation')
-    copyIfPresent(processedTags, 'Flash', tags, 'EXIF Flash')
-    copyIfPresent(processedTags, 'Lighting Type', tags, 'MakerNote LightingType')
-    copyIfPresent(processedTags, 'Noise Reduction', tags, 'MakerNote NoiseReduction')
-    copyIfPresent(processedTags, 'Flash Setting', tags, 'MakerNote FlashSetting')
-    copyIfPresent(processedTags, 'Bracketing Mode', tags, 'MakerNote BracketingMode')
-    copyIfPresent(processedTags, 'ISO Setting', tags, 'MakerNote ISOSetting')
-    copyIfPresent(processedTags, 'FlashBracketCompensationApplied', tags, 'MakerNote FlashBracketCompensationApplied')
-    copyIfPresent(processedTags, 'SubSecTimeOriginal', tags, 'EXIF SubSecTimeOriginal')
-    copyIfPresent(processedTags, 'AFFocusPosition', tags, 'MakerNote AFFocusPosition')
-    copyIfPresent(processedTags, 'WhiteBalanceBias', tags, 'MakerNote WhiteBalanceBias')
-    copyIfPresent(processedTags, 'Whitebalance', tags, 'MakerNote Whitebalance')
+    copyIfPresent(processedTags, 'AutoFlashMode',
+            tags, 'MakerNote AutoFlashMode')
+    copyIfPresent(processedTags, 'Image Sharpening',
+            tags, 'MakerNote ImageSharpening')
+    copyIfPresent(processedTags, 'Tone Compensation',
+            tags, 'MakerNote ToneCompensation')
+    copyIfPresent(processedTags, 'Flash',
+            tags, 'EXIF Flash')
+    copyIfPresent(processedTags, 'Lighting Type',
+            tags, 'MakerNote LightingType')
+    copyIfPresent(processedTags, 'Noise Reduction',
+            tags, 'MakerNote NoiseReduction')
+    copyIfPresent(processedTags, 'Flash Setting',
+            tags, 'MakerNote FlashSetting')
+    copyIfPresent(processedTags, 'Bracketing Mode',
+            tags, 'MakerNote BracketingMode')
+    copyIfPresent(processedTags, 'ISO Setting',
+            tags, 'MakerNote ISOSetting')
+    copyIfPresent(processedTags, 'FlashBracketCompensationApplied',
+            tags, 'MakerNote FlashBracketCompensationApplied')
+    copyIfPresent(processedTags, 'SubSecTimeOriginal',
+            tags, 'EXIF SubSecTimeOriginal')
+    copyIfPresent(processedTags, 'AFFocusPosition',
+            tags, 'MakerNote AFFocusPosition')
+    copyIfPresent(processedTags, 'WhiteBalanceBias',
+            tags, 'MakerNote WhiteBalanceBias')
+    copyIfPresent(processedTags, 'Whitebalance',
+            tags, 'MakerNote Whitebalance')
 
 
-    #Map various exif data
+    # Map various exif data.
 
-    #fractional
+    # Fractional...
+
     if tags.has_key('EXIF FNumber'):
-        processedTags['FNumber'] = fractionToDecimal(tags['EXIF FNumber'].printable)
+        processedTags['FNumber'] = fractionToDecimal(
+                tags['EXIF FNumber'].printable)
     if tags.has_key('EXIF FocalLength'):
-        processedTags['Focal Length'] = fractionToDecimal(tags['EXIF FocalLength'].printable)
+        processedTags['Focal Length'] = fractionToDecimal(
+                tags['EXIF FocalLength'].printable)
     return processedTags
