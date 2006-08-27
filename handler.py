@@ -1,25 +1,20 @@
 # vim:sw=4:ts=4
-import cgi
+
 import os
-import re
-import stat
 import string
-import sys
+from StringIO import StringIO
 import time
 
 from cache import *
+from config import configs
 from exif import *
 from paths import *
 import whatsnew
+
 import templates.browse
 import templates.photopage
 
-import EXIF
-from StringIO import StringIO
-
 import jon.cgi as cgi
-
-from config import configs
 
 small_size = "600"
 med_size = "1024"
@@ -50,7 +45,8 @@ def handler(req):
             return whatsnew.spew_all_whats_new(req, config)
         elif extn.lower() in img_extns: return photo(req, config, tuple_cache)
         elif extn == '.html': return photopage(req, config, tuple_cache)
-        elif extn.lower() in img_extns or len(extn) < 1: return gallery(req, config, tuple_cache)
+        elif extn.lower() in img_extns or len(extn) < 1:
+            return gallery(req, config, tuple_cache)
         else: send_404(req)
     except UnableToDisambiguateException: send_404(req)
 
@@ -63,9 +59,13 @@ def photopage(req, config, tuples):
     url = req.environ["PATH_INFO"][1:]
     (url_dir, base, extn) = split_path_ext(url)
     rel_dir = url_to_rel(url_dir, config, tuples)
-    abs_image = url_to_abs(os.path.join(url_dir, base), config, tuples, infer_suffix = 1)
-    if check_client_cache(req, 'text/html; charset="UTF-8"',
-        max_ctime_for_files([abs_image, scriptdir('templates/photopage.tmpl')])): return
+    abs_image = url_to_abs(
+            os.path.join(url_dir, base),
+            config, tuples, infer_suffix = 1)
+    cache_time = max_ctime_for_files(
+            [abs_image, scriptdir('templates/photopage.tmpl')])
+    if check_client_cache(req, 'text/html; charset="UTF-8"', cache_time):
+        return
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -75,7 +75,7 @@ def photopage(req, config, tuples):
                 description = line[len('Description: '):]
 
     a = {}
-    a['framed_img_url'] = abs_to_url(abs_image, config, tuples, size = "700x500")
+    a['framed_img_url'] = abs_to_url(abs_image, config, tuples, "700x500")
     a['full_img_url'] = abs_to_url(abs_image, config, tuples, size = big_size)
     a['gallery_title'] =  config['short_name']
     a['photo_title'] = get_displayname_for_file(abs_image, config, tuples)
@@ -96,10 +96,11 @@ def photopage(req, config, tuples):
         # to canonicalize both sides of this heinous equation.
         pruned_dest = dir_dest_path[len(os.path.realpath(
             config['img_prefix'])) + 1 :]
-        a['from_caption'] = format_for_display(os.path.basename(dir_dest_path), config)
+        leaf = os.path.basename(dir_dest_path)
+        a['from_caption'] = format_for_display(leaf, config)
         a['from_url'] = os.path.join(config['browse_prefix'], pruned_dest)
 
-    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, final_is_link = 0, config = config, tuples = tuples)
+    breadcrumbs = breadcrumbs_for_path("./" + rel_dir, config, tuples)
     a['breadcrumbs'] = breadcrumbs
 
     template = templates.photopage.photopage(searchList=[a])
@@ -132,20 +133,11 @@ def spew_photo(req, rel, size, config):
     if iscached(abs_raw_image, abs_cachefile):
         return spew_file(req, abs_cachefile)
     else:
-        width = 0
-        height = 0
-        if size != "full":
-            dims = size.split("x")
-            width = int(dims[0])
-            if len(dims) > 1: height = int(dims[1])
-            else: height = width
-        cache_img(req, rel, width, height, abs_cachedir, abs_cachefile, 1, config)
+        cache_img(req, rel, size, config)
         return
 
 def spew_html(abs):
-    if check_client_cache( 'text/html; charset="UTF-8"',
-            max_ctime_for_files([abs])):
-        return
+    if check_client_cache('text/html; charset="UTF-8"', lctime(abs)): return
     spew_file(abs)
 
 def spew_file(req, abs):
@@ -165,7 +157,8 @@ def first_image_in_dir(rel_dir, config, tuples):
     for dir_item in items:
         dir_fname = dir_item['filename']
         if os.path.isdir(os.path.join(abs_dir, dir_fname)):
-            recurse = first_image_in_dir(os.path.join(rel_dir, dir_fname), config, tuples)
+            rel_subdir = os.path.join(rel_dir, dir_fname)
+            recurse = first_image_in_dir(rel_subdir, config, tuples)
             return os.path.join(dir_fname, recurse)
 
 def send_redirect(req, new_url):
@@ -226,7 +219,8 @@ def gallery(req, config, tuples):
         url_thumb = rel_to_url(rel_image, config, tuples, size = thumb_size)
         caption = displayname
         (width, height) = img_size(rel_image, thumb_size_int, config)
-        image_records.append((url_medium, url_big, url_thumb, caption, width, height))
+        rec = (url_medium, url_big, url_thumb, caption, width, height)
+        image_records.append(rec)
 
     index_html = None
     rel_index = os.path.join(rel_dir, 'index.html')
@@ -254,12 +248,13 @@ def gallery(req, config, tuples):
         width = 0
         height = 0
         if rel_preview:
-            preview = os.path.join(url_subdir, rel_to_url(rel_preview, config, tuples, size = preview_size))
+            url_preview = rel_to_url(rel_preview, config, tuples, preview_size)
+            preview = os.path.join(url_subdir, url_preview)
             (width, height) = img_size(rel_preview, 100, config)
 
         subdir_records.append((url_subdir, caption, preview, width, height))
 
-    breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], 0, config, tuples)
+    breadcrumbs = breadcrumbs_for_path('./' + rel_dir[:-1], config, tuples)
 
     a = {}
     template = templates.browse.browse(searchList=[a])
@@ -271,13 +266,16 @@ def gallery(req, config, tuples):
         wn_txt_path = os.path.join(config['img_prefix'], "whatsnew.txt")
         wn_updates = None
         if os.path.exists(wn_txt_path):
-            wn_updates = whatsnew.read_update_entries(whatsnew.whatsnew_src_file(config), config)
-        if wn_updates != None and len(wn_updates) > 0:
+            wn_src = whatsnew.whatsnew_src_file(config)
+            wn_updates = whatsnew.read_update_entries(wn_src, config)
+        if wn_updates and len(wn_updates) > 0:
             use_wn = 1
     if use_wn:
-        wn_ctime = time.strftime('%B %d', time.strptime(wn_updates[0]['date'], '%m-%d-%Y'))
+        wn_date = wn_updates[0]['date']
+        wn_ctime = time.strftime('%B %d', time.strptime(wn_date, '%m-%d-%Y'))
         a['whatsnew_name'] = "What's New (updated " +  wn_ctime + ")"
-        a['whatsnew_url'] = os.path.join(config['browse_prefix'], "whatsnew.html")
+        a['whatsnew_url'] = os.path.join(
+                config['browse_prefix'], "whatsnew.html")
     else:
         a['whatsnew_name'] = None
         a['whatsnew_url'] = None

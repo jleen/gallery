@@ -35,7 +35,8 @@ configs = {
         'long_name': 'Saturn Valley Hall of Light',
         'short_name': 'Hall of Light',
         'copyright_name': 'Mike Boilen',
-        'copyright_font': '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',
+        'copyright_font':
+            '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',
         'allow_original': 0
         },
     'momnpop': {

@@ -29,10 +29,11 @@ def read_update_entries(fname, config):
         else:
             date_match = date_expr.search(line)
             if date_match:
-                current_entry['date'] = time.strftime( '%m-%d-%Y', time.strptime(date_match.group(1)) )
+                time = time.strptime(date_match.group(1))
+                current_entry['date'] = time.strftime('%m-%d-%Y', time)
             else:
                 dir_match = dir_expr.search(line)
-            #ambiguate and qualify?
+                # REVIEW: Ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
                     url = "http://saturnvalley.org" + config['browse_prefix']
@@ -57,14 +58,15 @@ def read_update_entries(fname, config):
     return update_entries
 
 
-def spew_whats_new(req, update_entries, title_str, next_url, next_link_name, config):
+def spew_whats_new(
+        req, update_entries, title_str, next_url, next_link_name, config):
     search = {}
     search['gallerytitle'] = config['short_name']
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    template = templates.whatsnewpage.whatsnewpage(searchList=[search])
+    template = templates.whatsnewpage.whatsnewpage(searchList = [search])
 
     req.write(str(template))
 
@@ -87,7 +89,13 @@ def spew_recent_whats_new(req, config):
     if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
-    spew_whats_new(req, update_entries[:idx], "Recent Updates", "http://saturnvalley.org" + (os.path.join(config['browse_prefix'], "whatsnew_all.html")), all_updates, config)
+    spew_whats_new(
+            req,
+            update_entries[:idx],
+            "Recent Updates",
+            os.path.join(config['browse_prefix'], "whatsnew_all.html"),
+            all_updates,
+            config)
 
 def spew_all_whats_new(req, config):
     fname = whatsnew_src_file(config)

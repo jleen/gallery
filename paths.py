@@ -6,22 +6,22 @@ img_extns = ['.jpeg', '.jpg', '.JPG']
 
 class UnableToDisambiguateException(Exception): pass
 
-def breadcrumbs_for_path(dir_fname, final_is_link, config, tuples):
+def breadcrumbs_for_path(dir_fname, config, tuples):
     breadcrumbs = []
     dirname = ''
     for crumb in (dir_fname).split(os.path.sep):
         if len(crumb) < 1: continue
         dirname = os.path.join(dirname, crumb)
         dir = rel_to_url(dirname, config, tuples, trailing_slash = 1)
-        #BUGBUG Too many places know about '.' I think.  Can this be the only
-        #place?
+        # BUGBUG: Too many places know about '.' I think.  Can this be the only
+        # place?
         if dirname == '.':
             display = format_for_display(dirname, config)
         else:
             display = format_for_display(os.path.split(dirname)[1], config)
         breadcrumbs.append([1, dir, display])
-    # The last breadcrumb might not be a link
-    breadcrumbs[-1][0] = final_is_link;
+    # The last breadcrumb isn't a link.
+    breadcrumbs[-1][0] = 0
     return breadcrumbs
 
 def rel_to_abs(rel, config):
@@ -39,9 +39,10 @@ def abs_to_url(abs, config, tuples, size = None, ext = None):
             ext = ext,
             trailing_slash = 0)
 
-def rel_to_url(rel, config, tuples, size = None, ext = None, trailing_slash = 0):
-    #first, break up the relative path and prepare each section of the url for
-    #display.
+def rel_to_url(
+        rel, config, tuples, size = None, ext = None, trailing_slash = 0):
+    # First, break up the relative path and prepare each section of the url for
+    # display.
     url = ""
     target_is_dir = os.path.isdir(rel_to_abs(rel, config))
     if rel.startswith(config['browse_prefix']):
@@ -62,9 +63,9 @@ def rel_to_url(rel, config, tuples, size = None, ext = None, trailing_slash = 0)
         #special case.  If component starts with a '.', then don't format it,
         #since we confuse the fname for an extension
         if component.startswith('.'):
-            url = os.path.join( url, component )
+            url = os.path.join(url, component)
         else:
-            url = os.path.join( url, get_urlname_for_file(abs, config, tuples) )
+            url = os.path.join(url, get_urlname_for_file(abs, config, tuples))
     url = os.path.join(config['browse_prefix'], url )
 
     (base, fname, url_ext) = split_path_ext(url)
@@ -96,7 +97,8 @@ def degrade_filename(fn):
     return fn
 
 def url_to_abs(url, config, tuples, infer_suffix = 0):
-    return rel_to_abs(url_to_rel(url, config, tuples, infer_suffix = infer_suffix), config)
+    rel = url_to_rel(url, config, tuples, infer_suffix = infer_suffix)
+    return rel_to_abs(rel, config)
 
 def url_to_rel(url, config, tuples, infer_suffix = 0):
     fname = os.path.join(config['img_prefix'], url)
@@ -114,7 +116,8 @@ def url_to_rel(url, config, tuples, infer_suffix = 0):
     # By induction, all but the leaf are now unambiguous.  So let's
     # disambiguate the leaf within the parent.
     newbasename = None #basename
-    tuples = get_directory_tuples(dir, config, tuples, ignore_dotfiles = fname.startswith('.'))
+    tuples = get_directory_tuples(
+            dir, config, tuples, ignore_dotfiles = fname.startswith('.'))
     for tuple in tuples:
         amb_urlname = ambiguate_filename(tuple['urlname'])
         amb_basename = ambiguate_filename(basename)
@@ -205,8 +208,9 @@ def get_directory_tuples(path, config, dir_tuple_cache, ignore_dotfiles = 1):
     return tuples
 
 def get_directory_tuples_internal(path, ignore_dotfiles, config):
-    #print "get_directory_tuples called for " + path + " with ignore_dotfiles " + str(ignore_dotfiles)
-    #parse the dirinfo file
+    #print ("get_directory_tuples called for " + path +
+    #        " with ignore_dotfiles " + str(ignore_dotfiles)
+    # Parse the dirinfo file.
     dirinfo_entries = {}
     if os.path.exists(os.path.join(path, ".dirinfo")):
         dirinfo = open(os.path.join(path, ".dirinfo"), "r")
@@ -218,7 +222,8 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
             if len(entry) == 3:
                 displayname = entry[2]
             else:
-                displayname = format_for_display(os.path.splitext(fname)[0], config)
+                dirname = os.path.splitext(fname)[0]
+                displayname = format_for_display(dirname, config)
 
             sortkey = sortkey + "_" + trim_serials(fname)
             dirinfo_entries[fname] = [sortkey, displayname]
@@ -245,26 +250,36 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
                 urlname = urlname + url_ext
             else:
                 urlname = format_for_url(fname, None)
-            tuple = {'sortkey':dirinfo_entries[fname][0], 'filename':fname, 'displayname':dirinfo_entries[fname][1], 'urlname':urlname }
+            tuple = {}
+            tuple['sortkey'] = dirinfo_entries[fname][0]
+            tuple['filename'] = fname
+            tuple['displayname'] = dirinfo_entries[fname][1]
+            tuple['urlname'] = urlname
         else:
             for_display = ''
             if os.path.isdir(os.path.join(path, fname)):
                 for_display = fname
             else:
                 for_display = os.path.splitext(fname)[0]
-            tuple = {'sortkey':fname, 'filename':fname, 'displayname':format_for_display(for_display, config), 'urlname':format_for_url(fname, None)}
+            tuple = {}
+            tuple['sortkey'] = fname
+            tuple['filename'] = fname
+            tuple['displayname'] = format_for_display(for_display, config)
+            tuple['urlname'] = format_for_url(fname, None)
         tuples.append(tuple)
     tuples.sort(dirent_compare)
     return tuples
 
 def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
-    (dir, fname, ext) = split_path_ext_no_degrade(full_fname.rstrip(os.path.sep))
+    full_fname = full_fname.rstrip(os.path.sep)
+    (dir, fname, ext) = split_path_ext_no_degrade(full_fname)
     if not dir_needs_tuples(dir):
         if use_ext: return format_fn(fname + ext, config)
         else: return format_fn(fname, config)
 
     #Obviously, this doesn't properly support dot directories
-    dirtuples = get_directory_tuples(dir, config, tuples, ignore_dotfiles = (not fname.startswith('.')))
+    ignore_dotfiles = not fname.startswith('.')
+    dirtuples = get_directory_tuples(dir, config, tuples, ignore_dotfiles)
     for tuple in dirtuples:
         if tuple['filename'].startswith(fname):
             return tuple[key]
@@ -272,10 +287,13 @@ def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
     return None #Never reached.
 
 def get_urlname_for_file(full_fname, config, tuples):
-    return get_name_for_file(full_fname, 'urlname', format_for_url, config, tuples, use_ext = 1)
+    return get_name_for_file(
+            full_fname, 'urlname', format_for_url, config, tuples, use_ext = 1)
 
 def get_displayname_for_file(full_fname, config, tuples):
-    return get_name_for_file(full_fname, 'displayname', format_for_display, config, tuples, use_ext = 0)
+    return get_name_for_file(
+            full_fname, 'displayname', format_for_display, config, tuples,
+            use_ext = 0)
 
 def get_nearby_for_file(full_fname, config, tuples):
     (dir, fname) = os.path.split(full_fname);
@@ -301,8 +319,9 @@ def get_nearby_for_file(full_fname, config, tuples):
                 before = current['filename']
         except StopIteration: break
     
-    #Found the files.  Now make absolute names out of the before and after that
-    #I found
+    # Found the files.  Now make absolute names out of the before and after
+    # that I found.
+
     if before: before = os.path.join(dir, before)
     if after: after = os.path.join(dir, after)
 
