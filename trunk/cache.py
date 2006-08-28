@@ -200,9 +200,9 @@ def cache_img(req, rel, size, config):
     img.save(buf, "JPEG", quality = 95)
     if req:
         req.write(buf.getvalue())
-    if os.path.isdir(cachedir):
-        makedirsfor(cachefile)
-        fil = file(cachefile, 'wb')
+    if os.path.isdir(abs_cachedir):
+        makedirsfor(abs_cachefile)
+        fil = file(abs_cachefile, 'wb')
         fil.write(buf.getvalue())
         fil.close()
     buf.close()

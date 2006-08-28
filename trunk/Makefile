@@ -1,4 +1,4 @@
-CHEETAH = /home/jmleen/bin/cheetah
+CHEETAH = cheetah
 export PYTHONPATH = /home/jmleen/lib/python2.4/site-packages
 
 all: templates/photopage.py templates/browse.py templates/whatsnewpage.py
