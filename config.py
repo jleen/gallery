@@ -17,6 +17,15 @@ configs = {
         'apply_rotation': 0,
         'show_exif': 1
         },
+    'jleen_arwing': {
+        'short_name': "Hall of Light",
+        'long_name': "Saturn Valley Hall of Light",
+        'img_prefix': "/Users/jleen/Local/gallery/photos/",
+        'cache_prefix': "/Users/jleen/Local/gallery/cache/",
+        'browse_prefix': "/~jleen/try/gallery/",
+        'apply_rotation': 0,
+        'show_exif': 1
+        },
     'randy': {
         'short_name': "Randy&rsquo;s House of Stuff",
         'long_name': "Randy&rsquo;s House of Stuff",
