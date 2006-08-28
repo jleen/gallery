@@ -29,8 +29,8 @@ def read_update_entries(fname, config):
         else:
             date_match = date_expr.search(line)
             if date_match:
-                time = time.strptime(date_match.group(1))
-                current_entry['date'] = time.strftime('%m-%d-%Y', time)
+                t = time.strptime(date_match.group(1))
+                current_entry['date'] = time.strftime('%m-%d-%Y', t)
             else:
                 dir_match = dir_expr.search(line)
                 # REVIEW: Ambiguate and qualify?
