@@ -267,7 +267,7 @@ def gallery(req, config, tuples):
         wn_updates = None
         if os.path.exists(wn_txt_path):
             wn_src = whatsnew.whatsnew_src_file(config)
-            wn_updates = whatsnew.read_update_entries(wn_src, config)
+            wn_updates = whatsnew.read_update_entries(wn_src, config, tuples)
         if wn_updates and len(wn_updates) > 0:
             use_wn = 1
     if use_wn:
