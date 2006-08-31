@@ -13,7 +13,7 @@ import templates.whatsnewpage
 def whatsnew_src_file(config):
     return os.path.join(config['img_prefix'], "whatsnew.txt")
 
-def read_update_entries(fname, config):
+def read_update_entries(fname, config, tuples):
     src = open(fname, "r")
 
     update_entries = []
@@ -36,7 +36,7 @@ def read_update_entries(fname, config):
                 # REVIEW: Ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = "http://saturnvalley.org" + config['browse_prefix']
+                    url = paths.rel_to_url(dir, config, tuples)
                     is_movie_dir = 0
                     if dir.endswith('Movies'):
                         is_movie_dir = 1
@@ -71,9 +71,9 @@ def spew_whats_new(
     req.write(str(template))
 
 
-def spew_recent_whats_new(req, config):
+def spew_recent_whats_new(req, config, tuples):
     fname = whatsnew_src_file(config)
-    update_entries = read_update_entries(fname, config)
+    update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
     #slim it down to 10 entries
     if len(update_entries) > 10:
@@ -97,9 +97,9 @@ def spew_recent_whats_new(req, config):
             all_updates,
             config)
 
-def spew_all_whats_new(req, config):
+def spew_all_whats_new(req, config, tuples):
     fname = whatsnew_src_file(config)
-    update_entries = read_update_entries(fname, config)
+    update_entries = read_update_entries(fname, config, tuples)
 
     if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
