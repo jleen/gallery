@@ -48,6 +48,20 @@ configs = {
             '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',
         'allow_original': 0
         },
+    'mgb_try': {
+        'img_prefix': "/home/mgb/photos/",
+        'cache_prefix': "/home/jmleen/var/cache/gallery/",
+        'browse_prefix': "/mgb/try/photos/",
+        'scriptdir': '/home/jmleen/saturnvalley.org/app/mgbgallery',
+        'apply_rotation': 1,
+        'show_exif': 1,
+        'long_name': 'Saturn Valley Hall of Light',
+        'short_name': 'Hall of Light',
+        'copyright_name': 'Mike Boilen',
+        'copyright_font':
+            '/usr/share/fonts/truetype/ttf-bitstream-vera/Vera.ttf',
+        'allow_original': 0
+        },
     'momnpop': {
         'short_name': "John and Winnie&rsquo;s Pictures",
         'long_name': "John and Winnie&rsquo;s Pictures",

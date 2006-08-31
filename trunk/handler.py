@@ -40,9 +40,9 @@ def handler(req):
         if os.path.split(reqpath)[1] == 'index.html':
             return gallery(req, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
-            return whatsnew.spew_recent_whats_new(req, config)
+            return whatsnew.spew_recent_whats_new(req, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
-            return whatsnew.spew_all_whats_new(req, config)
+            return whatsnew.spew_all_whats_new(req, config, tuple_cache)
         elif extn.lower() in img_extns: return photo(req, config, tuple_cache)
         elif extn == '.html': return photopage(req, config, tuple_cache)
         elif extn.lower() in img_extns or len(extn) < 1:
