@@ -16,6 +16,8 @@ import templates.photopage
 
 import jon.cgi as cgi
 
+import stat
+
 small_size = "600"
 med_size = "1024"
 big_size = "original"
@@ -142,11 +144,14 @@ def spew_html(abs):
 
 def spew_file(req, abs):
     fil = file(abs, 'rb')
-    data = fil.read();
     #set the content length to avoid the evil chunked transfer coding
-    req.set_header('Content-length', fil.tell())
+    req.set_header('Content-length', os.stat(abs)[stat.ST_SIZE])
 
-    req.write(data)
+    buf = fil.read(4096)
+    while buf:
+        req.write(buf)
+        buf = fil.read(4096)
+
     fil.close()
 
 def first_image_in_dir(rel_dir, config, tuples):
