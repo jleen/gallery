@@ -37,7 +37,7 @@ for root, dirs, files in os.walk(gallery_config.img_prefix):
             abs_cachedir = os.path.join(gallery_config.cache_prefix, size)
             abs_cachefile = os.path.join(abs_cachedir, rel)
 
-            if cache.iscached(abs, abs_cachefile):
+            if cache.is_cached(abs, abs_cachefile, config):
                 print abs + '(' + size + ") is up to date"
             else:
                 dims = size.split("x")
