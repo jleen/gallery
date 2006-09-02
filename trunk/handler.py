@@ -142,7 +142,11 @@ def spew_html(abs):
 
 def spew_file(req, abs):
     fil = file(abs, 'rb')
-    req.write(fil.read())
+    data = fil.read();
+    #set the content length to avoid the evil chunked transfer coding
+    req.set_header('Content-length', fil.tell())
+
+    req.write(data)
     fil.close()
 
 def first_image_in_dir(rel_dir, config, tuples):
