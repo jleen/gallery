@@ -130,7 +130,7 @@ def spew_photo(req, rel, size, config):
     abs_cachedir = os.path.join(config['cache_prefix'], size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
     abs_raw_image = rel_to_abs(rel, config)
-    if iscached(abs_raw_image, abs_cachefile):
+    if is_cached(abs_raw_image, abs_cachefile, config):
         return spew_file(req, abs_cachefile)
     else:
         cache_img(req, rel, size, config)
@@ -218,7 +218,10 @@ def gallery(req, config, tuples):
         url_big = rel_to_url(rel_image, config, tuples, size = big_size)
         url_thumb = rel_to_url(rel_image, config, tuples, size = thumb_size)
         caption = displayname
-        (width, height) = img_size(rel_image, thumb_size_int, config)
+        # HACK: Let's try taking out height and width attributes.  How much
+        # better is the perf?  How much worse is the render experience?
+        #(width, height) = img_size(rel_image, thumb_size_int, config)
+        (width, height) = (0, 0)
         rec = (url_medium, url_big, url_thumb, caption, width, height)
         image_records.append(rec)
 
@@ -250,7 +253,7 @@ def gallery(req, config, tuples):
         if rel_preview:
             url_preview = rel_to_url(rel_preview, config, tuples, preview_size)
             preview = os.path.join(url_subdir, url_preview)
-            (width, height) = img_size(rel_preview, 100, config)
+            #(width, height) = img_size(rel_preview, 100, config)
 
         subdir_records.append((url_subdir, caption, preview, width, height))
 

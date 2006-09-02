@@ -19,10 +19,6 @@ from   PIL import ImageStat
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
 
-cache_dependencies = [
-    scriptdir('cache_sentinel')
-]
-
 def normalize_date(date):
     if date == None: return None
     return time.asctime(time.gmtime(
@@ -49,7 +45,7 @@ def img_size(rel_image, max_size, config):
     abs_cachefile = os.path.join(abs_cachedir, rel_image)
     abs_raw_image = rel_to_abs(rel_image, config)
     try:
-        if iscached(abs_raw_image, abs_cachefile):
+        if is_cached(abs_raw_image, abs_cachefile, config):
             cache_image = Image.open(abs_cachefile)
             return cache_image.size
         else:
@@ -74,11 +70,18 @@ def img_size(rel_image, max_size, config):
                 return ((max_size * width) / height, max_size)
     except IOError: return (50, 50)
 
-def iscached(srcfile, cachefile):
+def is_cached(srcfile, cachefile, config):
     if not os.path.isfile(cachefile): return 0
-    for dependency in [ srcfile ] + cache_dependencies:
-        if lctime(cachefile) < lctime(dependency):
-            return 0
+
+    # In the config, we define the date at which we last manually expired the
+    # cache.  If our cached copy is older than this, it's invalid.  Note that
+    # the date format is that returned by /bin/date.
+
+    fmt = '%a %b %d %H:%M:%S %Z %Y'
+    exp_date = time.mktime(time.strptime(config['cache_expired'], fmt))
+    if lctime(cachefile) < exp_date:
+        return 0
+
     return 1 
 
 def lctime(fname):
