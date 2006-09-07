@@ -82,6 +82,11 @@ def is_cached(srcfile, cachefile, config):
     if lctime(cachefile) < exp_date:
         return 0
 
+    # And of course, if the source image has been changed more recently than
+    # the cached copy, then the cache is stale.
+
+    if lctime(cachefile) < lctime(srcfile): return 0
+
     return 1 
 
 def lctime(fname):

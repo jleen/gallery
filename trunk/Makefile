@@ -8,5 +8,8 @@ full: clean all
 clean:
 	-rm templates/photopage.py templates/browse.py templates/whatsnewpage.py
 
+tags: *.py
+	ctags *.py
+
 %.py: %.tmpl
 	$(CHEETAH) compile $<
