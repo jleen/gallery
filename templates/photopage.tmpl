@@ -1,47 +1,7 @@
 ## vim:sw=4:ts=4
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<style>
-body
-{
-    font-family: Georgia, Times New Roman, Times, serif;
-    font-size: 90%;
-    color: #333333;
-    background-color: #eeeeee;
-}
-a > img
-{
-    border: solid 2px #333366; 
-}
-a
-{
-    text-decoration: none;
-    color: #333399;
-}
-.phototitle
-{
-    text-decoration: none;
-    font-size: 130%;
-}
-.fromlink
-{
-    text-decoration: none;
-    font-size: 75%;
-    color: #333399;
-}
-.exiflink
-{
-    font-size: 55%;
-}
-.collapsedexif
-{
-    display:none;
-}
-.expandedexif
-{
-    display:inline;
-}
-</style>
+<link rel="stylesheet" type="text/css" href="${browse_prefix}gallery.css">
 </head>
 
 <script type="text/Javascript"> function toggleexif(obj) {
@@ -70,15 +30,13 @@ a
 #end if
 <table width="100%">
 <tr>
-<td align="left" valign="top">
+<td class="prev">
 #if $prev
-<a href="$prev">prev</a>
-#else
-prev
-#end if
+<a href="$prev">&lt;&lt; Previous</a>
+#endif
 </td>
 
-<td align="center">
+<td align="center" width="*">
 <div align="center">
 <a href="$full_img_url"><img src="$framed_img_url" border="2" vspace="10" align="middle"></a>
 <div class="phototitle"><b>$photo_title</b></div><br>
@@ -106,11 +64,10 @@ $description<br>
 #end if
 </div>
 </td>
-<td align="right" valign="top">
+
+<td class="next">
 #if $next
-<a href="$next">next</a>
-#else
-next
+<a href="$next">Next &gt;&gt;</a>
 #end if
 </td>
 </table>

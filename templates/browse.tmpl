@@ -27,28 +27,8 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="${browse_prefix}gallery.css">
 <style>
-body
-{
-    font-family: Georgia, Times New Roman, Times, serif;
-    font-size: 90%;
-    color: #333333;
-    background-color: #eeeeee;
-    height:100%;
-}
-a img
-{
-    border: solid 2px #333366; 
-}
-a
-{
-    text-decoration: none;
-    color: #333399;
-}
-.exiflink
-{
-    font-size: 55%;
-}
 #directory_section {
 #if $side_by_side
     margin-top:2em;
@@ -93,17 +73,12 @@ a
     margin-bottom:0;
 }
 
-#enclosing_body {
-    height:100%
-}
-
 </style>
-    
+
 <title>$title: $thisdir</title>
 </head>
 
 <body>
-
 <div id="enclosing_body">
 
 #if $index_html == None
@@ -136,23 +111,14 @@ $index_html
 
 #for $dir, $name, $preview, $width, $height in $subdirs
 #set $remain=$lhs_width-100
-<table width="$lhs_width" style="display: inline">
+<table style="display: inline">
 <tr>
 #if $preview
-<td width="100">
+<td width="120" height="100" align="center">
 <a href="$dir"><img src="$preview" border="2" align="middle"></a>
 </td>
-#if not $side_by_side
-</tr>
-#end if
-#end if
-#if not $side_by_side
-<tr>
-#set $name_width=$lhs_width
-#else
-#set $name_width=$lhs_width-100
-#end if
-<td align="left" width="$name_width">
+#endif
+<td align="left" width="200">
 <a href="$dir">$name</a>
 </td></tr></table>
 #end for
@@ -164,8 +130,8 @@ $index_html
 <table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="250">
-<a href="$medurl"><img src="$thumburl" border="2"></a><br>
-<a href="$bigurl">$caption</a>
+<a href="$medurl"><img src="$thumburl" border="2" class="thumbnail"></a>
+<div class="caption"><a href="$bigurl">$caption</a></div>
 </td>
 </tr>
 </table>

@@ -6,7 +6,7 @@ configs = {
         'cache_prefix': "/home/jmleen/var/cache/gallery/",
         'browse_prefix': "/gallery/",
         'apply_rotation': 0,
-        'show_exif': 1,
+        'show_exif': 0,
         'cache_expired': 'Mon Aug 21 07:31:00 PDT 2006'
         },
     'jleen_try': {
@@ -16,7 +16,7 @@ configs = {
         'cache_prefix': "/home/jmleen/var/cache/gallery/",
         'browse_prefix': "/try/gallery/",
         'apply_rotation': 0,
-        'show_exif': 1,
+        'show_exif': 0,
         'cache_expired': 'Mon Aug 21 07:31:00 PDT 2006'
         },
     'jleen_arwing': {
@@ -26,7 +26,6 @@ configs = {
         'cache_prefix': "/Users/jleen/Local/gallery/cache/",
         'browse_prefix': "/~jleen/try/gallery/",
         'apply_rotation': 0,
-        'show_exif': 1,
         'cache_expired': 'Mon Aug 21 07:31:00 PDT 2006'
         },
     'randy': {
