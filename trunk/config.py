@@ -90,7 +90,7 @@ configs = {
         'long_name': 'Corey &amp; Lauren in Japan',
         'img_prefix': '/home/jmleen/roussel/',
         'cache_prefix': '/home/jmleen/var/cache/gallery/roussel',
-        'browse_prefix': '/roussel',
+        'browse_prefix': '/roussel/',
         'apply_rotation': 1,
         'cache_expired': 'Mon Aug 21 07:31:00 PDT 2006'
         },
