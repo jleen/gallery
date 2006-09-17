@@ -82,7 +82,11 @@ def photopage(req, config, tuples):
     a['gallery_title'] =  config['short_name']
     a['photo_title'] = get_displayname_for_file(abs_image, config, tuples)
     a['description'] = description
-    a['exifdata'] = exif_tags(abs_image)
+    show_exif = config.get('show_exif', 0)
+    if show_exif:
+        a['exifdata'] = exif_tags(abs_image)
+    else:
+        a['exifdata'] = 0
     (prev, next) = get_nearby_for_file(abs_image, config, tuples)
     if prev: prev = abs_to_url(prev, config, tuples, ext = 'html')
     if next: next = abs_to_url(next, config, tuples, ext = 'html')
@@ -106,6 +110,7 @@ def photopage(req, config, tuples):
     a['breadcrumbs'] = breadcrumbs
 
     template = templates.photopage.photopage(searchList=[a])
+    a['browse_prefix'] = config['browse_prefix']
     req.write(str(template))
 
 def photo(req, config, tuples):
@@ -298,6 +303,7 @@ def gallery(req, config, tuples):
     a['imgurls'] = image_records
     a['subdirs'] = subdir_records
     a['index_html'] = index_html
+    a['browse_prefix'] = config['browse_prefix']
 
     req.write(str(template))
     return

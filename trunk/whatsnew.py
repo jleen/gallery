@@ -68,6 +68,7 @@ def spew_whats_new(
     search['nextLink'] = next_url
     template = templates.whatsnewpage.whatsnewpage(searchList = [search])
 
+    a['browse_prefix'] = config['browse_prefix']
     req.write(str(template))
 
 
