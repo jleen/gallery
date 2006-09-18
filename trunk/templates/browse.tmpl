@@ -29,7 +29,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="${browse_prefix}gallery.css">
 <style>
-#directory_section {
+.directory_section {
 #if $side_by_side
     margin-top:2em;
     float:left;
@@ -57,7 +57,7 @@
     line-height:300%;
 }
 #set leftcontent_width = $lhs_side_width + 10
-#image_section {
+.image_section {
 #if $side_by_side
     height:100%;
     border-left:2px solid #000;
@@ -79,7 +79,6 @@
 </head>
 
 <body>
-<div id="enclosing_body">
 
 #if $index_html == None
 <p>
@@ -107,27 +106,22 @@ $index_html
 
 
 
-<div id="directory_section">
-
+<div class="directory_section">
 #for $dir, $name, $preview, $width, $height in $subdirs
-#set $remain=$lhs_width-100
-<table style="display: inline">
+<table width="320" style="display: inline; float: left">
 <tr>
-#if $preview
 <td width="120" height="100" align="center">
 <a href="$dir"><img src="$preview" border="2" align="middle"></a>
 </td>
-#endif
-<td align="left" width="200">
+<td align="left">
 <a href="$dir">$name</a>
 </td></tr></table>
 #end for
-
 </div>
 
-<div id="image_section" align="center">
+<div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
-<table style="display: inline">
+<table style="display: inline; float: left">
 <tr>
 <td align="center" valign="middle" height="260" width="250">
 <a href="$medurl"><img src="$thumburl" border="2" class="thumbnail"></a>
@@ -136,8 +130,6 @@ $index_html
 </tr>
 </table>
 #end for
-
-</div>
 
 </div>
 </body>
