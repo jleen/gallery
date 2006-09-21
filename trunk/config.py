@@ -39,7 +39,7 @@ configs = {
         },
     'mgb': {
         'img_prefix': "/home/mgb/photos/",
-        'cache_prefix': "/home/jmleen/var/cache/gallery/",
+        'cache_prefix': "/home/jmleen/var/cache/gallery/mgb/",
         'browse_prefix': "/mgb/photos/",
         'scriptdir': '/home/jmleen/saturnvalley.org/app/mgbgallery',
         'apply_rotation': 1,
@@ -54,7 +54,7 @@ configs = {
         },
     'mgb_try': {
         'img_prefix': "/home/mgb/photos/",
-        'cache_prefix': "/home/jmleen/var/cache/gallery/",
+        'cache_prefix': "/home/jmleen/var/cache/gallery/mgb/",
         'browse_prefix': "/mgb/try/photos/",
         'scriptdir': '/home/jmleen/saturnvalley.org/app/mgbgallery',
         'apply_rotation': 1,
