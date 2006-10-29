@@ -4,6 +4,7 @@ import os
 import string
 from StringIO import StringIO
 import time
+import traceback
 
 from cache import *
 from config import configs
@@ -31,11 +32,28 @@ class GalleryHandler(cgi.Handler):
     def process(self, req):
         handler(req)
 
-def handler(req):
-    req.set_buffering(0)
+class Request:
+    environ = None
+    start_response = None
+    write = None
+    def __init__(self, e, sr):
+        self.environ = e
+        self.start_response = sr
+
+def application(environ, start_response):
+    req = Request(environ, start_response)
     try:
         os.umask(0002)
-        config = configs[req.params['config']]
+        config = None
+        if req.environ.get('QUERY_STRING'):
+            qs = req.environ['QUERY_STRING']
+            if not qs.startswith('config='):
+                raise 'Zoicks'
+            configname = qs[7:]
+            config = configs[configname]
+        else:
+            config = gallery_config
+
         tuple_cache = new_tuple_cache()
         reqpath = req.environ["PATH_INFO"].lower()
         extn = os.path.splitext(reqpath)[1]
@@ -51,11 +69,11 @@ def handler(req):
             return gallery(req, config, tuple_cache)
         else: send_404(req)
     except UnableToDisambiguateException: send_404(req)
-
+        
 def send_404(req):
-    req.set_header('Status', '404 Not Found')
-    req.set_header('Content-type', 'text/html')
-    spew_file(req, "/home/mrsaturn/saturnvalley.org/errors/404.html")
+    req.write = req.start_response('404 Not Found', [('Content-Type', 'text/html')])
+    req.write('There is no file.')
+    #spew_file(req, "/home/mrsaturn/saturnvalley.org/errors/404.html")
 
 def photopage(req, config, tuples):
     url = req.environ["PATH_INFO"][1:]
@@ -150,7 +168,7 @@ def spew_html(abs):
 def spew_file(req, abs):
     fil = file(abs, 'rb')
     #set the content length to avoid the evil chunked transfer coding
-    req.set_header('Content-length', os.stat(abs)[stat.ST_SIZE])
+    #req.set_header('Content-length', os.stat(abs)[stat.ST_SIZE])
 
     buf = fil.read(4096)
     while buf:
@@ -177,7 +195,7 @@ def first_image_in_dir(rel_dir, config, tuples):
 
 def send_redirect(req, new_url):
     new_full_url = 'http://www.saturnvalley.org' + new_url
-    req.set_header('Content-type', 'text/html')
+    req.write = req.start_response('200 OK', [('Content-Type', 'text/html')])
     req.write('<meta http-equiv="refresh" content="0;%s">' % new_full_url)
 
 def ensure_trailing_slash_and_check_needs_refresh(req):

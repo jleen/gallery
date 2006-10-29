@@ -31,13 +31,14 @@ def check_client_cache(req, content_type, ctime):
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
-        req.set_header('Status', '304 Not Modified')
+        req.write = start_response('304 Not Modified', [])
         return 1
     else:
         #content_type = 'text/plain'
-        req.set_header('Content-type', content_type)
-        req.set_header('Last-Modified', server_date)
-        req.set_header('ETag', server_date)
+        req.write = req.start_response('200 OK', [
+                ('Content-type', content_type),
+                ('Last-Modified', server_date),
+                ('ETag', server_date)])
         return 0
 
 def img_size(rel_image, max_size, config):
