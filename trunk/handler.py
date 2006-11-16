@@ -85,7 +85,7 @@ def photopage(req, config, tuples):
     cache_time = max_ctime_for_files(
             [abs_image, scriptdir('templates/photopage.tmpl')])
     if check_client_cache(req, 'text/html; charset="UTF-8"', cache_time):
-        return
+        return []
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -140,7 +140,7 @@ def photo(req, config, tuples):
     ext = url[ext_index+1:]
     rel_image = url_to_rel(base + '.' + ext, config, tuples)
     image_ctime = lctime(rel_to_abs(rel_image, config))
-    if check_client_cache(req, "image/jpeg", image_ctime): return
+    if check_client_cache(req, "image/jpeg", image_ctime): return []
     try: allow_original = config['allow_original']
     except KeyError:
         allow_original = 1
@@ -162,7 +162,7 @@ def spew_photo(req, rel, size, config):
         return
 
 def spew_html(abs):
-    if check_client_cache('text/html; charset="UTF-8"', lctime(abs)): return
+    if check_client_cache('text/html; charset="UTF-8"', lctime(abs)): return []
     spew_file(abs)
 
 def spew_file(req, abs):
@@ -236,7 +236,7 @@ def gallery(req, config, tuples):
             'text/html; charset="UTF-8"',
             max_ctime_for_files(
                 [abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
-        return
+        return []
 
     image_records = []
     for item in items:
