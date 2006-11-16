@@ -31,7 +31,7 @@ def check_client_cache(req, content_type, ctime):
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
-        req.write = start_response('304 Not Modified', [])
+        req.write = req.start_response('304 Not Modified', [])
         return 1
     else:
         #content_type = 'text/plain'
