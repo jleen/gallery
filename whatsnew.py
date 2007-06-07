@@ -76,23 +76,29 @@ def spew_recent_whats_new(req, config, tuples):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
-    #slim it down to 10 entries
-    if len(update_entries) > 10:
-        idx = 9
-        lastDate = update_entries[idx]['date']
-        while idx < len(update_entries):
-            if update_entries[idx]['date'] != lastDate:
-                break;
-            idx = idx + 1;
-    else:
-        idx = len(update_entries)
+
+    #slim it down to 10 entries or 3 days, whichever is greater
+    #walk through the list.  Make sure never to take a partial day's entries
+    #(i.e. only break out at the day change.
+    entries = 0
+    days = 0
+    lastDate = update_entries[0]['date']
+    while entries < len(update_entries):
+        if update_entries[entries]['date'] != lastDate:
+            lastDate = update_entries[entries]['date']
+            days = days + 1
+        if entries >= 10 and days >= 3:
+            break
+        entries = entries + 1
+
+
 
     if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
             cache.max_ctime_for_files([fname])):
         return
     spew_whats_new(
             req,
-            update_entries[:idx],
+            update_entries[:entries],
             "Recent Updates",
             os.path.join(config['browse_prefix'], "whatsnew_all.html"),
             all_updates,
