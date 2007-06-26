@@ -27,7 +27,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="stylesheet" type="text/css" href="${browse_prefix}gallery.css">
+<link rel="stylesheet" type="text/css" href="/gallery.css">
 <style>
 .directory_section {
 #if $side_by_side
@@ -108,7 +108,7 @@ $index_html
 
 <div class="directory_section">
 #for $dir, $name, $preview, $width, $height in $subdirs
-<table width="320" style="display: inline; float: left">
+<table width="320" style="display: inline">
 <tr>
 <td width="120" height="100" align="center">
 <a href="$dir"><img src="$preview" border="2" align="middle"></a>
@@ -121,7 +121,7 @@ $index_html
 
 <div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
-<table style="display: inline; float: left">
+<table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="250">
 <a href="$medurl"><img src="$thumburl" border="2" class="thumbnail"></a>
