@@ -12,13 +12,22 @@ my $targetDir;
 # Process gallery_config.py
 # Yes, I know I'm a terrible person
 $configPath = shift;
-die "usage: whatsnewgen.pl [-c] config\n" unless $configPath;
+$userName = shift;
+die "usage: whatsnewgen.pl [-c] config username\n" unless $configPath and $userName;
 open CONFIG, $configPath or die "Couldn't open $configPath: $!\n";
 while( <CONFIG> )
 {
-  if( m/img_prefix\s+=\s+"([^"]+)"/i )
+  if( m/'$userName'\s*:\s*{/ )
   {
-    $targetDir = $1;
+    while( <CONFIG> )
+    {
+      if( m/'img_prefix'\s*:\s*"([^"]+)"/i )
+      {
+        $targetDir = $1;
+        last;
+      }
+    }
+    last;
   }
 }
 close CONFIG;
