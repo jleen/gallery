@@ -25,20 +25,23 @@ def normalize_date(date):
         rfc822.mktime_tz(rfc822.parsedate_tz(date))))
 
 def check_client_cache(req, content_type, ctime):
-    client_date = normalize_date(req.environ.get('HTTP_IF_MODIFIED_SINCE'))
-    client_etag = req.environ.get('HTTP_IF_NONE_MATCH')
+    client_date = None
+    client_etag = None
+    if req.headers_in.has_key('If-Modified-Since'):
+        client_date = req.headers_in['If-Modified-Since'].strip()
+        client_date = normalize_date(client_date)
+    if req.headers_in.has_key('If-None-Match'):
+        client_etag = req.headers_in['If-None-Match'].strip()
+
     server_date = time.asctime(time.gmtime(ctime))
     if (client_date == server_date and client_etag == server_date
             or client_date == None and client_etag == server_date
             or client_etag == None and client_date == server_date):
-        req.write = req.start_response('304 Not Modified', [])
-        return 1
+        raise apache.SERVER_RETURN, apache.HTTP_NOT_MODIFIED
     else:
-        #content_type = 'text/plain'
-        req.write = req.start_response('200 OK', [
-                ('Content-type', content_type),
-                ('Last-Modified', server_date),
-                ('ETag', server_date)])
+        req.content_type = content_type
+        req.headers_out['Last-Modified'] = server_date
+        req.headers_out['ETag'] = server_date
         return 0
 
 def img_size(rel_image, max_size, config):

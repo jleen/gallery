@@ -93,9 +93,8 @@ def spew_recent_whats_new(req, config, tuples):
 
 
 
-    if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-            cache.max_ctime_for_files([fname])):
-        return
+    cache.check_client_cache( req, 'text/html; charset="UTF-8"',
+            cache.max_ctime_for_files([fname]))
     spew_whats_new(
             req,
             update_entries[:entries],
@@ -108,8 +107,7 @@ def spew_all_whats_new(req, config, tuples):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    if cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-            cache.max_ctime_for_files([fname])):
-        return
+    cache.check_client_cache( req, 'text/html; charset="UTF-8"',
+            cache.max_ctime_for_files([fname]))
 
     spew_whats_new(req, update_entries, "All Updates", None, None, config)

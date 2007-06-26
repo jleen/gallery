@@ -15,9 +15,9 @@ import whatsnew
 import templates.browse
 import templates.photopage
 
-import jon.cgi as cgi
-
 import stat
+
+from mod_python import apache
 
 small_size = "600"
 med_size = "1024"
@@ -28,55 +28,33 @@ preview_size = "100"
 thumb_size_int = string.atoi(thumb_size)
 preview_size_int = string.atoi(preview_size)
 
-class GalleryHandler(cgi.Handler):
-    def process(self, req):
-        handler(req)
-
-class Request:
-    environ = None
-    start_response = None
-    write = None
-    def __init__(self, e, sr):
-        self.environ = e
-        self.start_response = sr
-
-def application(environ, start_response):
-    req = Request(environ, start_response)
+def application(req, config):
     try:
         os.umask(0002)
-        config = None
-        if req.environ.get('QUERY_STRING'):
-            qs = req.environ['QUERY_STRING']
-            if not qs.startswith('config='):
-                raise 'Zoicks'
-            configname = qs[7:]
-            config = configs[configname]
-        else:
-            config = gallery_config
 
         tuple_cache = new_tuple_cache()
-        reqpath = req.environ["PATH_INFO"].lower()
+        reqpath = os.path.split(req.filename)[1] + req.path_info
+
         extn = os.path.splitext(reqpath)[1]
         if os.path.split(reqpath)[1] == 'index.html':
-            return gallery(req, config, tuple_cache)
+            return gallery(req, reqpath, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
             return whatsnew.spew_recent_whats_new(req, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
             return whatsnew.spew_all_whats_new(req, config, tuple_cache)
-        elif extn.lower() in img_extns: return photo(req, config, tuple_cache)
-        elif extn == '.html': return photopage(req, config, tuple_cache)
+        elif extn.lower() in img_extns:
+            return photo(req, reqpath, config, tuple_cache)
+        elif extn == '.html':
+            return photopage(req, reqpath, config, tuple_cache)
         elif extn.lower() in img_extns or len(extn) < 1:
-            return gallery(req, config, tuple_cache)
+            return gallery(req, reqpath, config, tuple_cache)
         else: send_404(req)
     except UnableToDisambiguateException: send_404(req)
         
 def send_404(req):
-    req.write = req.start_response('404 Not Found', [('Content-Type', 'text/html')])
-    req.write('There is no file.')
-    #spew_file(req, "/home/mrsaturn/saturnvalley.org/errors/404.html")
+    raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
-def photopage(req, config, tuples):
-    url = req.environ["PATH_INFO"][1:]
+def photopage(req, url, config, tuples):
     (url_dir, base, extn) = split_path_ext(url)
     rel_dir = url_to_rel(url_dir, config, tuples)
     abs_image = url_to_abs(
@@ -84,8 +62,7 @@ def photopage(req, config, tuples):
             config, tuples, infer_suffix = 1)
     cache_time = max_ctime_for_files(
             [abs_image, scriptdir('templates/photopage.tmpl')])
-    if check_client_cache(req, 'text/html; charset="UTF-8"', cache_time):
-        return []
+    check_client_cache(req, 'text/html; charset="UTF-8"', cache_time)
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -131,8 +108,7 @@ def photopage(req, config, tuples):
     a['browse_prefix'] = config['browse_prefix']
     req.write(str(template))
 
-def photo(req, config, tuples):
-    url = req.environ["PATH_INFO"][1:]
+def photo(req, url, config, tuples):
     size_index = url.rfind('_')
     ext_index = url.rfind('.')
     base = url[:size_index]
@@ -140,7 +116,7 @@ def photo(req, config, tuples):
     ext = url[ext_index+1:]
     rel_image = url_to_rel(base + '.' + ext, config, tuples)
     image_ctime = lctime(rel_to_abs(rel_image, config))
-    if check_client_cache(req, "image/jpeg", image_ctime): return []
+    check_client_cache(req, "image/jpeg", image_ctime)
     try: allow_original = config['allow_original']
     except KeyError:
         allow_original = 1
@@ -162,11 +138,12 @@ def spew_photo(req, rel, size, config):
         return
 
 def spew_html(abs):
-    if check_client_cache('text/html; charset="UTF-8"', lctime(abs)): return []
+    check_client_cache('text/html; charset="UTF-8"', lctime(abs))
     spew_file(abs)
 
 def spew_file(req, abs):
     fil = file(abs, 'rb')
+    #TODO: Why is this disabled?
     #set the content length to avoid the evil chunked transfer coding
     #req.set_header('Content-length', os.stat(abs)[stat.ST_SIZE])
 
@@ -193,13 +170,9 @@ def first_image_in_dir(rel_dir, config, tuples):
             recurse = first_image_in_dir(rel_subdir, config, tuples)
             return os.path.join(dir_fname, recurse)
 
-def send_redirect(req, new_url):
-    new_full_url = 'http://www.saturnvalley.org' + new_url
-    req.write = req.start_response('200 OK', [('Content-Type', 'text/html')])
-    req.write('<meta http-equiv="refresh" content="0;%s">' % new_full_url)
-
+# TODO: Fix this for mod_python
 def ensure_trailing_slash_and_check_needs_refresh(req):
-    uri = req.environ["REQUEST_URI"]
+    uri = req.uri
     if not uri.endswith('/'):
         send_redirect(req, uri + '/')
         return 1
@@ -212,14 +185,13 @@ def find_preview(rel_dir, config):
             return os.path.join(rel_dir, fn)
     return None
 
-def gallery(req, config, tuples):
+def gallery(req, url_dir, config, tuples):
     # HACK: Since IE can't seem to handle meta refresh properly, I've
     # disabled redirect and instead we'll just patch up PATH_INFO to
     # pretend we got a trailing slash.
 
     #if ensure_trailing_slash_and_check_needs_refresh(req): return
 
-    url_dir = req.environ["PATH_INFO"][1:]
     if url_dir.startswith('/home'): url_dir = '/'
     if not url_dir.endswith('/'): url_dir += '/'
     rel_dir = url_to_rel(url_dir, config, tuples)
@@ -231,12 +203,11 @@ def gallery(req, config, tuples):
         fname = item['filename']
         abs_images.append(os.path.join(abs_dir, fname))
 
-    if check_client_cache(
+    check_client_cache(
             req,
             'text/html; charset="UTF-8"',
             max_ctime_for_files(
-                [abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images)):
-        return []
+                [abs_dir] + [scriptdir('templates/browse.tmpl')] + abs_images))
 
     image_records = []
     for item in items:
