@@ -1,6 +1,8 @@
 # vim:sw=4:ts=4
 # -*- coding: latin-1 -*-
 
+from mod_python import apache
+
 from   paths import *
 
 import os
