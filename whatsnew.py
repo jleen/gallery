@@ -6,9 +6,6 @@ from Cheetah.Template import Template
 import sys
 import os
 
-import paths
-import cache
-import templates.whatsnewpage
 
 def whatsnew_src_file(config):
     return os.path.join(config['img_prefix'], "whatsnew.txt")
@@ -36,7 +33,7 @@ def read_update_entries(fname, config, tuples):
                 # REVIEW: Ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = paths.rel_to_url(dir, config, tuples)
+                    url = config['mod.paths'].rel_to_url(dir, config, tuples)
                     is_movie_dir = 0
                     if dir.endswith('Movies'):
                         is_movie_dir = 1
@@ -47,7 +44,7 @@ def read_update_entries(fname, config, tuples):
                     else:
                         idx = idx + 1
                     dir = dir[idx:]
-                    dir = paths.format_for_display(dir, config)
+                    dir = config['mod.paths'].format_for_display(dir, config)
                     if is_movie_dir:
                         dir += " - Movies"
                     current_entry['dir'].append((dir, url))
@@ -59,20 +56,21 @@ def read_update_entries(fname, config, tuples):
 
 
 def spew_whats_new(
-        req, update_entries, title_str, next_url, next_link_name, config):
+        req, update_entries, title_str, next_url, next_link_name, config,
+        whatsnew_template_module):
     search = {}
     search['gallerytitle'] = config['short_name']
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    template = templates.whatsnewpage.whatsnewpage(searchList = [search])
+    template = whatsnew_template_module.whatsnewpage(searchList = [search])
 
     search['browse_prefix'] = config['browse_prefix']
     req.write(str(template))
 
 
-def spew_recent_whats_new(req, config, tuples):
+def spew_recent_whats_new(req, config, tuples, whatsnew_template_module):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
@@ -93,21 +91,23 @@ def spew_recent_whats_new(req, config, tuples):
 
 
 
-    cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-            cache.max_ctime_for_files([fname]))
+    config['mod.cache'].check_client_cache( req, 'text/html; charset="UTF-8"',
+            config['mod.cache'].max_ctime_for_files([fname]), config)
     spew_whats_new(
             req,
             update_entries[:entries],
             "Recent Updates",
             os.path.join(config['browse_prefix'], "whatsnew_all.html"),
             all_updates,
-            config)
+            config,
+            whatsnew_template_module)
 
-def spew_all_whats_new(req, config, tuples):
+def spew_all_whats_new(req, config, tuples, whatsnew_template_module):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-            cache.max_ctime_for_files([fname]))
+    config['mod.cache'].check_client_cache( req, 'text/html; charset="UTF-8"',
+            config['mod.cache'].max_ctime_for_files([fname]), config)
 
-    spew_whats_new(req, update_entries, "All Updates", None, None, config)
+    spew_whats_new(req, update_entries, "All Updates", None, None, config,
+            whatsnew_template_module)
