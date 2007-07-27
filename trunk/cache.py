@@ -3,8 +3,6 @@
 
 from mod_python import apache
 
-from   paths import *
-
 import os
 import rfc822
 import stat
@@ -26,30 +24,32 @@ def normalize_date(date):
     return time.asctime(time.gmtime(
         rfc822.mktime_tz(rfc822.parsedate_tz(date))))
 
-def check_client_cache(req, content_type, ctime):
-    client_date = None
-    client_etag = None
-    if req.headers_in.has_key('If-Modified-Since'):
-        client_date = req.headers_in['If-Modified-Since'].strip()
-        client_date = normalize_date(client_date)
-    if req.headers_in.has_key('If-None-Match'):
-        client_etag = req.headers_in['If-None-Match'].strip()
+def check_client_cache(req, content_type, ctime, config):
+    if not config.get('ignore_client_cache', 0):
+        client_date = None
+        client_etag = None
+        if req.headers_in.has_key('If-Modified-Since'):
+            client_date = req.headers_in['If-Modified-Since'].strip()
+            client_date = normalize_date(client_date)
+        if req.headers_in.has_key('If-None-Match'):
+            client_etag = req.headers_in['If-None-Match'].strip()
 
-    server_date = time.asctime(time.gmtime(ctime))
-    if (client_date == server_date and client_etag == server_date
-            or client_date == None and client_etag == server_date
-            or client_etag == None and client_date == server_date):
-        raise apache.SERVER_RETURN, apache.HTTP_NOT_MODIFIED
-    else:
-        req.content_type = content_type
-        req.headers_out['Last-Modified'] = server_date
-        req.headers_out['ETag'] = server_date
-        return 0
+        server_date = time.asctime(time.gmtime(ctime))
+        if (client_date == server_date and client_etag == server_date
+                or client_date == None and client_etag == server_date
+                or client_etag == None and client_date == server_date):
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_MODIFIED
+        else:
+            req.headers_out['Last-Modified'] = server_date
+            req.headers_out['ETag'] = server_date
+
+    req.content_type = content_type
+    return 0
 
 def img_size(rel_image, max_size, config):
     abs_cachedir = os.path.join(config['cache_prefix'], "%d" % max_size)
     abs_cachefile = os.path.join(abs_cachedir, rel_image)
-    abs_raw_image = rel_to_abs(rel_image, config)
+    abs_raw_image = config['mod.paths'].rel_to_abs(rel_image, config)
     try:
         if is_cached(abs_raw_image, abs_cachefile, config):
             cache_image = Image.open(abs_cachefile)
@@ -57,12 +57,10 @@ def img_size(rel_image, max_size, config):
         else:
             raw_image = Image.open(abs_raw_image)
 
-            # Here's the problem.  Without checking the EXIF tags, I can't
-            # properly compute the dimensions.  However, if I do this step, the
-            # server sometimes times out.
-            rotation_amount = None
-            #rotation_amount = compute_rotation_amount(
-            #        exif.exif_tags_raw(abs_raw_image), config)
+            rotation_amount = 0
+            if config['apply_rotation']:
+                rotation_amount = compute_rotation_amount(
+                        exif.exif_tags_raw(abs_raw_image), config)
             if (rotation_amount and
                     (rotation_amount == 90 or rotation_amount == -90)):
                 (height, width) = raw_image.size #swap them
@@ -207,7 +205,7 @@ def cache_img(req, rel, size, config):
         else: height = width
     abs_cachedir = os.path.join(config['cache_prefix'], size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
-    abs_img = rel_to_abs(rel, config)
+    abs_img = config['mod.paths'].rel_to_abs(rel, config)
     img = get_image_for_display(abs_img, config, width, height)
 
     buf = StringIO()

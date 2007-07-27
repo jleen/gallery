@@ -111,9 +111,9 @@ $index_html
 <table width="320" style="display: inline">
 <tr>
 <td width="120" height="100" align="center">
-<a href="$dir"><img src="$preview" border="2" align="middle"></a>
+<a href="$dir"><img src="$preview" border="2" align="middle" height="$height" width="$width"></a>
 </td>
-<td align="left">
+<td align="left" width="200">
 <a href="$dir">$name</a>
 </td></tr></table>
 #end for
@@ -124,7 +124,7 @@ $index_html
 <table style="display: inline">
 <tr>
 <td align="center" valign="middle" height="260" width="250">
-<a href="$medurl"><img src="$thumburl" border="2" class="thumbnail"></a>
+<a href="$medurl"><img src="$thumburl" border="2" class="thumbnail" height="$height" width="$width"></a>
 <div class="caption"><a href="$bigurl">$caption</a></div>
 </td>
 </tr>
