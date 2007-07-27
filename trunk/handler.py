@@ -46,7 +46,7 @@ def application(req, config):
             return photo(req, reqpath, config, tuple_cache)
         elif extn == '.html':
             return photopage(req, reqpath, config, tuple_cache)
-        elif extn.lower() in img_extns or len(extn) < 1:
+        elif len(extn) < 1:
             return gallery(req, reqpath, config, tuple_cache)
         else: send_404(req)
     except UnableToDisambiguateException: send_404(req)
@@ -295,4 +295,3 @@ def gallery(req, url_dir, config, tuples):
     a['browse_prefix'] = config['browse_prefix']
 
     req.write(str(template))
-    return
