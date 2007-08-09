@@ -122,7 +122,7 @@ def url_to_rel(url, config, tuples, infer_suffix = 0):
         amb_urlname = ambiguate_filename(tuple['urlname'])
         amb_basename = ambiguate_filename(basename)
         if infer_suffix:
-            is_match = amb_urlname.startswith(amb_basename)
+            is_match = amb_urlname.startswith(amb_basename + '.')
         else:
             is_match = amb_urlname == amb_basename
         if is_match:
