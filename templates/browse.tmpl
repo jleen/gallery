@@ -108,7 +108,7 @@ $index_html
 
 <div class="directory_section">
 #for $dir, $name, $preview, $width, $height in $subdirs
-<table width="320" style="display: inline">
+<table width="320" frame="below" style="float: left">
 <tr>
 <td width="120" height="100" align="center">
 <a href="$dir"><img src="$preview" border="2" align="middle" height="$height" width="$width"></a>
@@ -121,7 +121,7 @@ $index_html
 
 <div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
-<table style="display: inline">
+<table style="float: left">
 <tr>
 <td align="center" valign="middle" height="260" width="250">
 <a href="$medurl"><img src="$thumburl" border="2" class="thumbnail" height="$height" width="$width"></a>
