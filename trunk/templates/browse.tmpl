@@ -13,7 +13,7 @@
 
 
 #if $side_by_side
-#set $lhs_width=250
+#set $lhs_width=350
 #else
 #set $lhs_width=350
 #end if
@@ -47,6 +47,7 @@
 #if len($imgurls) and len($subdirs)
     padding-bottom:2em;
     border-bottom:2px solid #000;
+	float:left;
 #end if
     margin-top:2em;
 
@@ -68,6 +69,7 @@
 
 
 #else
+	float: left;
     margin-top:3em;
 #end if
     margin-bottom:0;
@@ -110,7 +112,7 @@ $index_html
 #for $dir, $name, $preview, $width, $height in $subdirs
 <table width="320" frame="below" style="float: left">
 <tr>
-<td width="120" height="100" align="center">
+<td width="120" height="130" align="center">
 <a href="$dir"><img src="$preview" border="2" align="middle" height="$height" width="$width"></a>
 </td>
 <td align="left" width="200">
@@ -118,6 +120,12 @@ $index_html
 </td></tr></table>
 #end for
 </div>
+
+#if $side_by_side
+
+#else
+<div style="clear: all">
+#end if
 
 <div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
