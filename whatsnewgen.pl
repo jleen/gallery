@@ -7,30 +7,8 @@ use Getopt::Std;
 my %options = ();
 
 getopts('c', \%options);
-my $targetDir;
-
-# Process gallery_config.py
-# Yes, I know I'm a terrible person
-$configPath = shift;
-$userName = shift;
-die "usage: whatsnewgen.pl [-c] config username\n" unless $configPath and $userName;
-open CONFIG, $configPath or die "Couldn't open $configPath: $!\n";
-while( <CONFIG> )
-{
-  if( m/'$userName'\s*:\s*{/ )
-  {
-    while( <CONFIG> )
-    {
-      if( m/'img_prefix'\s*:\s*"([^"]+)"/i )
-      {
-        $targetDir = $1;
-        last;
-      }
-    }
-    last;
-  }
-}
-close CONFIG;
+$targetDir = shift;
+die "usage: whatsnewgen.pl [-c] target dir\n" unless $targetDir;
 my $whatsNew = $targetDir . "/whatsnew.txt";
 
 my $whatsNewBackup;
@@ -71,7 +49,7 @@ use vars qw/*name *dir *prune/;
 
 sub wanted;
 
-my %lastModifiedByDir = ();
+%lastModifiedByDir = ();
 
 
 
