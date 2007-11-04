@@ -262,6 +262,7 @@ def gallery(req, url_dir, config, tuples):
         fname = item['filename']
         displayname = item['displayname']
         rel_subdir = os.path.join(rel_dir, fname)
+        if fname.startswith('_'): continue
         if not os.path.isdir(config['mod.paths'].rel_to_abs(
             rel_subdir, config)): continue
         url_subdir = config['mod.paths'].rel_to_url(
