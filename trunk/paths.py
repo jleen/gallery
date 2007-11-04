@@ -97,6 +97,7 @@ def degrade_filename(fn):
     fn = fn.replace('{a:}', 'a')
     fn = fn.replace('\xc3\xa4', 'a')
     fn = fn.replace('\xc3\xb6', 'o')
+    if fn.startswith('_'): fn = fn[1:]
     return fn
 
 def url_to_abs(url, config, tuples, infer_suffix = 0):
