@@ -88,10 +88,13 @@ def ambiguate_filename(fn):
     # This is horrifically bogus.  We should have a table or something.
     fn = fn.replace('{o:}', 'o')
     fn = fn.replace('{a:}', 'a')
+    if fn.startswith('_'): fn = fn[1:]
     return fn.lower()
 
 def degrade_filename(fn):
     # By a similar token, this function is a crock.
+    fn = fn.replace('{o:}', 'o')
+    fn = fn.replace('{a:}', 'a')
     fn = fn.replace('\xc3\xa4', 'a')
     fn = fn.replace('\xc3\xb6', 'o')
     return fn
