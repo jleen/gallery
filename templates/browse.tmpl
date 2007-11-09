@@ -77,7 +77,11 @@
 
 </style>
 
+#if len($breadcrumbs) > 1
 <title>$thisdir - $title</title>
+#else
+<title>$title</title>
+#endif
 </head>
 
 <body>
