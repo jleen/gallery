@@ -299,6 +299,11 @@ def get_displayname_for_file(full_fname, config, tuples):
             full_fname, 'displayname', format_for_display, config, tuples,
             use_ext = 0)
 
+def get_displayname_or_untitled(full_fname, config, tuples):
+    name = get_displayname_for_file(full_fname, config, tuples)
+    if len(name) == 0: name = '(untitled)'
+    return name
+    
 def get_nearby_for_file(full_fname, config, tuples):
     (dir, fname) = os.path.split(full_fname);
     dirtuples = get_directory_tuples(dir, config, tuples)

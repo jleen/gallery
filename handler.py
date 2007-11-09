@@ -84,9 +84,13 @@ def photopage(req, url, config, tuples):
             abs_image, config, tuples, "700x500")
     a['full_img_url'] = config['mod.paths'].abs_to_url(
             abs_image, config, tuples, size = big_size)
-    a['gallery_title'] =  config['short_name']
-    a['photo_title'] = config['mod.paths'].get_displayname_for_file(
+    a['gallery_title'] =  config['long_name']
+    photo_title = config['mod.paths'].get_displayname_for_file(
             abs_image, config, tuples)
+    bread_title = photo_title
+    if len(bread_title) == 0: bread_title = '(untitled)'
+    a['photo_title'] = photo_title
+    a['bread_title'] = bread_title
     a['description'] = description
     show_exif = config.get('show_exif', 0)
     if show_exif:
