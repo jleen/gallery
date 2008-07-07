@@ -33,7 +33,7 @@ def read_update_entries(fname, config, tuples):
                 # REVIEW: Ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = config['mod.paths'].rel_to_url(dir, config, tuples)
+                    url = config['mod.paths'].rel_to_url(dir, config, tuples, trailing_slash = 1)
                     is_movie_dir = 0
                     if dir.endswith('Movies'):
                         is_movie_dir = 1
