@@ -127,6 +127,10 @@ def photopage(req, url, config, tuples):
     template = import_one_module('templates.photopage', config).photopage(
             searchList=[a])
     a['browse_prefix'] = config['browse_prefix']
+    if config.has_key('footer_message'):
+        a['footer_message'] = config['footer_message']
+    else:
+        a['footer_message'] = None
     req.write(str(template))
 
 def photo(req, url, config, tuples):
@@ -326,5 +330,10 @@ def gallery(req, url_dir, config, tuples):
     a['subdirs'] = subdir_records
     a['index_html'] = index_html
     a['browse_prefix'] = config['browse_prefix']
+    if config.has_key('footer_message'):
+        a['footer_message'] = config['footer_message']
+    else:
+        a['footer_message'] = None
+
 
     req.write(str(template))

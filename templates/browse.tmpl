@@ -74,6 +74,11 @@
 #end if
     margin-bottom:0;
 }
+.footer_section {
+	border-left:2px;
+	border-right:2px;
+	margin-top:2em;
+}
 
 </style>
 
@@ -128,9 +133,12 @@ $index_html
 #if $side_by_side
 
 #else
+#if len($imgurls) > 0
 <div style="clear: all">
 #end if
+#end if
 
+#if len($imgurls) > 0
 <div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
 <table width="250" style="float: left">
@@ -142,7 +150,14 @@ $index_html
 </tr>
 </table>
 #end for
-
 </div>
+#end if
+
+<!--Write the footer message if defined-->
+#if $footer_message != None
+<div style="clear: both" class="footer_section">
+$footer_message
+</div>
+#end if
 </body>
 </html>
