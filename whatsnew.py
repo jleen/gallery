@@ -3,8 +3,12 @@
 import re
 import time
 from Cheetah.Template import Template
+from Cheetah.Filters import ReplaceNone
+from Cheetah.Filters import Filter
 import sys
 import os
+
+from xml.sax import saxutils
 
 
 def whatsnew_src_file(config):
@@ -28,6 +32,10 @@ def read_update_entries(fname, config, tuples):
             if date_match:
                 t = time.strptime(date_match.group(1))
                 current_entry['date'] = time.strftime('%m-%d-%Y', t)
+                #+0000 is wrong, but the what's new file doesn't have a TZ in
+                #it.  Perhaps I should just fabricate one from the current
+                #timezone.
+                current_entry['date_822'] = time.strftime("%a, %d %b %Y %H:%M:%S +0000", t)
             else:
                 dir_match = dir_expr.search(line)
                 # REVIEW: Ambiguate and qualify?
@@ -111,3 +119,53 @@ def spew_all_whats_new(req, config, tuples, whatsnew_template_module):
 
     spew_whats_new(req, update_entries, "All Updates", None, None, config,
             whatsnew_template_module)
+
+def spew_whats_new_rss(req, config, tuples, rss_template_module):
+    fname = whatsnew_src_file(config)
+    update_entries = read_update_entries(fname, config, tuples)
+
+    config['mod.cache'].check_client_cache( req, 'text/xml; charset="UTF-8"',
+            config['mod.cache'].max_ctime_for_files([fname]), config)
+
+    search = {}
+    search['gallerytitle'] = config['short_name']
+    search['title'] = config['long_name']
+    search['updates'] = update_entries
+
+    #ok, since this is going into xml, html unescape the entries and then xml
+    #escape them.  Good thing that python doesn't have library functions for
+    #html unescaping.
+    #
+    #Do the escaping in the filter
+    #
+    #Oh yea, and the dirnames need to be unescaped too.  Sweet.
+
+
+    for entry in update_entries:
+        entry['desc'] = html_unescape(entry['desc'])
+        entry['dir'] = map(html_unescapehelper, entry['dir'])
+
+    template = rss_template_module.whatsnewrss(searchList = [search], filter=ReplaceXml)
+
+    search['browse_prefix'] = config['browse_prefix']
+    search['hostname'] = "www.saturnvalley.org"
+    req.write(str(template))
+
+def html_unescape(s):
+    s = s.replace("&lt;", "<")
+    s = s.replace("&gt;", ">")
+    s = s.replace("&apos;", "'")
+    s = s.replace("&quot;", '"')
+    s = s.replace("&rsquo;", "'")
+    s = s.replace("&amp;", "&") # Must be last
+    return s
+
+def html_unescapehelper(tup):
+    return [html_unescape(tup[0]), tup[1]]
+
+class ReplaceXml(Filter):
+    def filter(self, val, **kw):
+
+        if val is None:
+            return ''
+        return saxutils.escape(str(val))

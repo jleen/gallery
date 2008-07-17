@@ -40,6 +40,10 @@ def application(req, config):
             return config['mod.whatsnew'].spew_all_whats_new(
                     req, config, tuple_cache,
                     import_one_module('templates.whatsnewpage', config))
+        elif os.path.split(reqpath)[1] == 'whatsnew.xml':
+            return config['mod.whatsnew'].spew_whats_new_rss(
+                    req, config, tuple_cache,
+                    import_one_module('templates.whatsnewrss', config))
         elif extn.lower() in config['mod.paths'].img_extns:
             return photo(req, reqpath, config, tuple_cache)
         elif extn == '.html':
@@ -319,9 +323,12 @@ def gallery(req, url_dir, config, tuples):
         a['whatsnew_name'] = "What's New (updated " +  wn_ctime + ")"
         a['whatsnew_url'] = os.path.join(
                 config['browse_prefix'], "whatsnew.html")
+		a['whatsnew_rss'] = os.path.join(
+                config['browse_prefix'], "whatsnew.xml")
     else:
         a['whatsnew_name'] = None
         a['whatsnew_url'] = None
+        a['whatsnew_rss'] = None
 
     a['title'] = config['long_name']
     a['breadcrumbs'] = breadcrumbs
