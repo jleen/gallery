@@ -161,6 +161,8 @@ def format_for_display(fn, config):
     if fn.startswith('_DSC'): return ''
     if fn.startswith('CIMG'): return ''
     if fn.startswith('IMG_'): return ''
+    if fn.startswith('JL') and fn[2].isdigit() and fn[3] == '_': return ''
+
     fn = fn.replace('_', ' ')
     fn = fn.replace('~', '?')
     fn = fn.replace("'", '&rsquo;')
