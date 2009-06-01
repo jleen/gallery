@@ -3,7 +3,6 @@
 import re
 import time
 from Cheetah.Template import Template
-from Cheetah.Filters import ReplaceNone
 from Cheetah.Filters import Filter
 import sys
 import os
