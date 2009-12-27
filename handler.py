@@ -171,17 +171,10 @@ def spew_photo(req, rel, size, config):
         return
 
 def spew_file(req, abs):
-    fil = file(abs, 'rb')
-    #TODO: Why is this disabled?
     #set the content length to avoid the evil chunked transfer coding
-    #req.set_header('Content-length', os.stat(abs)[stat.ST_SIZE])
+    req.set_content_length(os.stat(abs)[stat.ST_SIZE])
+    req.sendfile(abs)
 
-    buf = fil.read(4096)
-    while buf:
-        req.write(buf)
-        buf = fil.read(4096)
-
-    fil.close()
 
 def first_image_in_dir(rel_dir, config, tuples):
     abs_dir = config['mod.paths'].rel_to_abs(rel_dir, config)
