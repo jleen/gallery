@@ -140,13 +140,22 @@ def url_to_rel(url, config, tuples, infer_suffix = 0):
 
 
 trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
+remove_bracketed_stuff_regexp = re.compile('\[[^\]]*\]')
+remove_brackets_regexp = re.compile('[\[\]]')
 
 def trim_serials(path):
     return trim_serials_regexp.sub('', path)
 
+def remove_bracketed_stuff(path):
+    return remove_bracketed_stuff_regexp.sub('', path)
+
+def remove_brackets(path):
+    return remove_brackets_regexp.sub('', path)
+
 def format_for_url(fn, this_param_is_ignored):
     fn = degrade_filename(fn)
     fn = trim_serials(fn)
+    fn = remove_bracketed_stuff(fn)
     fn = fn.replace(' ', '_')
     fn = fn.replace('?', '~')
     fn = fn.replace('&rsquo;', "'",)
@@ -156,6 +165,7 @@ def format_for_url(fn, this_param_is_ignored):
 
 def format_for_display(fn, config):
     fn = trim_serials(fn)
+    fn = remove_bracketed_stuff(fn)
     if fn == '.': return config['short_name']
     if fn.startswith('DSC_'): return ''
     if fn.startswith('_DSC'): return ''
@@ -169,6 +179,9 @@ def format_for_display(fn, config):
     fn = fn.replace('{o:}', '\xc3\xb6')
     fn = fn.replace('{a:}', '\xc3\xa4')
     return fn
+
+def format_for_sort(fn):
+    return remove_brackets(fn)
 
 def split_path_ext(path):
     (path, base, extn) = split_path_ext_no_degrade(path)
@@ -268,7 +281,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
             else:
                 for_display = os.path.splitext(fname)[0]
             tuple = {}
-            tuple['sortkey'] = fname
+            tuple['sortkey'] = format_for_sort(fname)
             tuple['filename'] = fname
             tuple['displayname'] = format_for_display(for_display, config)
             tuple['urlname'] = format_for_url(fname, None)
