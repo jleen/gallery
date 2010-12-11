@@ -144,14 +144,16 @@ $index_html
 #if len($imgurls) > 0
 <div class="image_section" align="center">
 #for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
-<table width="250" style="float: left">
+<div style="float: left; width: 250px; height: 260px">
+<table border="0" height="100%">
 <tr>
-<td align="center" valign="middle" height="260" width="250">
+<td align="center" valign="middle">
 <a href="$medurl"><img src="$thumburl" border="2" class="thumbnail" height="$height" width="$width"></a>
 <div class="caption"><a href="$bigurl">$caption</a></div>
 </td>
 </tr>
 </table>
+</div>
 #end for
 </div>
 #end if
