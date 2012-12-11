@@ -172,6 +172,7 @@ def format_for_display(fn, config):
     if fn == '.': return config['short_name']
     if fn.startswith('DSC_'): return ''
     if fn.startswith('_DSC'): return ''
+    if fn.startswith('DSCF'): return ''
     if fn.startswith('CIMG'): return ''
     if fn.startswith('IMG_'): return ''
     if fn.startswith('JL') and fn[2].isdigit() and fn[3] == '_': return ''
