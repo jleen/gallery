@@ -141,7 +141,7 @@ def url_to_rel(url, config, tuples, infer_suffix = 0):
     return os.path.join(dir, newbasename)[len(config['img_prefix']):]
 
 
-trim_serials_regexp = re.compile('(^\d+_|(?<=/)\d+_)')
+trim_serials_regexp = re.compile('(^\d+[_ ]|(?<=/)\d+[_ ])')
 remove_bracketed_stuff_regexp = re.compile('\[[^\]]*\]')
 remove_brackets_regexp = re.compile('[\[\]]')
 
