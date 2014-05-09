@@ -87,7 +87,7 @@ def photopage(req, url, config, tuples):
     a['framed_img_url'] = config['mod.paths'].abs_to_url(
             abs_image, config, tuples, "700x500")
     a['full_img_url'] = config['mod.paths'].abs_to_url(
-            abs_image, config, tuples, size = big_size)
+            abs_image, config, tuples)
     a['gallery_title'] =  config['long_name']
     photo_title = config['mod.paths'].get_displayname_for_file(
             abs_image, config, tuples)
@@ -140,9 +140,16 @@ def photopage(req, url, config, tuples):
 def photo(req, url, config, tuples):
     size_index = url.rfind('_')
     ext_index = url.rfind('.')
-    base = url[:size_index]
-    size = url[size_index+1:ext_index]
+    base = url[:ext_index]
+    size = big_size
     ext = url[ext_index+1:]
+    try:
+        # Attempt a disambiguation to see if the file exists.
+        config['mod.paths'].url_to_rel(base + '.' + ext, config, tuples)
+    except:
+        # If it fails, then try it with the underscore as a size separator.
+        base = url[:size_index]
+        size = url[size_index+1:ext_index]
     rel_image = config['mod.paths'].url_to_rel(
             base + '.' + ext, config, tuples)
     image_ctime = config['mod.cache'].lctime(
