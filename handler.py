@@ -67,11 +67,12 @@ def send_404(req):
 def photopage(req, url, config, tuples):
     (url_dir, base, extn) = config['mod.paths'].split_path_ext(url)
     rel_dir = config['mod.paths'].url_to_rel(url_dir, config, tuples)
+    abs_dir = config['mod.paths'].rel_to_abs(rel_dir, config)
     abs_image = config['mod.paths'].url_to_abs(
             os.path.join(url_dir, base),
             config, tuples, infer_suffix = 1)
     cache_time = config['mod.cache'].max_ctime_for_files(
-            [abs_image, config['mod.cache'].scriptdir(
+            [abs_image, abs_dir, config['mod.cache'].scriptdir(
                 'templates/photopage.tmpl')])
     config['mod.cache'].check_client_cache(
             req, 'text/html; charset="UTF-8"', cache_time, config)
