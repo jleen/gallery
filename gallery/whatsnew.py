@@ -1,14 +1,8 @@
 # vim:sw=4:ts=4
 
-import re
-import time
-from Cheetah.Template import Template
-from Cheetah.Filters import Filter
-import sys
-import os
-
-from xml.sax import saxutils
-
+import os, re, time, sys, xml
+from jinja2 import Environment, PackageLoader
+from gallery import paths
 
 def whatsnew_src_file(config):
     return os.path.join(config['img_prefix'], "whatsnew.txt")
@@ -40,7 +34,7 @@ def read_update_entries(fname, config, tuples):
                 # REVIEW: Ambiguate and qualify?
                 if dir_match:
                     dir = dir_match.group(1)
-                    url = config['mod.paths'].rel_to_url(dir, config, tuples, trailing_slash = 1)
+                    url = paths.rel_to_url(dir, config, tuples, trailing_slash = 1)
                     is_movie_dir = 0
                     if dir.endswith('Movies'):
                         is_movie_dir = 1
@@ -51,7 +45,7 @@ def read_update_entries(fname, config, tuples):
                     else:
                         idx = idx + 1
                     dir = dir[idx:]
-                    dir = config['mod.paths'].format_for_display(dir, config)
+                    dir = paths.format_for_display(dir, config)
                     if is_movie_dir:
                         dir += " - Movies"
                     current_entry['dir'].append((dir, url))
@@ -63,21 +57,21 @@ def read_update_entries(fname, config, tuples):
 
 
 def spew_whats_new(
-        req, update_entries, title_str, next_url, next_link_name, config,
-        whatsnew_template_module):
+        req, update_entries, title_str, next_url, next_link_name, config):
     search = {}
     search['gallerytitle'] = config['short_name']
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    template = whatsnew_template_module.whatsnewpage(searchList = [search])
+    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
+    template = jenv.get_template('whatsnewpage.html.jj')
 
     search['browse_prefix'] = config['browse_prefix']
-    req.write(str(template))
+    return [template.render(search).encode('utf-8')]
 
 
-def spew_recent_whats_new(req, config, tuples, whatsnew_template_module):
+def spew_recent_whats_new(start_response, config, tuples):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
@@ -98,33 +92,35 @@ def spew_recent_whats_new(req, config, tuples, whatsnew_template_module):
 
 
 
-    config['mod.cache'].check_client_cache( req, 'text/html; charset="UTF-8"',
-            config['mod.cache'].max_ctime_for_files([fname]), config)
-    spew_whats_new(
-            req,
+    # TODO(jleen)
+    #cache.check_client_cache( req, 'text/html; charset="UTF-8"',
+    #        cache.max_ctime_for_files([fname]), config)
+    return spew_whats_new(
+            start_response,
             update_entries[:entries],
             "Recent Updates",
             os.path.join(config['browse_prefix'], "whatsnew_all.html"),
             all_updates,
-            config,
-            whatsnew_template_module)
+            config)
 
-def spew_all_whats_new(req, config, tuples, whatsnew_template_module):
+def spew_all_whats_new(start_response, config, tuples):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    config['mod.cache'].check_client_cache( req, 'text/html; charset="UTF-8"',
-            config['mod.cache'].max_ctime_for_files([fname]), config)
+    # TODO(jleen)
+    #cache.check_client_cache( req, 'text/html; charset="UTF-8"',
+    #        cache.max_ctime_for_files([fname]), config)
 
-    spew_whats_new(req, update_entries, "All Updates", None, None, config,
-            whatsnew_template_module)
+    return spew_whats_new(
+            start_response, update_entries, "All Updates", None, None, config)
 
-def spew_whats_new_rss(req, config, tuples, rss_template_module):
+def spew_whats_new_rss(start_response, config, tuples):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    config['mod.cache'].check_client_cache( req, 'text/xml; charset="UTF-8"',
-            config['mod.cache'].max_ctime_for_files([fname]), config)
+    # TODO(jleen)
+    #cache.check_client_cache( req, 'text/xml; charset="UTF-8"',
+    #        cache.max_ctime_for_files([fname]), config)
 
     search = {}
     search['gallerytitle'] = config['short_name']
@@ -142,13 +138,14 @@ def spew_whats_new_rss(req, config, tuples, rss_template_module):
 
     for entry in update_entries:
         entry['desc'] = html_unescape(entry['desc'])
-        entry['dir'] = map(html_unescapehelper, entry['dir'])
+        entry['dir'] = list(map(html_unescapehelper, entry['dir']))
 
-    template = rss_template_module.whatsnewrss(searchList = [search], filter=ReplaceXml)
+    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
+    template = jenv.get_template('whatsnewrss.xml.jj')
 
     search['browse_prefix'] = config['browse_prefix']
     search['hostname'] = "www.saturnvalley.org"
-    req.write(str(template))
+    return [template.render(search).encode('utf-8')]
 
 def html_unescape(s):
     s = s.replace("&lt;", "<")
@@ -162,9 +159,10 @@ def html_unescape(s):
 def html_unescapehelper(tup):
     return [html_unescape(tup[0]), tup[1]]
 
-class ReplaceXml(Filter):
+# Uh oh
+class ReplaceXml: #(Filter):
     def filter(self, val, **kw):
 
         if val is None:
             return ''
-        return saxutils.escape(str(val))
+        return xml.sax.saxutils.escape(str(val))
