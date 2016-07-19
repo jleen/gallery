@@ -15,21 +15,6 @@ preview_size_int = int(preview_size)
 
 preload_modules = [ 'cache', 'paths', 'whatsnew' ]
 
-def app(environ, start_response):
-    config = {
-        'namespace': 'gallery',
-        'short_name': "Hall of Light",
-        'long_name': "Saturn Valley Hall of Light",
-        'img_prefix': "/Users/jleen/gallery/photos/",
-        'cache_prefix': "/Users/jleen/gallery/cache/",
-        'browse_prefix': "/",
-        'apply_rotation': 1,
-        'applow_original': 0,
-        'cache_expired': 'Mon Aug 21 07:31:00 PDT 2006'
-    }
-
-    return application(environ, start_response, config)
-
 def application(environ, start_response, config):
     try:
         os.umask(0o002)
@@ -137,6 +122,7 @@ def photopage(start_response, url, config, tuples):
         a['footer_message'] = config['footer_message']
     else:
         a['footer_message'] = None
+    start_response('200 OK', [('Content-Type', 'text/html')])
     return [template.render(a).encode('utf-8')]
 
 def photo(start_response, url, config, tuples):
