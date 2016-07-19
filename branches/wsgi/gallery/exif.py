@@ -1,6 +1,6 @@
 # vim:sw=4:ts=4
 
-from exif import EXIF
+import exifread
 
 def copyIfPresent(dst, dstKey, src, srcKey):
     if srcKey in src:
@@ -67,7 +67,7 @@ def improperToProper(fraction):
 def exif_tags_raw(img_fname):
     try:
         f = open(img_fname, 'rb')
-        tags = EXIF.process_file(f)
+        tags = exifread.process_file(f)
         f.close()
     except:
         tags = None
