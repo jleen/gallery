@@ -2,7 +2,7 @@
 
 import os, time
 from jinja2 import Environment, PackageLoader
-from gallery import cache, paths, whatsnew
+from gallery import cache, exif, paths, whatsnew
 
 small_size = "600"
 med_size = "1024"
@@ -85,7 +85,7 @@ def photopage(start_response, url, config, tuples):
     a['description'] = description
     show_exif = config.get('show_exif', 0)
     if show_exif:
-        a['exifdata'] = exif_tags(abs_image).items()
+        a['exifdata'] = exif.exif_tags(abs_image).items()
     else:
         a['exifdata'] = None
     (prev, next) = paths.get_nearby_for_file(
