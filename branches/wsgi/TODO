@@ -1,0 +1,8 @@
+Cache shouldn't be at the mercy of what's been pre-created
+Next/prev buttons
+_default size
+whatsnew.html refinements
+better caching
+better error handling
+Fix seedcache.py so that DreamHost doesn't kill it.
+Fix img_size to handle rotated images the first time.

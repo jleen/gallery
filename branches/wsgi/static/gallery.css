@@ -1,0 +1,92 @@
+body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    color: #333333;
+    background-color: #f4f4f4;
+}
+
+body, td {
+    font-size: 90%;
+}
+
+a img {
+    border: solid 2px #333366; 
+}
+
+a {
+    text-decoration: none;
+    color: #333399;
+}
+
+div.caption {
+    padding: 10px;
+}
+
+td.prev {
+    text-align: left;
+}
+
+td.next {
+    text-align: right;
+}
+
+td.prev, td.next {
+    width: 100px;
+    vertical-align: top;
+    padding-top: 20px;
+}
+
+.phototitle {
+    text-decoration: none;
+    font-size: 130%;
+}
+
+.fromlink {
+    text-decoration: none;
+    font-size: 75%;
+    color: #333399;
+}
+
+.exiflink {
+    font-size: 55%;
+}
+
+.collapsedexif {
+    display:none;
+}
+
+.expandedexif {
+    display:inline;
+}
+
+.datebox h3 {
+    font-size: medium;
+    font-weight: 900;
+    margin-bottom: 0;
+}
+
+.datecontents {
+    width: 90%;
+    margin-left:5%;
+    margin-right:5%;
+}
+
+.datetitles {
+    width: 90%;
+    margin-left:3%;
+    font-size: larger;
+    font-weight: bold;
+    margin-bottom:.5em;
+    margin-top:1em;
+}
+
+.datecomment {
+    margin-left:6%;
+    margin-right:5%;
+    margin-bottom: 1.5em;
+}
+
+.footer_section {
+	border-left:2px;
+	border-right:2px;
+	margin-top:0;
+}
