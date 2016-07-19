@@ -28,41 +28,44 @@ def application(environ, start_response, config):
                     environ, start_response, reqpath, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
             return whatsnew.spew_recent_whats_new(
-                    start_response, config, tuple_cache, jenv)
+                    environ, start_response, config, tuple_cache, jenv)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
             return whatsnew.spew_all_whats_new(
-                    start_response, config, tuple_cache, jenv)
+                    environ, start_response, config, tuple_cache, jenv)
         elif os.path.split(reqpath)[1] == 'whatsnew.xml':
             return whatsnew.spew_whats_new_rss(
-                    start_response, config, tuple_cache, jenv)
+                    environ, start_response, config, tuple_cache, jenv)
         elif extn.lower() in paths.img_extns:
-            return photo(start_response, reqpath, config, tuple_cache)
+            return photo(environ, start_response, reqpath, config, tuple_cache)
         elif extn == '.html':
-            return photopage(start_response, reqpath, config, tuple_cache)
+            return photopage(
+                    environ, start_response, reqpath, config, tuple_cache)
         elif len(extn) < 1:
             return gallery(
                     environ, start_response, reqpath, config, tuple_cache)
         else: return send_404(start_response)
+    except cache.NotModifiedException:
+        return send_304(start_response)
     except paths.UnableToDisambiguateException:
         return send_404(start_response)
         
+def send_304(start_response):
+    start_response('304 NOT MODIFIED', [('Content-Type', 'text/plain')])
+    return [b'Not Modified']
+
 def send_404(start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
     return [b'Not Found']
 
-def photopage(start_response, url, config, tuples):
+def photopage(environ, start_response, url, config, tuples):
     (url_dir, base, extn) = paths.split_path_ext(url)
     rel_dir = paths.url_to_rel(url_dir, config, tuples)
     abs_dir = paths.rel_to_abs(rel_dir, config)
     abs_image = paths.url_to_abs(
             os.path.join(url_dir, base),
             config, tuples, infer_suffix = 1)
-    # TODO(jleen)
-    #cache_time = cache.max_ctime_for_files(
-    #        [abs_image, abs_dir, cache.scriptdir(
-    #            'templates/photopage.tmpl')])
-    #cache.check_client_cache(
-    #        req, 'text/html; charset="UTF-8"', cache_time, config)
+    cache_time = cache.max_ctime_for_files([abs_image, abs_dir])
+    server_date = cache.check_client_cache(environ, cache_time, config)
 
     abs_info = os.path.splitext(abs_image)[0] + '.info'
     description = ''
@@ -122,10 +125,11 @@ def photopage(start_response, url, config, tuples):
         a['footer_message'] = config['footer_message']
     else:
         a['footer_message'] = None
-    start_response('200 OK', [('Content-Type', 'text/html')])
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'text/html; charset="UTF-8"')], server_date))
     return [template.render(a).encode('utf-8')]
 
-def photo(start_response, url, config, tuples):
+def photo(environ, start_response, url, config, tuples):
     size_index = url.rfind('_')
     ext_index = url.rfind('.')
     base = url[:ext_index]
@@ -142,15 +146,14 @@ def photo(start_response, url, config, tuples):
             base + '.' + ext, config, tuples)
     image_ctime = cache.lctime(
             paths.rel_to_abs(rel_image, config))
-    # TODO(jleen)
-    #cache.check_client_cache(
-    #        req, "image/jpeg", image_ctime, config)
+    server_date = cache.check_client_cache(environ, image_ctime, config)
     try: allow_original = config['allow_original']
     except KeyError:
         allow_original = 1
     if size == "original" and not allow_original:
         size = "full"
-    start_response('200 OK', [('Content-Type', 'image/jpeg')])
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'image/jpeg')], server_date))
     if size == "original":
         return [spew_file(paths.rel_to_abs(rel_image, config))]
     else:
@@ -166,8 +169,7 @@ def spew_photo(rel, size, config):
         return cache.cache_img(rel, size, config)
 
 def spew_file(abs):
-    # TODO(jleen)
-    #set the content length to avoid the evil chunked transfer coding
+    # TODO(jleen): set content length to avoid the evil chunked transfer coding
     #req.set_content_length(os.stat(abs)[stat.ST_SIZE])
     with open(abs, 'rb') as f:
         return f.read()
@@ -190,7 +192,7 @@ def first_image_in_dir(rel_dir, config, tuples):
             recurse = first_image_in_dir(rel_subdir, config, tuples)
             return os.path.join(dir_fname, recurse)
 
-# TODO: Fix this for mod_python
+# TODO(jleen): Can this still work?
 def ensure_trailing_slash_and_check_needs_refresh(req):
     uri = req.uri
     if not uri.endswith('/'):
@@ -223,14 +225,8 @@ def gallery(environ, start_response, url_dir, config, tuples):
         fname = item['filename']
         abs_images.append(os.path.join(abs_dir, fname))
 
-    # TODO(jleen)
-    #cache.check_client_cache(
-    #        req,
-    #        'text/html; charset="UTF-8"',
-    #        cache.max_ctime_for_files(
-    #            [abs_dir] + [cache.scriptdir(
-    #                'templates/browse.tmpl')] + abs_images),
-    #            config)
+    server_date = cache.check_client_cache(
+            environ, cache.max_ctime_for_files([abs_dir]), config)
 
     image_records = []
     for item in items:
@@ -332,5 +328,6 @@ def gallery(environ, start_response, url_dir, config, tuples):
     else:
         a['footer_message'] = None
 
-    start_response('200 OK', [('Content-Type', 'text/html')])
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'text/html; charset="UTF-8"')], server_date))
     return [template.render(a).encode('utf-8')]
