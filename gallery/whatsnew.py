@@ -57,21 +57,20 @@ def read_update_entries(fname, config, tuples):
 
 
 def spew_whats_new(
-        req, update_entries, title_str, next_url, next_link_name, config):
+        req, update_entries, title_str, next_url, next_link_name, config, jenv):
     search = {}
     search['gallerytitle'] = config['short_name']
     search['title'] = title_str
     search['updates'] = update_entries
     search['nextLinkTitle'] = next_link_name
     search['nextLink'] = next_url
-    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
     template = jenv.get_template('whatsnewpage.html.jj')
 
     search['browse_prefix'] = config['browse_prefix']
     return [template.render(search).encode('utf-8')]
 
 
-def spew_recent_whats_new(start_response, config, tuples):
+def spew_recent_whats_new(start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
@@ -101,9 +100,10 @@ def spew_recent_whats_new(start_response, config, tuples):
             "Recent Updates",
             os.path.join(config['browse_prefix'], "whatsnew_all.html"),
             all_updates,
-            config)
+            config,
+            jenv)
 
-def spew_all_whats_new(start_response, config, tuples):
+def spew_all_whats_new(start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
@@ -112,9 +112,10 @@ def spew_all_whats_new(start_response, config, tuples):
     #        cache.max_ctime_for_files([fname]), config)
 
     return spew_whats_new(
-            start_response, update_entries, "All Updates", None, None, config)
+            start_response, update_entries, "All Updates", None, None, config,
+            jenv)
 
-def spew_whats_new_rss(start_response, config, tuples):
+def spew_whats_new_rss(start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
@@ -140,7 +141,6 @@ def spew_whats_new_rss(start_response, config, tuples):
         entry['desc'] = html_unescape(entry['desc'])
         entry['dir'] = list(map(html_unescapehelper, entry['dir']))
 
-    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
     template = jenv.get_template('whatsnewrss.xml.jj')
 
     search['browse_prefix'] = config['browse_prefix']

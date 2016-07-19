@@ -13,34 +13,35 @@ preview_size = "100"
 thumb_size_int = int(thumb_size)
 preview_size_int = int(preview_size)
 
-preload_modules = [ 'cache', 'paths', 'whatsnew' ]
+jenv = Environment(loader=PackageLoader('gallery', 'templates'))
 
 def application(environ, start_response, config):
     try:
         os.umask(0o002)
 
         tuple_cache = paths.new_tuple_cache()
-        # TODO(jleen): What about SCRIPT_NAME?
         reqpath = environ.get('PATH_INFO', '')[1:]
 
         extn = os.path.splitext(reqpath)[1]
         if os.path.split(reqpath)[1] == 'index.html':
-            return gallery(start_response, reqpath, config, tuple_cache)
+            return gallery(
+                    environ, start_response, reqpath, config, tuple_cache)
         elif os.path.split(reqpath)[1] == 'whatsnew.html':
             return whatsnew.spew_recent_whats_new(
-                    start_response, config, tuple_cache)
+                    start_response, config, tuple_cache, jenv)
         elif os.path.split(reqpath)[1] == 'whatsnew_all.html':
             return whatsnew.spew_all_whats_new(
-                    start_response, config, tuple_cache)
+                    start_response, config, tuple_cache, jenv)
         elif os.path.split(reqpath)[1] == 'whatsnew.xml':
             return whatsnew.spew_whats_new_rss(
-                    start_response, config, tuple_cache)
+                    start_response, config, tuple_cache, jenv)
         elif extn.lower() in paths.img_extns:
             return photo(start_response, reqpath, config, tuple_cache)
         elif extn == '.html':
             return photopage(start_response, reqpath, config, tuple_cache)
         elif len(extn) < 1:
-            return gallery(start_response, reqpath, config, tuple_cache)
+            return gallery(
+                    environ, start_response, reqpath, config, tuple_cache)
         else: return send_404(start_response)
     except paths.UnableToDisambiguateException:
         return send_404(start_response)
@@ -115,7 +116,6 @@ def photopage(start_response, url, config, tuples):
             "./" + rel_dir, config, tuples)
     a['breadcrumbs'] = breadcrumbs
 
-    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
     template = jenv.get_template('photopage.html.jj')
     a['browse_prefix'] = config['browse_prefix']
     if 'footer_message' in config:
@@ -205,7 +205,7 @@ def find_preview(rel_dir, config):
             return os.path.join(rel_dir, fn)
     return None
 
-def gallery(start_response, url_dir, config, tuples):
+def gallery(environ, start_response, url_dir, config, tuples):
     # HACK: Since IE can't seem to handle meta refresh properly, I've
     # disabled redirect and instead we'll just patch up PATH_INFO to
     # pretend we got a trailing slash.
@@ -293,7 +293,6 @@ def gallery(start_response, url_dir, config, tuples):
             './' + rel_dir[:-1], config, tuples)
 
     a = {}
-    jenv = Environment(loader=PackageLoader('gallery', 'templates'))
     template = jenv.get_template('browse.html.jj')
     leafdir = os.path.split(rel_dir[:-1])[1]
     use_wn = 0
