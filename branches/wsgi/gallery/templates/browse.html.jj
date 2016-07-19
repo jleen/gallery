@@ -1,80 +1,58 @@
-## vim:sw=4:ts=4
-#set $side_by_side = 0
-#if len($imgurls) and len($subdirs) > 2
-#set $side_by_side = 1
-#end if
-
-#set $left_side_dominates = 0
-#if $side_by_side
-#if len($imgurls) < len($subdirs)
-#set $left_side_dominates = 1
-#end if
-#end if
-
-
-#if $side_by_side
-#set $lhs_width=350
-#else
-#set $lhs_width=350
-#end if
-
-#if $left_side_dominates
-#set $lhs_side_width = 550
-#else
-#set $lhs_side_width = $lhs_width
-#end if
-
+{# vim: set ft=htmldjango sw=4 ts=4: #}
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="/gallery.css">
-#if $whatsnew_rss
-<link href="$whatsnew_rss" rel="alternate" type="application/rss+xml" title="$title"/>
-#end if
+{% if whatsnew_rss %}
+<link href="{{ whatsnew_rss }}" rel="alternate" type="application/rss+xml" title="{{ title }}"/>
+{% endif %}
 <style>
 .directory_section {
-#if $side_by_side
+{% if imgurls|length > 0 and subdirs|length > 2 %}
     margin-top:2em;
     float:left;
     left:auto;
-#if $left_side_dominates
-    width:$lhs_side_width;
+{% if imgurls|length < subdirs|length %}
+    width:550;
     padding-right:0;
     margin-right:0;
-#else
-    width:$lhs_width;
-#end if
+{% else %}
+    width:350;
+{% endif %}
     height:100%;
-#else
+{% else %}
 
-#if len($imgurls) and len($subdirs)
+{% if imgurls|length and subdirs|length %}
     padding-bottom:2em;
     border-bottom:2px solid #000;
 	float:left;
-#end if
+{% endif %}
     margin-top:2em;
 
-#end if
+{% endif %}
     margin-right:0;
     padding-right:2em;
     margin-bottom:2em;
     line-height:300%;
 }
-#set leftcontent_width = $lhs_side_width + 10
 .image_section {
-#if $side_by_side
+{% if imgurls|length > 0 and subdirs|length > 2 %}
     height:100%;
     border-left:2px solid #000;
     padding-left:20px;
     margin-top:2em;
 
-    margin-left:$leftcontent_width;
+{% if imgurls|length < subdirs|length %}
+    margin-left:560;
+{% else %}
+    margin-left:360;
+{% endif %}
 
 
-#else
+{% else %}
 	float: left;
     margin-top:3em;
-#end if
+{% endif %}
     margin-bottom:0;
 }
 .footer_section {
@@ -85,84 +63,81 @@
 
 </style>
 
-#if len($breadcrumbs) > 1
-<title>$thisdir - $title</title>
-#else
-<title>$title</title>
-#end if
+{% if breadcrumbs|length > 1 %}
+<title>{{ thisdir }} - {{ title }}</title>
+{% else %}
+<title>{{ title }}</title>
+{% endif %}
 </head>
 
 <body>
 
-#if $index_html == None
+{% if not index_html %}
 <p>
-#set $first = 1
-#for $is_link, $dir, $name in $breadcrumbs
-#if $first == 0
+{% for is_link, dir, name in breadcrumbs %}
+{% if not loop.first %}
  &gt;&gt; 
-#end if
-#if $is_link
-<b><a href="$dir">$name</a></b>
-#else
-<b>$name</b>
-#end if
-#set $first = 0
-#end for
+{% endif %}
+{% if is_link %}
+<b><a href="{{ dir }}">{{ name }}</a></b>
+{% else %}
+<b>{{ name }}</b>
+{% endif %}
+{% endfor %}
 </p>
 
-#if $whatsnew_name
-<a href="$whatsnew_url">$whatsnew_name</a>
-#end if
+{% if whatsnew_name %}
+<a href="{{ whatsnew_url }}">{{ whatsnew_name }}</a>
+{% endif %}
 
-#else
-$index_html
-#end if
+{% else %}
+{{ index_html }}
+{% endif %}
 
 
 
 <div class="directory_section">
-#for $dir, $name, $preview, $width, $height in $subdirs
+{% for dir, name, preview, width, height in subdirs %}
 <table width="320" frame="below" style="float: left">
 <tr>
 <td width="120" height="130" align="center">
-<a href="$dir"><img src="$preview" border="2" align="middle" height="$height" width="$width"></a>
+<a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}"></a>
 </td>
 <td align="left" width="200">
-<a href="$dir">$name</a>
+<a href="{{ dir }}">{{ name }}</a>
 </td></tr></table>
-#end for
+{% endfor %}
 </div>
 
-#if $side_by_side
+{% if imgurls|length > 0 and subdirs|length > 2 %}
 
-#else
-#if len($imgurls) > 0
+{% else %}
+{% if imgurls|length > 0 %}
 <div style="clear: all">
-#end if
-#end if
+{% endif %}
+{% endif %}
 
-#if len($imgurls) > 0
+{% if imgurls|length > 0 %}
 <div class="image_section" align="center">
-#for $medurl, $bigurl, $thumburl, $caption, $width, $height in $imgurls:
+{% for medurl, bigurl, thumburl, caption, width, height in imgurls %}
 <div style="float: left; width: 250px; height: 260px">
 <table border="0" height="100%">
 <tr>
 <td align="center" valign="middle">
-<a href="$medurl"><img src="$thumburl" border="2" class="thumbnail" height="$height" width="$width"></a>
-<div class="caption"><a href="$bigurl">$caption</a></div>
+<a href="{{ medurl }}"><img src="{{ thumburl }}" border="2" class="thumbnail" height="{{ height }}" width="{{ width }}"></a>
+<div class="caption"><a href="{{ bigurl }}">{{ caption }}</a></div>
 </td>
 </tr>
 </table>
 </div>
-#end for
+{% endfor %}
 </div>
-#end if
+{% endif %}
 
-<!--Write the footer message if defined-->
-#if $footer_message != None
+{% if footer_message %}
 <div style="clear: both" class="footer_section">
-$footer_message
+{{ footer_message }}
 </div>
-#end if
+{% endif %}
 </body>
 </html>

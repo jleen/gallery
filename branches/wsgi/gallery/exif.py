@@ -1,9 +1,9 @@
 # vim:sw=4:ts=4
 
-import EXIF
+from exif import EXIF
 
 def copyIfPresent(dst, dstKey, src, srcKey):
-    if src.has_key(srcKey):
+    if srcKey in src:
         dst[dstKey] = src[srcKey]
 
 def safe_divide(numer, denom):
@@ -88,10 +88,10 @@ def exif_tags(img_fname):
             tags, 'MakerNote Image Optimization')
     copyIfPresent(processedTags, 'Hue Adjustment',
             tags, 'MakerNote HueAdjustment')
-    if tags.has_key('EXIF ExposureTime'):
+    if 'EXIF ExposureTime' in tags:
         processedTags['Shutter Speed'] = fractionToDecimal(
                 tags['EXIF ExposureTime'].printable)
-    if tags.has_key('EXIF ExposureBiasValue'):
+    if 'EXIF ExposureBiasValue' in tags:
         processedTags['Exposure Compensation'] = improperToProper(
                 tags['EXIF ExposureBiasValue'].printable)
 
@@ -134,10 +134,10 @@ def exif_tags(img_fname):
 
     # Fractional...
 
-    if tags.has_key('EXIF FNumber'):
+    if 'EXIF FNumber' in tags:
         processedTags['FNumber'] = fractionToDecimal(
                 tags['EXIF FNumber'].printable)
-    if tags.has_key('EXIF FocalLength'):
+    if 'EXIF FocalLength' in tags:
         processedTags['Focal Length'] = fractionToDecimal(
                 tags['EXIF FocalLength'].printable)
     return processedTags

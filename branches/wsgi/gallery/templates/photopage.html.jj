@@ -1,4 +1,4 @@
-## vim:sw=4:ts=4
+{# vim: set ft=htmldjango sw=4 ts=4: #}
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="stylesheet" type="text/css" href="/gallery.css">
@@ -24,63 +24,62 @@
 }
 </script>
 
-<title>$bread_title - $gallery_title</title>
-#if $varExists('breadcrumbs')
+<title>{{ bread_title }} - {{ gallery_title }}</title>
+{% if breadcrumbs %}
 <p>
-#for $is_link, $dir, $name in $breadcrumbs
-<b><a href="$dir">$name</a></b>
+{% for is_link, dir, name in breadcrumbs %}
+<b><a href="{{ dir }}">{{ name }}</a></b>
  &gt;&gt; 
-#end for
-<b>$bread_title</b>
+{% endfor %}
+<b>{{ bread_title }}</b>
 </p>
-#end if
+{% endif %}
 <table width="100%">
 <tr>
 <td class="prev">
-#if $prev
-<a href="$prev">&lt;&lt; Previous</a>
-#end if
+{% if prev %}
+<a href="{{ prev }}">&lt;&lt; Previous</a>
+{% endif %}
 </td>
 
 <td align="center" width="*">
 <div align="center">
-<a href="$full_img_url"><img src="$framed_img_url" border="2" vspace="10" align="middle"></a>
-<div class="phototitle"><b>$photo_title</b></div><br>
-#if $varExists('from_url')
-From <a class="fromlink" href="$from_url">$from_caption</a><br>
-#end if
-#if $description
-$description<br>
-#end if
+<a href="{{ full_img_url }}"><img src="{{ framed_img_url }}" border="2" vspace="10" align="middle"></a>
+<div class="phototitle"><b>{{ photo_title }}</b></div><br>
+{% if from_url %}
+From <a class="fromlink" href="{{ from_url }}">{{ from_caption }}</a><br>
+{% endif %}
+{% if description %}
+{{ description }}<br>
+{% endif %}
 
-#if $exifdata
+{% if exifdata %}
 <a class="exiflink" href="javascript:toggleexif('exifblock');">+ exif</a>
 <div id="exifblock" class="collapsedexif">
 <p>
 <table style="display: inline">
-#for $key, $value in $exifdata.items()
+{% for key, value in exifdata %}
 <tr>
-<td>$key</td>
-<td>$value</td>
+<td>{{ key }}</td>
+<td>{{ value }}</td>
 </tr>
-#end for
+{% endfor %}
 </table>
 </p>
 </div>
-#end if
+{% endif %}
 </div>
 </td>
 
 <td class="next">
-#if $next
-<a href="$next">Next &gt;&gt;</a>
-#end if
+{% if next %}
+<a href="{{ next }}">Next &gt;&gt;</a>
+{% endif %}
 </td>
 </table>
 
-<!--Write the footer message if defined-->
-#if $footer_message != None
+{% if footer_message %}
 <div style="clear: both" class="footer_section">
-$footer_message
+{{ footer_message }}
 </div>
-#end if
+{% endif %}
