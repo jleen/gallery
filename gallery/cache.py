@@ -8,34 +8,41 @@ from PIL import Image, ImageDraw, ImageFont, ImageStat
 from gallery import exif, paths
 
 
+class NotModifiedException(Exception): pass
+
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
 
 def normalize_date(date):
     if date == None: return None
     return time.asctime(time.gmtime(
-        rfc822.mktime_tz(rfc822.parsedate_tz(date))))
+        email.utils.mktime_tz(email.utils.parsedate_tz(date))))
 
-def check_client_cache(req, content_type, ctime, config):
+def add_cache_headers(headers, server_date):
+    if not server_date: return headers
+    else: return headers + [('Last-Modified', server_date),
+                            ('ETag', server_date)]
+
+def check_client_cache(environ, ctime, config):
+    # TODO(jleen): Factor in the template change time. Maybe just remember
+    # when the app booted.
     if not config.get('ignore_client_cache', 0):
         client_date = None
         client_etag = None
-        if 'If-Modified-Since' in req.headers_in:
-            client_date = req.headers_in['If-Modified-Since'].strip()
+        if 'HTTP_IF_MODIFIED_SINCE' in environ:
+            client_date = environ['HTTP_IF_MODIFIED_SINCE'].strip()
             client_date = normalize_date(client_date)
-        if 'If-None-Match' in req.headers_in:
-            client_etag = req.headers_in['If-None-Match'].strip()
+        if 'HTTP_IF_NONE_MATCH' in environ:
+            client_etag = environ['HTTP_IF_NONE_MATCH'].strip()
 
         server_date = time.asctime(time.gmtime(ctime))
         if (client_date == server_date and client_etag == server_date
                 or client_date == None and client_etag == server_date
                 or client_etag == None and client_date == server_date):
-            raise apache.SERVER_RETURN(apache.HTTP_NOT_MODIFIED)
+            raise NotModifiedException
         else:
-            req.headers_out['Last-Modified'] = server_date
-            req.headers_out['ETag'] = server_date
-
-    req.content_type = content_type
+            return server_date
+    return None
 
 def img_size(rel_image, max_size, config):
     abs_cachedir = os.path.join(config['cache_prefix'], "%d" % max_size)

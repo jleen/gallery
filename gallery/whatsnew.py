@@ -2,7 +2,7 @@
 
 import os, re, time, sys, xml
 from jinja2 import Environment, PackageLoader
-from gallery import paths
+from gallery import cache, paths
 
 def whatsnew_src_file(config):
     return os.path.join(config['img_prefix'], "whatsnew.txt")
@@ -57,7 +57,8 @@ def read_update_entries(fname, config, tuples):
 
 
 def spew_whats_new(
-        req, update_entries, title_str, next_url, next_link_name, config, jenv):
+        environ, start_response, update_entries, title_str, next_url,
+        next_link_name, config, jenv, server_date):
     search = {}
     search['gallerytitle'] = config['short_name']
     search['title'] = title_str
@@ -67,10 +68,12 @@ def spew_whats_new(
     template = jenv.get_template('whatsnewpage.html.jj')
 
     search['browse_prefix'] = config['browse_prefix']
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'text/html; charset="UTF-8"')], server_date))
     return [template.render(search).encode('utf-8')]
 
 
-def spew_recent_whats_new(start_response, config, tuples, jenv):
+def spew_recent_whats_new(environ, start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
     all_updates = "See all updates: " + str(len(update_entries)) + " entries"
@@ -91,37 +94,34 @@ def spew_recent_whats_new(start_response, config, tuples, jenv):
 
 
 
-    # TODO(jleen)
-    #cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-    #        cache.max_ctime_for_files([fname]), config)
+    server_date = cache.check_client_cache(
+            environ, cache.max_ctime_for_files([fname]), config)
+
     return spew_whats_new(
-            start_response,
+            environ, start_response,
             update_entries[:entries],
             "Recent Updates",
             os.path.join(config['browse_prefix'], "whatsnew_all.html"),
             all_updates,
-            config,
-            jenv)
+            config, jenv, server_date)
 
-def spew_all_whats_new(start_response, config, tuples, jenv):
+def spew_all_whats_new(environ, start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    # TODO(jleen)
-    #cache.check_client_cache( req, 'text/html; charset="UTF-8"',
-    #        cache.max_ctime_for_files([fname]), config)
+    server_date = cache.check_client_cache(
+            environ, cache.max_ctime_for_files([fname]), config)
 
     return spew_whats_new(
-            start_response, update_entries, "All Updates", None, None, config,
-            jenv)
+            environ, start_response, update_entries, "All Updates",
+            None, None, config, jenv, server_date)
 
-def spew_whats_new_rss(start_response, config, tuples, jenv):
+def spew_whats_new_rss(environ, start_response, config, tuples, jenv):
     fname = whatsnew_src_file(config)
     update_entries = read_update_entries(fname, config, tuples)
 
-    # TODO(jleen)
-    #cache.check_client_cache( req, 'text/xml; charset="UTF-8"',
-    #        cache.max_ctime_for_files([fname]), config)
+    server_date = cache.check_client_cache(environ,
+            cache.max_ctime_for_files([fname]), config)
 
     search = {}
     search['gallerytitle'] = config['short_name']
@@ -145,6 +145,8 @@ def spew_whats_new_rss(start_response, config, tuples, jenv):
 
     search['browse_prefix'] = config['browse_prefix']
     search['hostname'] = "www.saturnvalley.org"
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'text/xml; charset="UTF-8"')], server_date))
     return [template.render(search).encode('utf-8')]
 
 def html_unescape(s):
