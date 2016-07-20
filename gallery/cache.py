@@ -56,7 +56,7 @@ def img_size(rel_image, max_size, config):
             raw_image = Image.open(abs_raw_image)
 
             rotation_amount = 0
-            if config['apply_rotation']:
+            if config.getboolean('apply_rotation', fallback=False):
                 rotation_amount = compute_rotation_amount(
                         exif.exif_tags_raw(abs_raw_image), config)
             if (rotation_amount and
@@ -100,7 +100,7 @@ def makedirsfor(fname):
 
 def compute_rotation_amount(tags, config):
     rotation_amount = 0
-    if config['apply_rotation'] and tags:
+    if config.getboolean('apply_rotation', fallback=False) and tags:
         orientation_tag = tags.get('Image Orientation')
         if orientation_tag == None:
             orientation_tag = ''
@@ -123,7 +123,8 @@ def get_image_for_display(fname, config, width = 0, height = 0):
         (width, height) = img.size
 
     rotation_amount = compute_rotation_amount(tags, config)
-    if rotation_amount: img = img.rotate(rotation_amount, Image.NEAREST)
+    if rotation_amount:
+        img = img.rotate(rotation_amount, Image.NEAREST, expand=True)
 
     try :
         copyright_name = config['copyright_name'] 
