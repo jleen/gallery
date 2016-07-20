@@ -1,20 +1,14 @@
 # vim:sw=4:ts=4
 # -*- coding: latin-1 -*-
 
-from mod_python import apache
+import email.utils, io, os, stat, time
 
-import os
-import rfc822
-import stat
-from   StringIO import StringIO
-import sys
-import time
+from PIL import Image, ImageDraw, ImageFont, ImageStat
 
-import exif
-from   PIL import Image
-from   PIL import ImageDraw
-from   PIL import ImageFont
-from   PIL import ImageStat
+from gallery import exif, paths
+
+
+class NotModifiedException(Exception): pass
 
 def scriptdir(fname):
     return os.path.join(os.path.split(__file__)[0], fname)
@@ -22,34 +16,38 @@ def scriptdir(fname):
 def normalize_date(date):
     if date == None: return None
     return time.asctime(time.gmtime(
-        rfc822.mktime_tz(rfc822.parsedate_tz(date))))
+        email.utils.mktime_tz(email.utils.parsedate_tz(date))))
 
-def check_client_cache(req, content_type, ctime, config):
+def add_cache_headers(headers, server_date):
+    if not server_date: return headers
+    else: return headers + [('Last-Modified', server_date),
+                            ('ETag', server_date)]
+
+def check_client_cache(environ, ctime, config):
+    # TODO(jleen): Factor in the template change time. Maybe just remember
+    # when the app booted.
     if not config.get('ignore_client_cache', 0):
         client_date = None
         client_etag = None
-        if req.headers_in.has_key('If-Modified-Since'):
-            client_date = req.headers_in['If-Modified-Since'].strip()
+        if 'HTTP_IF_MODIFIED_SINCE' in environ:
+            client_date = environ['HTTP_IF_MODIFIED_SINCE'].strip()
             client_date = normalize_date(client_date)
-        if req.headers_in.has_key('If-None-Match'):
-            client_etag = req.headers_in['If-None-Match'].strip()
+        if 'HTTP_IF_NONE_MATCH' in environ:
+            client_etag = environ['HTTP_IF_NONE_MATCH'].strip()
 
         server_date = time.asctime(time.gmtime(ctime))
         if (client_date == server_date and client_etag == server_date
                 or client_date == None and client_etag == server_date
                 or client_etag == None and client_date == server_date):
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_MODIFIED
+            raise NotModifiedException
         else:
-            req.headers_out['Last-Modified'] = server_date
-            req.headers_out['ETag'] = server_date
-
-    req.content_type = content_type
-    return 0
+            return server_date
+    return None
 
 def img_size(rel_image, max_size, config):
     abs_cachedir = os.path.join(config['cache_prefix'], "%d" % max_size)
     abs_cachefile = os.path.join(abs_cachedir, rel_image)
-    abs_raw_image = config['mod.paths'].rel_to_abs(rel_image, config)
+    abs_raw_image = paths.rel_to_abs(rel_image, config)
     try:
         if is_cached(abs_raw_image, abs_cachefile, config):
             cache_image = Image.open(abs_cachefile)
@@ -58,7 +56,7 @@ def img_size(rel_image, max_size, config):
             raw_image = Image.open(abs_raw_image)
 
             rotation_amount = 0
-            if config['apply_rotation']:
+            if config.getboolean('apply_rotation', fallback=False):
                 rotation_amount = compute_rotation_amount(
                         exif.exif_tags_raw(abs_raw_image), config)
             if (rotation_amount and
@@ -102,7 +100,7 @@ def makedirsfor(fname):
 
 def compute_rotation_amount(tags, config):
     rotation_amount = 0
-    if config['apply_rotation'] and tags:
+    if config.getboolean('apply_rotation', fallback=False) and tags:
         orientation_tag = tags.get('Image Orientation')
         if orientation_tag == None:
             orientation_tag = ''
@@ -125,7 +123,8 @@ def get_image_for_display(fname, config, width = 0, height = 0):
         (width, height) = img.size
 
     rotation_amount = compute_rotation_amount(tags, config)
-    if rotation_amount: img = img.rotate(rotation_amount, Image.NEAREST)
+    if rotation_amount:
+        img = img.rotate(rotation_amount, Image.NEAREST, expand=True)
 
     try :
         copyright_name = config['copyright_name'] 
@@ -195,7 +194,7 @@ def get_image_for_display(fname, config, width = 0, height = 0):
     return img
 
 
-def cache_img(req, rel, size, config):
+def cache_img(rel, size, config):
     width = 0
     height = 0
     if size != "full":
@@ -205,20 +204,16 @@ def cache_img(req, rel, size, config):
         else: height = width
     abs_cachedir = os.path.join(config['cache_prefix'], size)
     abs_cachefile = os.path.join(abs_cachedir, rel)
-    abs_img = config['mod.paths'].rel_to_abs(rel, config)
+    abs_img = paths.rel_to_abs(rel, config)
     img = get_image_for_display(abs_img, config, width, height)
 
-    buf = StringIO()
-    img.save(buf, "JPEG", quality = 95)
-    if req:
-        req.write(buf.getvalue())
-    if os.path.isdir(abs_cachedir):
-        makedirsfor(abs_cachefile)
-        fil = file(abs_cachefile, 'wb')
-        fil.write(buf.getvalue())
-        fil.close()
-    buf.close()
-    return img.size
+    with io.BytesIO() as buf:
+        img.save(buf, "JPEG", quality = 95)
+        if os.path.isdir(abs_cachedir):
+            makedirsfor(abs_cachefile)
+            with open(abs_cachefile, 'wb') as fil:
+                fil.write(buf.getvalue())
+        return buf.getvalue()
 
 def max_ctime_for_files(fnames):
     max_ctime = 0

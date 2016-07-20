@@ -1,0 +1,21 @@
+{# vim: set ft=htmldjango sw=4 ts=4: #}<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+    <title>{{ title }}</title>
+    <link>http://{{ hostname }}{{browse_prefix }}</link>
+    <description>What's new on {{ title }}</description>
+    <atom:link href="http://{{ hostname }}{{ browse_prefix }}whatsnew.xml" rel="self" type="application/rss+xml" />
+{% for entry in updates %}
+{% for dirname, url in entry.dir %}
+    <item>
+        <title>{{ dirname }}</title>
+        <link>http://{{ hostname }}{{ url }}</link>
+        <description>{{ entry.desc }}</description>
+        <pubDate>{{ entry.date_822 }}</pubDate>
+        <guid>http://{{ hostname }}{{ url }}index.html#item{{ loop.index0 }}</guid>
+    </item>
+{% endfor %}
+{% endfor %}
+
+</channel>
+</rss>
