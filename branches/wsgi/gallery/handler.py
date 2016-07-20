@@ -252,7 +252,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
     rel_index = os.path.join(rel_dir, 'index.html')
     abs_index = paths.rel_to_abs(rel_index, config)
     if os.path.exists(abs_index):
-        fh = file(abs_index, 'r')
+        fh = open(abs_index, 'r', encoding='utf-8')
         index_html = fh.read()
         fh.close()
 
