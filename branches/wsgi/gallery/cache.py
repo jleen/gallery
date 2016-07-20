@@ -1,7 +1,7 @@
 # vim:sw=4:ts=4
 # -*- coding: latin-1 -*-
 
-import email, io, os, stat, time
+import email.utils, io, os, stat, time
 
 from PIL import Image, ImageDraw, ImageFont, ImageStat
 
