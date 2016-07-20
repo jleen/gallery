@@ -1,0 +1,38 @@
+{# vim: set ft=htmldjango sw=4 ts=4: #}
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="/gallery.css">
+<title>{{ title }}</title></head>
+<body>
+{% set lastDate = '' %}
+<a href="."><b>{{ gallerytitle }}</b></a>
+&gt;&gt;
+<b>{{ title }}</b>
+
+{% if nextLinkTitle %}
+<br><br><i>(<a href="{{ nextLink }}">{{ nextLinkTitle }})</a></i>
+{% endif %}
+
+<br><br>
+{% for entry in updates %}
+{% if lastDate != entry.date %}
+{% if not loop.first %}
+    </div> <!--end datebox-->
+{% endif %}
+    <div class="datebox"><hr><h3>{{ entry.date }}</h3>
+{% endif %}
+{% set lastDate = entry.date %}
+<div class="datetitles">
+{% for dirname, url in entry.dir %}
+<a href="{{ url }}">{{ dirname }}</a><br>
+{% endfor %}
+</div> <!--end datetitles-->
+<div class="datecomment">
+{{ entry.desc }}
+</div> <!--end datecomment-->
+{% else %}
+    </div>
+{% endfor %}
+</body>
+</html>

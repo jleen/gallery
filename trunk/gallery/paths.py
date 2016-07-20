@@ -202,13 +202,6 @@ def split_path_ext_no_degrade(path):
 
     return (path, base, extn)
 
-def dirent_compare(lhs, rhs):
-    lhsKey = lhs['sortkey']
-    rhsKey = rhs['sortkey']
-    if lhsKey < rhsKey: return -1
-    if lhsKey > rhsKey: return 1
-    return 0
-
 def dir_needs_tuples(dir_path):
     return os.path.exists(os.path.join(dir_path, ".dirinfo"))
 
@@ -223,7 +216,7 @@ def get_directory_tuples(path, config, dir_tuple_cache, ignore_dotfiles = 1):
     #canonicalize the key
     if ignore_dotfiles:
         cache_key = cache_key + "ignore_dotfiles"
-    if dir_tuple_cache.has_key(cache_key):
+    if cache_key in dir_tuple_cache:
         return dir_tuple_cache[cache_key]
     tuples = get_directory_tuples_internal(path, ignore_dotfiles, config)
 
@@ -265,7 +258,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
             if base.startswith('.'): continue
             if fname.lower() == 'preview.jpg': continue
 
-        if dirinfo_entries.has_key(fname):
+        if fname in dirinfo_entries:
             displayname = dirinfo_entries[fname][1]
 
             if len(displayname):
@@ -291,7 +284,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
             tuple['displayname'] = format_for_display(for_display, config)
             tuple['urlname'] = format_for_url(fname, None)
         tuples.append(tuple)
-    tuples.sort(dirent_compare)
+    tuples.sort(key = lambda x: x['sortkey'])
     return tuples
 
 def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
@@ -339,10 +332,10 @@ def get_nearby_for_file(full_fname, config, tuples):
     tempiter = iter(newtuples)
     while True:
         try:
-            current = tempiter.next()
+            current = next(tempiter)
             current_fname = current['filename']
             if current['filename'].startswith(fname):
-                after = tempiter.next()['filename']
+                after = next(tempiter)['filename']
                 break
             else:
                 before = current['filename']
