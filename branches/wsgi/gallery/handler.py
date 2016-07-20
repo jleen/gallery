@@ -87,7 +87,7 @@ def photopage(environ, start_response, url, config, tuples):
     a['photo_title'] = photo_title
     a['bread_title'] = bread_title
     a['description'] = description
-    show_exif = config.get('show_exif', 0)
+    show_exif = config.getboolean('show_exif', fallback=False)
     if show_exif:
         a['exifdata'] = exif.exif_tags(abs_image).items()
     else:
@@ -147,9 +147,7 @@ def photo(environ, start_response, url, config, tuples):
     image_ctime = cache.lctime(
             paths.rel_to_abs(rel_image, config))
     server_date = cache.check_client_cache(environ, image_ctime, config)
-    try: allow_original = config['allow_original']
-    except KeyError:
-        allow_original = 1
+    allow_original = config.getboolean('allow_original', fallback=True)
     if size == "original" and not allow_original:
         size = "full"
     start_response('200 OK', cache.add_cache_headers(
