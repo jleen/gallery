@@ -8,7 +8,7 @@ def whatsnew_src_file(config):
     return os.path.join(config['img_prefix'], "whatsnew.txt")
 
 def read_update_entries(fname, config, tuples):
-    src = open(fname, "r")
+    src = open(fname, "r", encoding='utf-8')
 
     update_entries = []
     date_expr = re.compile('^DATE\s+(.*)$')
