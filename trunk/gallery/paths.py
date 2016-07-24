@@ -96,6 +96,7 @@ def degrade_filename(fn):
     # By a similar token, this function is a crock.
     fn = fn.replace('{a:}', 'a')
     fn = fn.replace('{o:}', 'o')
+    fn = fn.replace('{u:}', 'u')
     fn = fn.replace('\N{LATIN SMALL LETTER A WITH DIAERESIS}', 'a')
     fn = fn.replace('\N{LATIN SMALL LETTER O WITH DIAERESIS}', 'o')
     fn = fn.replace('\N{LATIN SMALL LETTER U WITH DIAERESIS}', 'u')
@@ -161,9 +162,6 @@ def format_for_url(fn, this_param_is_ignored):
     fn = fn.replace(' ', '_')
     fn = fn.replace('?', '~')
     fn = fn.replace('&rsquo;', "'",)
-    fn = fn.replace('\N{LATIN SMALL LETTER A WITH DIAERESIS}', '{a:}' )
-    fn = fn.replace('\N{LATIN SMALL LETTER O WITH DIAERESIS}', '{o:}' )
-    fn = fn.replace('\N{LATIN SMALL LETTER U WITH DIAERESIS}', '{u:}' )
     return fn
 
 def format_for_display(fn, config):
