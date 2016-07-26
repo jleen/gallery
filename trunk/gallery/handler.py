@@ -51,7 +51,7 @@ def application(environ, start_response, config):
         
 def send_304(start_response):
     start_response('304 NOT MODIFIED', [('Content-Type', 'text/plain')])
-    return [b'Not Modified']
+    return []
 
 def send_404(start_response):
     start_response('404 NOT FOUND', [('Content-Type', 'text/plain')])
