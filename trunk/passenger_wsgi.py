@@ -1,2 +1,4 @@
 from gallery import app
-def application(a, b): return app.application(a,b)
+
+
+def application(a, b): return app.application(a, b)
