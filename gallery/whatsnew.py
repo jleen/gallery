@@ -3,7 +3,7 @@
 import os
 import re
 import time
-import xml
+import xml.sax.saxutils
 from typing import Dict, List
 
 from gallery import cache, paths
