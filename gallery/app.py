@@ -1,6 +1,8 @@
-import configparser, os
+import configparser
+import os
 
 from gallery import handler
+
 
 def application(environ, start_response):
     config_data = configparser.ConfigParser()

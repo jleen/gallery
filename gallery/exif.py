@@ -2,142 +2,149 @@
 
 import exifread
 
-def copyIfPresent(dst, dstKey, src, srcKey):
-    if srcKey in src:
-        dst[dstKey] = src[srcKey]
+
+def copy_if_present(dst, dst_key, src, src_key):
+    if src_key in src:
+        dst[dst_key] = src[src_key]
+
 
 def safe_divide(numer, denom):
-    if denom == 0: return 0
+    if denom == 0:
+        return 0
     return numer / denom
 
-def fractionToDecimal(fraction):
+
+def fraction_to_decimal(fraction):
     pieces = fraction.split('/')
     if len(pieces) == 2:
         computed = safe_divide(float(pieces[0]), float(pieces[1]))
-        if computed < 0.25001 and computed > 0:
-            return '1/%d' % int(0.5 + (1/computed))
+        if 0.25001 > computed > 0:
+            return '1/%d' % int(0.5 + (1 / computed))
         else:
             return str(safe_divide(float(pieces[0]), float(pieces[1])))
     else:
         return fraction
 
-def fractionToEntity(fractionStr):
-    if fractionStr == '1/3':
+
+def fraction_to_entity(fraction_str):
+    if fraction_str == '1/3':
         return '&#8531'
-    elif fractionStr == '2/3':
+    elif fraction_str == '2/3':
         return '&#8532'
-    elif fractionStr == '1/2':
+    elif fraction_str == '1/2':
         return '&frac12'
     else:
-        return fractionStr
+        return fraction_str
 
-def improperToProper(fraction):
+
+def improper_to_proper(fraction):
     pieces = fraction.split('/')
     if len(pieces) == 2:
         rational = safe_divide(float(pieces[0]), float(pieces[1]))
         if rational < 0:
-            isNegative = 1
-            rational = rational * -1.0
+            is_negative = 1
+            rational *= -1.0
         else:
-            isNegative = 0
+            is_negative = 0
 
         whole = int(rational)
-        rational = rational - whole
-        rational = rational * 1.00001 #sketchy round off avoidance
+        rational -= whole
+        rational *= 1.00001  # sketchy round off avoidance
         if not rational:
             fractional = ' '
-        elif int(rational*2.0)/(rational*2.0) > 0.999:
+        elif int(rational * 2.0) / (rational * 2.0) > 0.999:
             fractional = '%d/2' % int(rational * 2)
-        elif int(rational*3.0)/(rational*3.0) > 0.999:
+        elif int(rational * 3.0) / (rational * 3.0) > 0.999:
             fractional = '%d/3' % int(rational * 3)
         else:
-            fractional = '.3g' % rational
+            fractional = '%.3g' % rational
         final = ''
-        if isNegative:
-            final = final + '-'
+        if is_negative:
+            final += '-'
         if whole != 0:
-            final = final + str(whole)
-            if not fractional.startswith('.') :
-                final = final + ' '
-        final = final + fractionToEntity(fractional)
+            final += str(whole)
+            if not fractional.startswith('.'):
+                final += ' '
+        final += fraction_to_entity(fractional)
         return final
     else:
         return fraction
 
+
 def exif_tags_raw(img_fname):
     try:
-        f = open(img_fname, 'rb')
-        tags = exifread.process_file(f)
-        f.close()
-    except:
+        with open(img_fname, 'rb') as f:
+            tags = exifread.process_file(f)
+    except IOError:
         tags = None
     return tags
 
+
 def exif_tags(img_fname):
     tags = exif_tags_raw(img_fname)
-    if tags == None: return ()
+    if tags is None:
+        return ()
 
-    processedTags = {}
-    #copy some of the simple tags
+    processed_tags = {}
+    # copy some of the simple tags
 
-    #light source and metering mode need mappings
-    copyIfPresent(processedTags, 'Light Source', tags, 'EXIF LightSource')
-    copyIfPresent(processedTags, 'Metering Mode', tags, 'EXIF MeteringMode')
-    copyIfPresent(processedTags, 'Date Time', tags, 'EXIF DateTimeOriginal')
-    copyIfPresent(processedTags, 'Image Optimization',
-            tags, 'MakerNote Image Optimization')
-    copyIfPresent(processedTags, 'Hue Adjustment',
-            tags, 'MakerNote HueAdjustment')
+    # light source and metering mode need mappings
+    copy_if_present(processed_tags, 'Light Source', tags, 'EXIF LightSource')
+    copy_if_present(processed_tags, 'Metering Mode', tags, 'EXIF MeteringMode')
+    copy_if_present(processed_tags, 'Date Time', tags, 'EXIF DateTimeOriginal')
+    copy_if_present(processed_tags, 'Image Optimization',
+                    tags, 'MakerNote Image Optimization')
+    copy_if_present(processed_tags, 'Hue Adjustment',
+                    tags, 'MakerNote HueAdjustment')
     if 'EXIF ExposureTime' in tags:
-        processedTags['Shutter Speed'] = fractionToDecimal(
+        processed_tags['Shutter Speed'] = fraction_to_decimal(
                 tags['EXIF ExposureTime'].printable)
     if 'EXIF ExposureBiasValue' in tags:
-        processedTags['Exposure Compensation'] = improperToProper(
+        processed_tags['Exposure Compensation'] = improper_to_proper(
                 tags['EXIF ExposureBiasValue'].printable)
 
-    copyIfPresent(processedTags, 'Exposure Program',
-            tags, 'EXIF ExposureProgram')
-    copyIfPresent(processedTags, 'Focus Mode',
-            tags, 'MakerNote FocusMode')
+    copy_if_present(processed_tags, 'Exposure Program',
+                    tags, 'EXIF ExposureProgram')
+    copy_if_present(processed_tags, 'Focus Mode',
+                    tags, 'MakerNote FocusMode')
 
-    copyIfPresent(processedTags, 'AutoFlashMode',
-            tags, 'MakerNote AutoFlashMode')
-    copyIfPresent(processedTags, 'Image Sharpening',
-            tags, 'MakerNote ImageSharpening')
-    copyIfPresent(processedTags, 'Tone Compensation',
-            tags, 'MakerNote ToneCompensation')
-    copyIfPresent(processedTags, 'Flash',
-            tags, 'EXIF Flash')
-    copyIfPresent(processedTags, 'Lighting Type',
-            tags, 'MakerNote LightingType')
-    copyIfPresent(processedTags, 'Noise Reduction',
-            tags, 'MakerNote NoiseReduction')
-    copyIfPresent(processedTags, 'Flash Setting',
-            tags, 'MakerNote FlashSetting')
-    copyIfPresent(processedTags, 'Bracketing Mode',
-            tags, 'MakerNote BracketingMode')
-    copyIfPresent(processedTags, 'ISO Setting',
-            tags, 'MakerNote ISOSetting')
-    copyIfPresent(processedTags, 'FlashBracketCompensationApplied',
-            tags, 'MakerNote FlashBracketCompensationApplied')
-    copyIfPresent(processedTags, 'SubSecTimeOriginal',
-            tags, 'EXIF SubSecTimeOriginal')
-    copyIfPresent(processedTags, 'AFFocusPosition',
-            tags, 'MakerNote AFFocusPosition')
-    copyIfPresent(processedTags, 'WhiteBalanceBias',
-            tags, 'MakerNote WhiteBalanceBias')
-    copyIfPresent(processedTags, 'Whitebalance',
-            tags, 'MakerNote Whitebalance')
-
+    copy_if_present(processed_tags, 'AutoFlashMode',
+                    tags, 'MakerNote AutoFlashMode')
+    copy_if_present(processed_tags, 'Image Sharpening',
+                    tags, 'MakerNote ImageSharpening')
+    copy_if_present(processed_tags, 'Tone Compensation',
+                    tags, 'MakerNote ToneCompensation')
+    copy_if_present(processed_tags, 'Flash',
+                    tags, 'EXIF Flash')
+    copy_if_present(processed_tags, 'Lighting Type',
+                    tags, 'MakerNote LightingType')
+    copy_if_present(processed_tags, 'Noise Reduction',
+                    tags, 'MakerNote NoiseReduction')
+    copy_if_present(processed_tags, 'Flash Setting',
+                    tags, 'MakerNote FlashSetting')
+    copy_if_present(processed_tags, 'Bracketing Mode',
+                    tags, 'MakerNote BracketingMode')
+    copy_if_present(processed_tags, 'ISO Setting',
+                    tags, 'MakerNote ISOSetting')
+    copy_if_present(processed_tags, 'FlashBracketCompensationApplied',
+                    tags, 'MakerNote FlashBracketCompensationApplied')
+    copy_if_present(processed_tags, 'SubSecTimeOriginal',
+                    tags, 'EXIF SubSecTimeOriginal')
+    copy_if_present(processed_tags, 'AFFocusPosition',
+                    tags, 'MakerNote AFFocusPosition')
+    copy_if_present(processed_tags, 'WhiteBalanceBias',
+                    tags, 'MakerNote WhiteBalanceBias')
+    copy_if_present(processed_tags, 'Whitebalance',
+                    tags, 'MakerNote Whitebalance')
 
     # Map various exif data.
 
     # Fractional...
 
     if 'EXIF FNumber' in tags:
-        processedTags['FNumber'] = fractionToDecimal(
+        processed_tags['FNumber'] = fraction_to_decimal(
                 tags['EXIF FNumber'].printable)
     if 'EXIF FocalLength' in tags:
-        processedTags['Focal Length'] = fractionToDecimal(
+        processed_tags['Focal Length'] = fraction_to_decimal(
                 tags['EXIF FocalLength'].printable)
-    return processedTags
+    return processed_tags
