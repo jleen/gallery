@@ -207,9 +207,10 @@ def first_image_in_dir(rel_dir, config, tuples):
             return os.path.join(dir_fname, recurse)
 
 
-def ensure_trailing_slash_and_check_needs_refresh(uri, start_response):
+def ensure_trailing_slash_and_check_needs_refresh(uri, start_response, config):
     if len(uri) > 1 and not uri.endswith('/'):
-        start_response('301 MOVED PERMANENTLY', [('Location', uri + '/')])
+        start_response('301 MOVED PERMANENTLY',
+                       [('Location', config['browse_prefix'] + uri + '/')])
         return True
     return False
 
@@ -227,7 +228,8 @@ def gallery(environ, start_response, url_dir, config, tuples):
     # disabled redirect and instead we'll just patch up PATH_INFO to
     # pretend we got a trailing slash.
 
-    if ensure_trailing_slash_and_check_needs_refresh(url_dir, start_response):
+    if ensure_trailing_slash_and_check_needs_refresh(
+            url_dir, start_response, config):
         return []
 
     if url_dir.startswith('/home'):
