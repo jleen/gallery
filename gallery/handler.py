@@ -13,8 +13,11 @@ BIG_SIZE = "original"
 THUMB_SIZE = "200"
 PREVIEW_SIZE = "100"
 
-thumb_size_int = int(THUMB_SIZE)
-preview_size_int = int(PREVIEW_SIZE)
+GALLERY_CSS = os.path.join(os.path.dirname(__file__),
+                           "static", "gallery.css")
+
+THUMB_SIZE_INT = int(THUMB_SIZE)
+PREVIEW_SIZE_INT = int(PREVIEW_SIZE)
 
 jenv = Environment(loader=PackageLoader('gallery', 'templates'))
 
@@ -39,6 +42,8 @@ def application(environ, start_response, config):
         elif os.path.split(reqpath)[1] == 'whatsnew.xml':
             return whatsnew.spew_whats_new_rss(
                     environ, start_response, config, tuple_cache, jenv)
+        elif os.path.split(reqpath)[1] == 'gallery.css':
+            return css(environ, start_response, config)
         elif extn.lower() in paths.IMG_EXTNS:
             return photo(environ, start_response, reqpath, config, tuple_cache)
         elif extn == '.html':
@@ -138,6 +143,14 @@ def photopage(environ, start_response, url, config, tuples):
     start_response('200 OK', cache.add_cache_headers(
             [('Content-Type', 'text/html; charset="UTF-8"')], server_date))
     return [template.render(a).encode('utf-8')]
+
+
+def css(environ, start_response, config):
+    ctime = cache.lctime(GALLERY_CSS)
+    server_date = cache.check_client_cache(environ, ctime, config)
+    start_response('200 OK', cache.add_cache_headers(
+            [('Content-Type', 'text/css')], server_date))
+    return [spew_file(GALLERY_CSS)]
 
 
 def photo(environ, start_response, url, config, tuples):
@@ -261,7 +274,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
                 rel_image, config, tuples, size=THUMB_SIZE)
         caption = displayname
         (width, height) = cache.img_size(
-                rel_image, thumb_size_int, config)
+                rel_image, THUMB_SIZE_INT, config)
         rec = (url_medium, url_big, url_thumb, caption, width, height)
         image_records.append(rec)
 
