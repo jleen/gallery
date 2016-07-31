@@ -227,7 +227,7 @@ def split_path_ext(path):
 def split_path_ext_no_degrade(path):
     (path, fname) = os.path.split(path)
     (base, extn) = os.path.splitext(fname)
-    if len(base) == 0 and len(extn) > 0 and fname.startswith('.'):
+    if not base and extn and fname.startswith('.'):
         base = extn
         extn = ""
 

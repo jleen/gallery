@@ -323,7 +323,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
             wn_src = whatsnew.whatsnew_src_file(config)
             wn_updates = whatsnew.read_update_entries(
                     wn_src, config, tuples)
-    if wn_updates and len(wn_updates) > 0:
+    if wn_updates:
         wn_date = wn_updates[0]['date']
         wn_ctime = time.strftime('%B %d', time.strptime(wn_date, '%m-%d-%Y'))
         a['whatsnew_name'] = "What's New (updated " + wn_ctime + ")"
