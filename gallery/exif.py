@@ -75,7 +75,7 @@ def exif_tags_raw(img_fname):
     try:
         with open(img_fname, 'rb') as f:
             tags = exifread.process_file(f)
-    except IOError:
+    except (IOError, TypeError):
         tags = None
     return tags
 
