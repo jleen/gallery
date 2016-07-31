@@ -208,9 +208,13 @@ def first_image_in_dir(rel_dir, config, tuples):
 
 
 def ensure_trailing_slash_and_check_needs_refresh(environ, start_response):
-    if not environ['REQUEST_URI'].endswith('/'):
-        start_response('301 MOVED PERMANENTLY',
-                       [('Location', environ['REQUEST_URI'] + '/')])
+    # Passenger provides REQUEST_URI.  Green Unicorn does not, but it does
+    # provide RAW_URI, which seems to be just as good.  As a fallback, we'll
+    # use PATH_INFO and pray.
+    path = environ.get('REQUEST_URI',
+                       environ.get('RAW_URI', environ.get('PATH_INFO', '')))
+    if not path.endswith('/'):
+        start_response('301 MOVED PERMANENTLY', [('Location', path + '/')])
         return True
     return False
 
