@@ -329,9 +329,9 @@ def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
     (dirname, fname, ext) = split_path_ext_no_degrade(full_fname)
     if not dir_needs_tuples(dirname):
         if use_ext:
-            return format_fn(fname + ext, config)
+            return format_fn(fname + ext)
         else:
-            return format_fn(fname, config)
+            return format_fn(fname)
 
     # Obviously, this doesn't properly support dot directories
     ignore_dotfiles = not fname.startswith('.')
