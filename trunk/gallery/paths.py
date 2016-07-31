@@ -22,9 +22,9 @@ def breadcrumbs_for_path(dir_fname, config, tuples):
         # BUGBUG: Too many places know about '.' I think.  Can this be the only
         # place?
         if dirname == '.':
-            display = format_for_display(dirname, config)
+            display = config['short_name']
         else:
-            display = format_for_display(os.path.split(dirname)[1], config)
+            display = format_for_display(os.path.split(dirname)[1])
         breadcrumbs.append([1, dir_url, display])
     # The last breadcrumb isn't a link.
     breadcrumbs[-1][0] = 0
@@ -146,8 +146,8 @@ def url_to_rel(url, config, tuples, infer_suffix=0):
     # By induction, all but the leaf are now unambiguous.  So let's
     # disambiguate the leaf within the parent.
     newbasename = None  # basename
-    tuples = get_directory_tuples(
-            dirname, config, tuples, ignore_dotfiles=fname.startswith('.'))
+    tuples = get_directory_tuples(dirname, tuples,
+                                  ignore_dotfiles=fname.startswith('.'))
     for dirtuple in tuples:
         amb_urlname = ambiguate_filename(dirtuple['urlname'])
         amb_basename = ambiguate_filename(basename)
@@ -182,7 +182,7 @@ def remove_brackets(path):
     return remove_brackets_regexp.sub('', path)
 
 
-def format_for_url(fn, this_param_is_ignored):
+def format_for_url(fn):
     fn = degrade_filename(fn)
     fn = trim_serials(fn)
     fn = remove_bracketed_stuff(fn)
@@ -195,11 +195,9 @@ def format_for_url(fn, this_param_is_ignored):
 boring_filenames = ['DSC_', '_DSC', 'DSCF', 'CIMG', 'IMG_']
 
 
-def format_for_display(fn, config):
+def format_for_display(fn):
     fn = trim_serials(fn)
     fn = remove_bracketed_stuff(fn)
-    if fn == '.':
-        return config['short_name']
     if fn[0:4] in boring_filenames:
         return ''
     if fn.startswith('JL') and fn[2].isdigit() and fn[3] == '_':
@@ -241,7 +239,7 @@ def dir_needs_tuples(dir_path):
 def new_tuple_cache(): return {}
 
 
-def get_directory_tuples(path, config, dir_tuple_cache,
+def get_directory_tuples(path, dir_tuple_cache,
                          ignore_dotfiles=1) -> List[Dict]:
     """
     returns a sorted sequence of dictionaries.  Each dictionary contains:
@@ -255,14 +253,14 @@ def get_directory_tuples(path, config, dir_tuple_cache,
         cache_key += "ignore_dotfiles"
     if cache_key in dir_tuple_cache:
         return dir_tuple_cache[cache_key]
-    tuples = get_directory_tuples_internal(path, ignore_dotfiles, config)
+    tuples = get_directory_tuples_internal(path, ignore_dotfiles)
 
     dir_tuple_cache[cache_key] = tuples
 
     return tuples
 
 
-def get_directory_tuples_internal(path, ignore_dotfiles, config):
+def get_directory_tuples_internal(path, ignore_dotfiles):
     """Parse the dirinfo file."""
     # print ("get_directory_tuples called for " + path +
     #        " with ignore_dotfiles " + str(ignore_dotfiles)
@@ -278,7 +276,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
                 displayname = entry[2]
             else:
                 dirname = os.path.splitext(fname)[0]
-                displayname = format_for_display(dirname, config)
+                displayname = format_for_display(dirname)
 
             sortkey = sortkey + "_" + trim_serials(fname)
             dirinfo_entries[fname] = [sortkey, displayname]
@@ -302,11 +300,11 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
             displayname = dirinfo_entries[fname][1]
 
             if len(displayname):
-                urlname = format_for_url(displayname, None)
+                urlname = format_for_url(displayname)
                 url_ext = os.path.splitext(fname)[1]
                 urlname += url_ext
             else:
-                urlname = format_for_url(fname, None)
+                urlname = format_for_url(fname)
             dirtuple = {
                 'sortkey': dirinfo_entries[fname][0], 'filename': fname,
                 'displayname': dirinfo_entries[fname][1], 'urlname': urlname
@@ -318,8 +316,8 @@ def get_directory_tuples_internal(path, ignore_dotfiles, config):
                 for_display = os.path.splitext(fname)[0]
             dirtuple = {
                 'sortkey': format_for_sort(fname), 'filename': fname,
-                'displayname': format_for_display(for_display, config),
-                'urlname': format_for_url(fname, None)
+                'displayname': format_for_display(for_display),
+                'urlname': format_for_url(fname)
             }
         tuples.append(dirtuple)
     tuples.sort(key=lambda x: x['sortkey'])
@@ -337,7 +335,7 @@ def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
 
     # Obviously, this doesn't properly support dot directories
     ignore_dotfiles = not fname.startswith('.')
-    dirtuples = get_directory_tuples(dirname, config, tuples, ignore_dotfiles)
+    dirtuples = get_directory_tuples(dirname, tuples, ignore_dotfiles)
     for dirtuple in dirtuples:
         if dirtuple['filename'].startswith(fname):
             return dirtuple[key]
@@ -362,9 +360,9 @@ def get_displayname_or_untitled(full_fname, config, tuples):
     return name
 
 
-def get_nearby_for_file(full_fname, config, tuples):
+def get_nearby_for_file(full_fname, tuples):
     (dir_path, fname) = os.path.split(full_fname)
-    dirtuples = get_directory_tuples(dir_path, config, tuples)
+    dirtuples = get_directory_tuples(dir_path, tuples)
     before = None
     after = None
 
