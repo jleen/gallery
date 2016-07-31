@@ -207,9 +207,7 @@ def first_image_in_dir(rel_dir, config, tuples):
             return os.path.join(dir_fname, recurse)
 
 
-def ensure_trailing_slash_and_check_needs_refresh(
-        environ, start_response, config):
-    redir = None
+def ensure_trailing_slash_and_check_needs_refresh(environ, start_response):
     if not environ['REQUEST_URI'].endswith('/'):
         start_response('301 MOVED PERMANENTLY',
                        [('Location', environ['REQUEST_URI'] + '/')])
@@ -226,8 +224,7 @@ def find_preview(rel_dir, config):
 
 
 def gallery(environ, start_response, url_dir, config, tuples):
-    if ensure_trailing_slash_and_check_needs_refresh(
-            environ, start_response, config):
+    if ensure_trailing_slash_and_check_needs_refresh(environ, start_response):
         return []
 
     if url_dir.startswith('/home'):
