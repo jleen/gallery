@@ -207,10 +207,12 @@ def first_image_in_dir(rel_dir, config, tuples):
             return os.path.join(dir_fname, recurse)
 
 
-def ensure_trailing_slash_and_check_needs_refresh(uri, start_response, config):
-    if len(uri) > 1 and not uri.endswith('/'):
+def ensure_trailing_slash_and_check_needs_refresh(
+        environ, start_response, config):
+    redir = None
+    if not environ['REQUEST_URI'].endswith('/'):
         start_response('301 MOVED PERMANENTLY',
-                       [('Location', config['browse_prefix'] + uri + '/')])
+                       [('Location', environ['REQUEST_URI'] + '/')])
         return True
     return False
 
@@ -224,12 +226,8 @@ def find_preview(rel_dir, config):
 
 
 def gallery(environ, start_response, url_dir, config, tuples):
-    # HACK: Since IE can't seem to handle meta refresh properly, I've
-    # disabled redirect and instead we'll just patch up PATH_INFO to
-    # pretend we got a trailing slash.
-
     if ensure_trailing_slash_and_check_needs_refresh(
-            url_dir, start_response, config):
+            environ, start_response, config):
         return []
 
     if url_dir.startswith('/home'):
