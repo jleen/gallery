@@ -77,8 +77,7 @@ def rel_to_url(
         if component.startswith('.'):
             url = os.path.join(url, component)
         else:
-            url = os.path.join(url, get_urlname_for_file(abs_path,
-                                                         config, dirtuples))
+            url = os.path.join(url, get_urlname_for_file(abs_path, dirtuples))
     url = os.path.join(config['browse_prefix'], url)
 
     (base, fname, url_ext) = split_path_ext(url)
@@ -324,7 +323,7 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
     return tuples
 
 
-def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
+def get_name_for_file(full_fname, key, format_fn, tuples, use_ext):
     full_fname = full_fname.rstrip(os.path.sep)
     (dirname, fname, ext) = split_path_ext_no_degrade(full_fname)
     if not dir_needs_tuples(dirname):
@@ -342,19 +341,18 @@ def get_name_for_file(full_fname, key, format_fn, config, tuples, use_ext):
     raise fname
 
 
-def get_urlname_for_file(full_fname, config, tuples):
-    return get_name_for_file(
-            full_fname, 'urlname', format_for_url, config, tuples, use_ext=1)
+def get_urlname_for_file(full_fname, tuples):
+    return get_name_for_file(full_fname, 'urlname', format_for_url, tuples,
+                             use_ext=1)
 
 
-def get_displayname_for_file(full_fname, config, tuples):
-    return get_name_for_file(
-            full_fname, 'displayname', format_for_display, config, tuples,
-            use_ext=0)
+def get_displayname_for_file(full_fname, tuples):
+    return get_name_for_file(full_fname, 'displayname', format_for_display,
+                             tuples, use_ext=0)
 
 
-def get_displayname_or_untitled(full_fname, config, tuples):
-    name = get_displayname_for_file(full_fname, config, tuples)
+def get_displayname_or_untitled(full_fname, tuples):
+    name = get_displayname_for_file(full_fname, tuples)
     if len(name) == 0:
         name = '(untitled)'
     return name

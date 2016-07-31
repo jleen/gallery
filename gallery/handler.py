@@ -90,8 +90,7 @@ def photopage(environ, start_response, url, config, tuples):
                 abs_image, config, tuples),
         'gallery_title': config['long_name']
     }
-    photo_title = paths.get_displayname_for_file(
-            abs_image, config, tuples)
+    photo_title = paths.get_displayname_for_file(abs_image, tuples)
     bread_title = photo_title
     if len(bread_title) == 0:
         bread_title = '(untitled)'
