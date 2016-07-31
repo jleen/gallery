@@ -103,8 +103,7 @@ def photopage(environ, start_response, url, config, tuples):
         a['exifdata'] = exif.exif_tags(abs_image).items()
     else:
         a['exifdata'] = None
-    (prev, nxt) = paths.get_nearby_for_file(
-            abs_image, config, tuples)
+    (prev, nxt) = paths.get_nearby_for_file(abs_image, tuples)
     if prev:
         prev = paths.abs_to_url(
                 prev, config, tuples, ext='html')
@@ -124,8 +123,7 @@ def photopage(environ, start_response, url, config, tuples):
         pruned_dest = dir_dest_path[len(os.path.realpath(
                 config['img_prefix'])) + 1:]
         leaf = os.path.basename(dir_dest_path)
-        a['from_caption'] = paths.format_for_display(
-                leaf, config)
+        a['from_caption'] = paths.format_for_display(leaf)
         a['from_url'] = os.path.join(config['browse_prefix'], pruned_dest)
 
     breadcrumbs = paths.breadcrumbs_for_path(
@@ -191,7 +189,7 @@ def spew_file(abs_path):
 
 def first_image_in_dir(rel_dir, config, tuples):
     abs_dir = paths.rel_to_abs(rel_dir, config)
-    items = paths.get_directory_tuples(abs_dir, config, tuples)
+    items = paths.get_directory_tuples(abs_dir, tuples)
     for item in items:
         (scratch, base, ext) = paths.split_path_ext(
                 item['filename'])
@@ -237,7 +235,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
         url_dir += '/'
     rel_dir = paths.url_to_rel(url_dir, config, tuples)
     abs_dir = paths.rel_to_abs(rel_dir, config)
-    items = paths.get_directory_tuples(abs_dir, config, tuples)
+    items = paths.get_directory_tuples(abs_dir, tuples)
 
     abs_images = []
     for item in items:
@@ -337,7 +335,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
 
     a['title'] = config['long_name']
     a['breadcrumbs'] = breadcrumbs
-    a['thisdir'] = paths.format_for_display(leafdir, config)
+    a['thisdir'] = paths.format_for_display(leafdir)
     a['imgurls'] = image_records
     a['subdirs'] = subdir_records
     a['index_html'] = index_html

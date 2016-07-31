@@ -51,7 +51,7 @@ def read_update_entries(fname, config, tuples) -> List[Dict]:
                     else:
                         idx += 1
                     dirname = dirname[idx:]
-                    dirname = paths.format_for_display(dirname, config)
+                    dirname = paths.format_for_display(dirname)
                     if is_movie_dir:
                         dirname += " - Movies"
                     current_entry['dir'].append((dirname, url))
