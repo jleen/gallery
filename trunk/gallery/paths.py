@@ -182,6 +182,7 @@ def remove_brackets(path):
 
 
 def format_for_url(fn):
+    fn = fn.replace('_.jpg', '.jpg')
     fn = degrade_filename(fn)
     fn = trim_serials(fn)
     fn = remove_bracketed_stuff(fn)
