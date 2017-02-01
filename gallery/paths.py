@@ -192,16 +192,18 @@ def format_for_url(fn):
     return fn
 
 
-boring_filenames = ['DSC_', '_DSC', 'DSCF', 'CIMG', 'IMG_']
+boring_filenames = [
+        re.compile(r) for r in
+        [r'^DSC_.*', r'^_DSC.*', r'^DSCF.*', r'^CIMG.*', r'^IMG_.*',
+         r'JL[0-9]_.*', r'^[A-Z][a-z]*-[0-9]{8}']]
 
 
 def format_for_display(fn):
     fn = trim_serials(fn)
     fn = remove_bracketed_stuff(fn)
-    if fn[0:4] in boring_filenames:
-        return ''
-    if fn.startswith('JL') and fn[2].isdigit() and fn[3] == '_':
-        return ''
+    for r in boring_filenames:
+        if r.match(fn):
+            return ''
 
     fn = fn.replace('_', ' ')
     fn = fn.replace('~', '?')
