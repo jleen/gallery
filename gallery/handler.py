@@ -27,7 +27,10 @@ def application(environ, start_response, config):
         os.umask(0o002)
 
         tuple_cache = paths.new_tuple_cache()
-        reqpath = environ.get('PATH_INFO', '')[1:]
+        reqpath = environ.get('PATH_INFO', '')
+        
+        if config['multitenant_prefix']:
+            reqpath = reqpath[len(config['multitenant_prefix']) + 1:]
 
         extn = os.path.splitext(reqpath)[1]
         if os.path.split(reqpath)[1] == 'index.html':
