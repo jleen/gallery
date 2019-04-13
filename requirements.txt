@@ -1,6 +1,6 @@
 ExifRead==2.1.2
-Jinja2==2.8
-MarkupSafe==0.23
+Jinja2==2.10.1
+MarkupSafe==1.1.1
 Pillow==3.3.0
 typing==3.5.2.2
 -e .
