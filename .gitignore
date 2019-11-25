@@ -1,0 +1,5 @@
+lib
+gallery.egg-info
+pip-selfcheck.json
+pyvenv.cfg
+scripts
