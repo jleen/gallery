@@ -241,7 +241,8 @@ def find_preview(rel_dir, config):
 
 
 def gallery(environ, start_response, url_dir, config, tuples):
-    if ensure_trailing_slash_and_check_needs_refresh(environ, start_response):
+    if environ and ensure_trailing_slash_and_check_needs_refresh(
+            environ, start_response):
         return []
 
     if url_dir.startswith('/home'):
@@ -257,8 +258,10 @@ def gallery(environ, start_response, url_dir, config, tuples):
         fname = item['filename']
         abs_images.append(os.path.join(abs_dir, fname))
 
-    server_date = cache.check_client_cache(
-            environ, cache.max_ctime_for_files([abs_dir]), config)
+    server_date = 0
+    if environ:
+        server_date = cache.check_client_cache(
+                environ, cache.max_ctime_for_files([abs_dir]), config)
 
     image_records = []
     for item in items:

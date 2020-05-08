@@ -32,7 +32,7 @@ def breadcrumbs_for_path(dir_fname, config, tuples):
 
 
 def rel_to_abs(rel, config):
-    return os.path.join(config['img_prefix'], rel)
+    return os.path.join(config['img_prefix'], url_to_os(rel))
 
 
 def abs_to_rel(abs_path, config):
@@ -127,12 +127,19 @@ def url_to_abs(url, config, tuples, infer_suffix=0):
     return rel_to_abs(rel, config)
 
 
+def url_to_os(url):
+    return url.replace('/', os.sep)
+
+def os_to_url(path):
+    return path.replace(os.sep, '/')
+
 def url_to_rel(url, config, tuples, infer_suffix=0):
+    url = url_to_os(url)
     fname = os.path.join(config['img_prefix'], url)
 
     # Handle the trivial case first
     if os.path.exists(fname):
-        return fname[len(config['img_prefix']):]
+        return os_to_url(fname[len(config['img_prefix']):])
 
     (dirname, basename) = os.path.split(fname)
 
@@ -161,7 +168,8 @@ def url_to_rel(url, config, tuples, infer_suffix=0):
         newbasename = basename
     if newbasename is None:
         raise UnableToDisambiguateException
-    return os.path.join(dirname, newbasename)[len(config['img_prefix']):]
+    joined = os.path.join(dirname, newbasename)[len(config['img_prefix']):]
+    return os_to_url(joined)
 
 
 trim_serials_regexp = re.compile('(^\d+[_ ]|(?<=/)\d+[_ ])')
