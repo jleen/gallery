@@ -3,3 +3,6 @@ gallery.egg-info
 pip-selfcheck.json
 pyvenv.cfg
 scripts
+*.swp
+__pycache__
+tags
