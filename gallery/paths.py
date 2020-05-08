@@ -36,7 +36,7 @@ def rel_to_abs(rel, config):
 
 
 def abs_to_rel(abs_path, config):
-    return abs_path[len(config['img_prefix']):]
+    return os_to_url(abs_path[len(config['img_prefix']):])
 
 
 def abs_to_url(abs_path, config, tuples, size=None, ext=None):
@@ -272,8 +272,6 @@ def get_directory_tuples(path, dir_tuple_cache,
 
 def get_directory_tuples_internal(path, ignore_dotfiles):
     """Parse the dirinfo file."""
-    # print ("get_directory_tuples called for " + path +
-    #        " with ignore_dotfiles " + str(ignore_dotfiles)
     dirinfo_entries = {}
     if os.path.exists(os.path.join(path, ".dirinfo")):
         dirinfo = open(os.path.join(path, ".dirinfo"), "r")
