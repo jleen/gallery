@@ -2,6 +2,7 @@
 
 import re
 import os
+import posixpath
 from typing import Dict, List
 
 IMG_EXTNS = ['.jpeg', '.jpg', '.JPG']
@@ -39,6 +40,12 @@ def abs_to_rel(abs_path, config):
     return os_to_url(abs_path[len(config['img_prefix']):])
 
 
+def abs_to_relurl(abs_path, url_path, config, tuples, size=None, ext=None):
+    url = abs_to_url(abs_path, config, tuples, size, ext)
+    foo = url_to_relurl(url, url_path, config)
+    return foo
+
+
 def abs_to_url(abs_path, config, tuples, size=None, ext=None):
     return rel_to_url(
             abs_to_rel(abs_path, config),
@@ -47,6 +54,19 @@ def abs_to_url(abs_path, config, tuples, size=None, ext=None):
             size=size,
             ext=ext,
             trailing_slash=0)
+
+
+def rel_to_relurl(
+        rel, url_path, config, dirtuples,
+        size=None, ext=None, trailing_slash=0):
+    url = rel_to_url(
+        rel, config, dirtuples, size, ext, trailing_slash)
+    return url_to_relurl(url, url_path, config)
+
+
+def url_to_relurl(url, url_path, config):
+    url_base = posixpath.join(config['browse_prefix'], url_path)
+    return posixpath.relpath(url, url_base)
 
 
 def rel_to_url(
@@ -75,20 +95,20 @@ def rel_to_url(
         # Special case.  If component starts with a '.', then don't format it,
         # since we confuse the fname for an extension
         if component.startswith('.'):
-            url = os.path.join(url, component)
+            url = posixpath.join(url, component)
         else:
-            url = os.path.join(url, get_urlname_for_file(abs_path, dirtuples))
-    url = os.path.join(config['browse_prefix'], url)
+            url = posixpath.join(url, get_urlname_for_file(abs_path, dirtuples))
+    url = posixpath.join(config['browse_prefix'], url)
 
     (base, fname, url_ext) = split_path_ext(url)
-    base = os.path.join(base, fname)
+    base = posixpath.join(base, fname)
     if ext is not None:
         url_ext = "." + ext
     if size is not None:
         base = base + "_" + size
     url = base + url_ext
     if trailing_slash:
-        url = os.path.join(url, '')
+        url = posixpath.join(url, '')
     return url
 
 

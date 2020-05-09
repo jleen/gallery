@@ -42,12 +42,7 @@ def staticgen():
         for photo in photos:
             photopath = os.path.join(photodir, photo)
 
-            rel_photo_url = paths.abs_to_rel(photopath, config)
-            target_photo = target_filename(rel_photo_url, config, tuples)
-            generate(handler.photo, rel_photo_url, target_photo,
-                     config, tuples)
-
-            rel_photo_url = paths.abs_to_rel(photopath, config)
+            rel_photo_url = paths.abs_to_relurl(photopath, '', config, tuples)
             target_photo = target_filename(rel_photo_url, config, tuples)
             generate(handler.photo, rel_photo_url, target_photo,
                      config, tuples)
@@ -56,6 +51,12 @@ def staticgen():
             target_thumb = hack_extn(target_photo, '_200.jpg')
             generate(handler.photo, rel_thumb_url, target_thumb,
                      config, tuples)
+
+            rel_thumb_url = hack_extn(rel_photo_url, '_700x500.jpg')
+            target_thumb = hack_extn(target_photo, '_700x500.jpg')
+            generate(handler.photo, rel_thumb_url, target_thumb,
+                     config, tuples)
+
             rel_page_url = hack_extn(rel_photo_url, '.html')
             target_page = hack_extn(target_photo, '.html')
             generate(handler.photopage, rel_page_url, target_page,

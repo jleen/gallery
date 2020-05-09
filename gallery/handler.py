@@ -92,10 +92,10 @@ def photopage(environ, start_response, url, config, tuples):
                     description = line[len('Description: '):]
 
     a = {
-        'framed_img_url': paths.abs_to_url(
-                abs_image, config, tuples, "700x500"),
-        'full_img_url': paths.abs_to_url(
-                abs_image, config, tuples),
+        'framed_img_url': paths.abs_to_relurl(
+                abs_image, rel_dir, config, tuples, "700x500"),
+        'full_img_url': paths.abs_to_relurl(
+                abs_image, rel_dir, config, tuples),
         'gallery_title': config['long_name']
     }
     photo_title = paths.get_displayname_for_file(abs_image, tuples)
@@ -272,12 +272,12 @@ def gallery(environ, start_response, url_dir, config, tuples):
             continue
 
         rel_image = os.path.join(rel_dir, fname)
-        url_medium = paths.rel_to_url(
-                rel_image, config, tuples, ext='html')
-        url_big = paths.rel_to_url(
-                rel_image, config, tuples, size=BIG_SIZE)
-        url_thumb = paths.rel_to_url(
-                rel_image, config, tuples, size=THUMB_SIZE)
+        url_medium = paths.rel_to_relurl(
+                rel_image, url_dir, config, tuples, ext='html')
+        url_big = paths.rel_to_relurl(
+                rel_image, url_dir, config, tuples, size=BIG_SIZE)
+        url_thumb = paths.rel_to_relurl(
+                rel_image, url_dir, config, tuples, size=THUMB_SIZE)
         caption = displayname
         (width, height) = cache.img_size(
                 rel_image, THUMB_SIZE_INT, config)
