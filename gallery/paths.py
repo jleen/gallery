@@ -15,11 +15,12 @@ class UnableToDisambiguateException(Exception):
 def breadcrumbs_for_path(dir_fname, config, tuples):
     breadcrumbs = []
     dirname = ''
-    for crumb in dir_fname.split(os.path.sep):
+    for crumb in dir_fname.split('/'):
         if len(crumb) < 1:
             continue
         dirname = os.path.join(dirname, crumb)
-        dir_url = rel_to_url(dirname, config, tuples, trailing_slash=1)
+        dir_url = rel_to_relurl(
+                dirname, dir_fname, config, tuples, trailing_slash=1)
         # BUGBUG: Too many places know about '.' I think.  Can this be the only
         # place?
         if dirname == '.':
@@ -59,8 +60,10 @@ def abs_to_url(abs_path, config, tuples, size=None, ext=None):
 def rel_to_relurl(
         rel, url_path, config, dirtuples,
         size=None, ext=None, trailing_slash=0):
+    print(rel)
     url = rel_to_url(
         rel, config, dirtuples, size, ext, trailing_slash)
+    print(url)
     return url_to_relurl(url, url_path, config)
 
 

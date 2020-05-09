@@ -112,11 +112,11 @@ def photopage(environ, start_response, url, config, tuples):
         a['exifdata'] = None
     (prev, nxt) = paths.get_nearby_for_file(abs_image, tuples)
     if prev:
-        prev = paths.abs_to_url(
-                prev, config, tuples, ext='html')
+        prev = paths.abs_to_relurl(
+                prev, rel_dir, config, tuples, ext='html')
     if nxt:
-        nxt = paths.abs_to_url(
-                nxt, config, tuples, ext='html')
+        nxt = paths.abs_to_relurl(
+                nxt, rel_dir, config, tuples, ext='html')
     a['prev'] = prev
     a['next'] = nxt
 
@@ -302,8 +302,8 @@ def gallery(environ, start_response, url_dir, config, tuples):
         if not os.path.isdir(paths.rel_to_abs(
                 rel_subdir, config)):
             continue
-        url_subdir = paths.rel_to_url(
-                rel_subdir, config, tuples, trailing_slash=1)
+        url_subdir = paths.rel_to_relurl(
+                rel_subdir, url_dir[:-1], config, tuples, trailing_slash=1)
         caption = displayname
         rel_preview = find_preview(rel_subdir, config)
         if not rel_preview:
@@ -315,13 +315,13 @@ def gallery(environ, start_response, url_dir, config, tuples):
         width = 0
         height = 0
         if rel_preview:
-            url_preview = paths.rel_to_url(
-                    rel_preview, config, tuples, PREVIEW_SIZE)
-            preview = os.path.join(url_subdir, url_preview)
+            url_preview = paths.rel_to_relurl(
+                    rel_preview, url_dir[:-1], config, tuples, PREVIEW_SIZE)
             (width, height) = cache.img_size(
                     rel_preview, 100, config)
 
-        subdir_records.append((url_subdir, caption, preview, width, height))
+        subdir_records.append(
+                (url_subdir, caption, url_preview, width, height))
 
     breadcrumbs = paths.breadcrumbs_for_path(
             './' + rel_dir[:-1], config, tuples)
