@@ -168,9 +168,8 @@ def get_image_for_display(fname, config, width=0, height=0):
         font = ImageFont.truetype(copyright_font, int(round(imgheight * .02)))
 
         draw = ImageDraw.Draw(img)
-        draw.setfont(font)
         # outline_value = "#000000"
-        (textwidth, textheight) = draw.textsize(copyright_string)
+        (textwidth, textheight) = draw.textsize(copyright_string, font=font)
 
         winset = imgwidth * .01
         hinset = imgheight * .01
