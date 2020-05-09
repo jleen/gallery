@@ -47,7 +47,7 @@ def application(environ, start_response, config):
         elif os.path.split(reqpath)[1] == 'whatsnew.xml':
             return whatsnew.spew_whats_new_rss(
                     environ, start_response, config, tuple_cache, jenv)
-        elif os.path.split(reqpath)[1] == 'gallery.css':
+        elif os.path.split(reqpath)[1] in ['gallery.css', 'css']:
             return css(environ, start_response, config)
         elif extn.lower() in paths.IMG_EXTNS:
             return photo(environ, start_response, reqpath, config, tuple_cache)
