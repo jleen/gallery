@@ -15,6 +15,7 @@ def target_filename(rel_url, config, tuples):
     target_path = paths.url_to_os(pseudo_url[len(config['browse_prefix']):])
     return os.path.join(config['target_prefix'], target_path)
 
+
 def generate(generator, rel_url, filename, config, tuples):
     print("Generating " + filename)
 
@@ -22,9 +23,20 @@ def generate(generator, rel_url, filename, config, tuples):
     with open(filename, 'wb') as f:
         f.write(content[0])
 
+
 def hack_extn(path, extn):
     base = os.path.splitext(path)[0]
     return base + extn
+
+
+def gen_photo(rel_photo_url, size, config, tuples):
+    target_photo = target_filename(rel_photo_url, config, tuples)
+    rel_thumb_url = hack_extn(rel_photo_url, '_' + size + '.jpg')
+    target_thumb = hack_extn(target_photo, '_' + size + '.jpg')
+    generate(handler.photo, rel_thumb_url, target_thumb,
+             config, tuples)
+
+
 
 def staticgen():
     config_data = configparser.ConfigParser()
@@ -47,15 +59,8 @@ def staticgen():
             generate(handler.photo, rel_photo_url, target_photo,
                      config, tuples)
 
-            rel_thumb_url = hack_extn(rel_photo_url, '_200.jpg')
-            target_thumb = hack_extn(target_photo, '_200.jpg')
-            generate(handler.photo, rel_thumb_url, target_thumb,
-                     config, tuples)
-
-            rel_thumb_url = hack_extn(rel_photo_url, '_700x500.jpg')
-            target_thumb = hack_extn(target_photo, '_700x500.jpg')
-            generate(handler.photo, rel_thumb_url, target_thumb,
-                     config, tuples)
+            gen_photo(rel_photo_url, '200', config, tuples)
+            gen_photo(rel_photo_url, '700x500', config, tuples)
 
             rel_page_url = hack_extn(rel_photo_url, '.html')
             target_page = hack_extn(target_photo, '.html')
