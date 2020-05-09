@@ -278,7 +278,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
         if ext.lower() not in paths.IMG_EXTNS:
             continue
 
-        rel_image = os.path.join(rel_dir, fname)
+        rel_image = os.path.join(paths.url_to_os(rel_dir), fname)
         url_medium = paths.rel_to_relurl(
                 rel_image, url_dir, config, tuples, ext='html')
         url_big = paths.rel_to_relurl(
@@ -303,7 +303,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
     for item in items:
         fname = item['filename']
         displayname = item['displayname']
-        rel_subdir = os.path.join(rel_dir, fname)
+        rel_subdir = os.path.join(paths.url_to_os(rel_dir), fname)
         if fname.startswith('_'):
             continue
         if not os.path.isdir(paths.rel_to_abs(

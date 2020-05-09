@@ -38,7 +38,7 @@ def rel_to_abs(rel, config):
 
 
 def abs_to_rel(abs_path, config):
-    return os_to_url(abs_path[len(config['img_prefix']):])
+    return abs_path[len(config['img_prefix']):]
 
 
 def abs_to_relurl(abs_path, url_path, config, tuples, size=None, ext=None):

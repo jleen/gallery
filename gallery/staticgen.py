@@ -17,9 +17,11 @@ def target_filename(rel_url, config, tuples):
 
 
 def generate(generator, rel_url, filename, config, tuples):
-    print("Generating " + filename)
+    print('Generating ' + rel_url)
 
-    content = generator(None, ignore_response, rel_url, config, tuples)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    content = generator(None, ignore_response, paths.os_to_url(rel_url),
+                        config, tuples)
     with open(filename, 'wb') as f:
         f.write(content[0])
 
@@ -37,7 +39,6 @@ def gen_photo(rel_photo_url, size, config, tuples):
              config, tuples)
 
 
-
 def staticgen():
     config_data = configparser.ConfigParser()
     config_data.read(os.environ.get('GALLERY_RC', 'gallery.rc'))
@@ -45,22 +46,23 @@ def staticgen():
     tuples = paths.new_tuple_cache()
 
     for photodir, _, photos in os.walk(config['img_prefix']):
-        rel_url = paths.abs_to_rel(photodir, config)
+        rel_url = paths.url_to_os(
+                paths.abs_to_relurl(photodir, '', config, tuples))
         target_dir = target_filename(rel_url, config, tuples)
-        os.makedirs(target_dir, exist_ok=True)
         index_file = os.path.join(target_dir, 'index.html')
         generate(handler.gallery, rel_url, index_file, config, tuples)
 
-        preview = handler.find_preview(rel_url, config, tuples)
+        preview = handler.find_preview(
+                paths.abs_to_rel(photodir, config), config, tuples)
         gen_photo(preview, '100', config, tuples)
 
         for photo in photos:
             photopath = os.path.join(photodir, photo)
 
-            rel_photo_url = paths.abs_to_relurl(photopath, '', config, tuples)
+            rel_photo_url = paths.url_to_os(
+                    paths.abs_to_relurl(photopath, '', config, tuples))
             target_photo = target_filename(rel_photo_url, config, tuples)
-            generate(handler.photo, rel_photo_url, target_photo,
-                     config, tuples)
+            generate(handler.photo, rel_photo_url, target_photo, config, tuples)
 
             gen_photo(rel_photo_url, '200', config, tuples)
             gen_photo(rel_photo_url, '700x500', config, tuples)
