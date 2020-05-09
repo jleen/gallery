@@ -30,6 +30,8 @@ def application(environ, start_response, config):
         reqpath = environ.get('PATH_INFO', '')
         
         if config['multitenant_prefix']:
+            if config['multitenant_prefix'] == '/':
+                config['multitenant_prefix'] = ''
             reqpath = reqpath[len(config['multitenant_prefix']) + 1:]
 
         extn = os.path.splitext(reqpath)[1]
