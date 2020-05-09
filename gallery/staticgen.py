@@ -26,6 +26,11 @@ def generate(generator, rel_url, filename, config, tuples):
         f.write(content[0])
 
 
+def hack_size(path, size):
+    (base, extn) = os.path.splitext(path)
+    return base + "_" + size + extn
+
+
 def hack_extn(path, extn):
     base = os.path.splitext(path)[0]
     return base + extn
@@ -33,8 +38,8 @@ def hack_extn(path, extn):
 
 def gen_photo(rel_photo_url, size, config, tuples):
     target_photo = target_filename(rel_photo_url, config, tuples)
-    rel_thumb_url = hack_extn(rel_photo_url, '_' + size + '.jpg')
-    target_thumb = hack_extn(target_photo, '_' + size + '.jpg')
+    rel_thumb_url = hack_size(rel_photo_url, size)
+    target_thumb = hack_size(target_photo, size)
     generate(handler.photo, rel_thumb_url, target_thumb,
              config, tuples)
 
@@ -54,7 +59,8 @@ def staticgen():
 
         preview = handler.find_preview(
                 paths.abs_to_rel(photodir, config), config, tuples)
-        gen_photo(preview, '100', config, tuples)
+        preview_relurl = paths.rel_to_relurl(preview, '', config, tuples)
+        gen_photo(paths.url_to_os(preview_relurl), '100', config, tuples)
 
         for photo in photos:
             photopath = os.path.join(photodir, photo)
