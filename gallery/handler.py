@@ -232,12 +232,19 @@ def ensure_trailing_slash_and_check_needs_refresh(environ, start_response):
     return False
 
 
-def find_preview(rel_dir, config):
+def find_preview(rel_dir, config, tuples):
+    rel_preview = None
+
     abs_dir = paths.rel_to_abs(rel_dir, config)
     for fn in os.listdir(abs_dir):
         if fn == ".preview.jpeg" or fn.lower() == "preview.jpg":
-            return os.path.join(rel_dir, fn)
-    return None
+            rel_preview = os.path.join(rel_dir, fn)
+    if not rel_preview:
+        rel_preview = first_image_in_dir(rel_dir, config, tuples)
+        if rel_preview:
+            rel_preview = os.path.join(rel_dir, rel_preview)
+
+    return rel_preview
 
 
 def gallery(environ, start_response, url_dir, config, tuples):
@@ -305,12 +312,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
         url_subdir = paths.rel_to_relurl(
                 rel_subdir, url_dir[:-1], config, tuples, trailing_slash=1)
         caption = displayname
-        rel_preview = find_preview(rel_subdir, config)
-        if not rel_preview:
-            rel_preview = first_image_in_dir(rel_subdir, config, tuples)
-            if rel_preview:
-                rel_preview = os.path.join(rel_subdir, rel_preview)
-
+        rel_preview = find_preview(rel_subdir, config, tuples)
         preview = None
         width = 0
         height = 0
@@ -318,7 +320,7 @@ def gallery(environ, start_response, url_dir, config, tuples):
             url_preview = paths.rel_to_relurl(
                     rel_preview, url_dir[:-1], config, tuples, PREVIEW_SIZE)
             (width, height) = cache.img_size(
-                    rel_preview, 100, config)
+                    rel_preview, PREVIEW_SIZE_INT, config)
 
         subdir_records.append(
                 (url_subdir, caption, url_preview, width, height))

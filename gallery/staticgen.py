@@ -51,6 +51,9 @@ def staticgen():
         index_file = os.path.join(target_dir, 'index.html')
         generate(handler.gallery, rel_url, index_file, config, tuples)
 
+        preview = handler.find_preview(rel_url, config, tuples)
+        gen_photo(preview, '100', config, tuples)
+
         for photo in photos:
             photopath = os.path.join(photodir, photo)
 
