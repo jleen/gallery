@@ -80,9 +80,9 @@ def img_size(rel_image, max_size, config):
             if width < max_size and height < max_size:
                 return width, height
             if width > height:
-                return max_size, (max_size * height) / width
+                return max_size, (max_size * height) // width
             else:
-                return (max_size * width) / height, max_size
+                return (max_size * width) // height, max_size
     except IOError:
         return 50, 50
 
