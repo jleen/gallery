@@ -249,7 +249,7 @@ def format_for_sort(fn):
 
 def split_path_ext(path):
     (path, base, extn) = split_path_ext_no_degrade(path)
-    base = degrade_filename(trim_serials(base))
+    base = degrade_filename(base)
     return path, base, extn
 
 
