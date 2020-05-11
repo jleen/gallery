@@ -1,6 +1,9 @@
 # vim:sw=4:ts=4
 
 import exifread
+import logging
+
+logging.getLogger('exifread').setLevel(logging.ERROR)
 
 
 def copy_if_present(dst, dst_key, src, src_key):
