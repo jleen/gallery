@@ -209,11 +209,13 @@ def get_image_for_display(fname, config, width=0, height=0):
             textstartw + drop_shadow_offset,
             textstarth + drop_shadow_offset),
                 copyright_string,
-                fill=shadow_fill_value)
+                fill=shadow_fill_value,
+                font=font)
         draw.text(
                 (textstartw, textstarth),
                 copyright_string,
-                fill=fill_value)
+                fill=fill_value,
+                font=font)
         del draw
 
     return img
