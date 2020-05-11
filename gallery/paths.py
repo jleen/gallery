@@ -57,6 +57,10 @@ def abs_to_url(abs_path, config, tuples, size=None, ext=None):
             trailing_slash=0)
 
 
+def relurl_to_url(relurl, config):
+    return posixpath.join(config['browse_prefix'], relurl)
+
+
 def rel_to_relurl(
         rel, url_path, config, dirtuples,
         size=None, ext=None, trailing_slash=0):
@@ -368,7 +372,7 @@ def get_name_for_file(full_fname, key, format_fn, tuples, use_ext):
     for dirtuple in dirtuples:
         if dirtuple['filename'].startswith(fname):
             return dirtuple[key]
-    raise fname
+    raise Exception('Unable to find tuple name for ' + fname)
 
 
 def get_urlname_for_file(full_fname, tuples):
