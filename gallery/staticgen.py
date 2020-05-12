@@ -71,8 +71,7 @@ def staticgen():
                   dirtime, config, tuples)
 
         for photo in photos:
-            if (photo.startswith('whatsnew.') or photo.startswith('.preview')
-                    or photo == '.dirinfo'):
+            if os.path.splitext(photo)[1] not in paths.IMG_EXTNS:
                 continue
 
             photopath = os.path.join(photodir, photo)
