@@ -15,8 +15,9 @@ class UnableToDisambiguateException(Exception):
 def breadcrumbs_for_path(dir_fname, config, tuples):
     breadcrumbs = []
     dirname = ''
+    saw_dot = False
     for crumb in dir_fname.split('/'):
-        if len(crumb) < 1:
+        if len(crumb) < 1 or (crumb == '.' and saw_dot):
             continue
         dirname = os.path.join(dirname, crumb)
         dir_url = rel_to_relurl(
@@ -25,6 +26,7 @@ def breadcrumbs_for_path(dir_fname, config, tuples):
         # place?
         if dirname == '.':
             display = config['short_name']
+            saw_dot = True
         else:
             display = format_for_display(os.path.split(dirname)[1])
         breadcrumbs.append([1, dir_url, display])

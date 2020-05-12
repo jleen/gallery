@@ -18,7 +18,7 @@ def target_filename(rel_url, config, tuples):
 
 
 def generate(generator, rel_url, filename, ctime, config, tuples):
-    if (os.path.exists(filename) and ctime < cache.lctime(filename)):
+    if (os.path.exists(filename) and ctime < cache.lmtime(filename)):
         return
 
     print('Generating ' + rel_url)
@@ -55,7 +55,7 @@ def staticgen():
     tuples = paths.new_tuple_cache()
 
     for photodir, _, photos in os.walk(config['img_prefix']):
-        dirtime = cache.lctime(photodir)
+        dirtime = cache.lmtime(photodir)
 
         rel_url = paths.url_to_os(
                 paths.abs_to_relurl(photodir, '', config, tuples))
@@ -76,7 +76,7 @@ def staticgen():
                 continue
 
             photopath = os.path.join(photodir, photo)
-            ctime = cache.lctime(photopath)
+            ctime = cache.lmtime(photopath)
 
             rel_photo_url = paths.url_to_os(
                     paths.abs_to_relurl(photopath, '', config, tuples))

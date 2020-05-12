@@ -113,6 +113,10 @@ def lctime(fname):
     return os.lstat(fname)[stat.ST_CTIME]
 
 
+def lmtime(fname):
+    return os.lstat(fname)[stat.ST_MTIME]
+
+
 def makedirsfor(fname):
     dirname = os.path.split(fname)[0]
     if not os.path.isdir(dirname):

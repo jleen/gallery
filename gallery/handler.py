@@ -1,6 +1,7 @@
 # vim:sw=4:ts=4
 
 import os
+import posixpath
 import time
 
 from jinja2 import Environment, PackageLoader
@@ -133,14 +134,17 @@ def photopage(environ, start_response, url, config, tuples):
                 config['img_prefix'])) + 1:]
         leaf = os.path.basename(dir_dest_path)
         a['from_caption'] = paths.format_for_display(leaf)
-        a['from_url'] = os.path.join(config['browse_prefix'], pruned_dest)
+        a['from_url'] = paths.url_to_relurl(
+                posixpath.join(config['browse_prefix'], pruned_dest),
+                rel_dir, config)
 
     breadcrumbs = paths.breadcrumbs_for_path(
             "./" + rel_dir, config, tuples)
     a['breadcrumbs'] = breadcrumbs
 
     template = jenv.get_template('photopage.html.jj')
-    a['browse_prefix'] = config['browse_prefix']
+    a['browse_prefix'] = paths.url_to_relurl(
+            config['browse_prefix'], rel_dir, config) + '/'
     if 'footer_message' in config:
         a['footer_message'] = config['footer_message']
     else:
@@ -361,7 +365,8 @@ def gallery(environ, start_response, url_dir, config, tuples):
     a['imgurls'] = image_records
     a['subdirs'] = subdir_records
     a['index_html'] = index_html
-    a['browse_prefix'] = config['browse_prefix']
+    a['browse_prefix'] = paths.url_to_relurl(
+            config['browse_prefix'], rel_dir, config) + '/'
     if 'footer_message' in config:
         a['footer_message'] = config['footer_message']
     else:
