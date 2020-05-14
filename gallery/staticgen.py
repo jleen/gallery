@@ -50,7 +50,8 @@ def gen_photo(rel_photo_url, size, ctime, config, tuples):
 
 def staticgen():
     config_data = configparser.ConfigParser()
-    config_data.read(os.environ.get('GALLERY_RC', 'gallery.rc'))
+    config_data.read(os.environ.get('GALLERY_RC',
+                                    os.path.expanduser('~/gallery.rc',)))
     config = config_data['gallery']
     tuples = paths.new_tuple_cache()
 
