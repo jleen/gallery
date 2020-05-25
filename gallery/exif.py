@@ -74,10 +74,10 @@ def improper_to_proper(fraction):
         return fraction
 
 
-def exif_tags_raw(img_fname):
+def exif_tags_raw(img_fname, details=True):
     try:
         with open(img_fname, 'rb') as f:
-            tags = exifread.process_file(f)
+            tags = exifread.process_file(f, details=details)
     except (IOError, TypeError):
         tags = None
     return tags

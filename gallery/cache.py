@@ -1,6 +1,7 @@
 # vim:sw=4:ts=4
 
 import email.utils
+import imagesize
 import io
 import os
 import stat
@@ -62,20 +63,18 @@ def img_size(rel_image, max_size, config):
     abs_raw_image = paths.rel_to_abs(rel_image, config)
     try:
         if is_cached(abs_raw_image, abs_cachefile, config):
-            cache_image = Image.open(abs_cachefile)
-            return cache_image.size
+            return imagesize.get(abs_cachefile)
         else:
-            raw_image = Image.open(abs_raw_image)
+            (width, height) = imagesize.get(abs_raw_image)
 
             rotation_amount = 0
             if config.getboolean('apply_rotation', fallback=False):
                 rotation_amount = compute_rotation_amount(
-                        exif.exif_tags_raw(abs_raw_image), config)
+                        exif.exif_tags_raw(abs_raw_image, details=False),
+                        config)
             if (rotation_amount and
                     (rotation_amount == 90 or rotation_amount == -90)):
-                (height, width) = raw_image.size  # swap them
-            else:
-                (width, height) = raw_image.size
+                (width, height) = (height, width)
 
             if width < max_size and height < max_size:
                 return width, height
