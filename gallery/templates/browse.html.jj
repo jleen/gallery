@@ -51,7 +51,6 @@
 
 
 {% else %}
-	float: left;
     margin-top:3em;
 {% endif %}
     margin-bottom:0;
@@ -99,16 +98,16 @@
 
 <div class="directory_section" style="display: grid; grid-template-columns: repeat(auto-fill, 320px); grid-auto-rows: 130px; justify-content: center; align-items: center">
 {% for dir, name, preview, width, height in subdirs %}
-<div style="border-bottom: 0.5px solid; height: 100%; display: grid; align-items: center">
-<div>
-<div style="display: inline; width: 120px; padding-left: 10px; height: 130px; text-align: center">
-<a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" style="vertical-align: middle"></a>
-</div>
-<div style="display: inline; width: 200px; padding-left: 10px; text-align: center">
-<a href="{{ dir }}">{{ name }}</a>
-</div>
-</div>
-</div>
+  <div style="border-bottom: 0.5px solid; height: 100%; display: grid; align-items: center">
+    <div>
+      <div style="display: inline; width: 120px; padding-left: 10px; height: 130px; text-align: center">
+        <a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" style="vertical-align: middle"></a>
+      </div>
+      <div style="display: inline; width: 200px; padding-left: 10px; text-align: center">
+        <a href="{{ dir }}">{{ name }}</a>
+      </div>
+    </div>
+  </div>
 {% endfor %}
 </div>
 
@@ -121,18 +120,16 @@
 {% endif %}
 
 {% if imgurls|length > 0 %}
-<div class="image_section" align="center">
+<div class="image_section" style="display: grid; grid-template-columns: repeat(auto-fill, 250px); grid-auto-rows: 260px; justify-content: center; align-items: center">
 {% for medurl, bigurl, thumburl, caption, width, height in imgurls %}
-<div style="float: left; width: 250px; height: 260px">
-<table border="0" height="100%">
-<tr>
-<td align="center" valign="middle">
-<a href="{{ medurl }}"><img src="{{ thumburl }}" border="2" class="thumbnail" height="{{ height }}" width="{{ width }}"></a>
-<div class="caption"><a href="{{ bigurl }}">{{ caption }}</a></div>
-</td>
-</tr>
-</table>
-</div>
+  <div style="height: 100%; display: grid; align-items: center; justify-items: center">
+    <div>
+      <div style="display: inline; width: 250px">
+        <a href="{{ medurl }}"><img src="{{ thumburl }}" border="2" class="thumbnail" height="{{ height }}" width="{{ width }}"></a>
+        <div class="caption" style="text-align: center"><a href="{{ bigurl }}">{{ caption }}</a></div>
+      </div>
+    </div>
+  </div>
 {% endfor %}
 </div>
 {% endif %}
