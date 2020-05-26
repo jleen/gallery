@@ -98,14 +98,16 @@
 
 <div class="directory_section" style="display: grid; grid-template-columns: repeat(auto-fill, 320px); grid-auto-rows: 130px; justify-content: center; align-items: center">
 {% for dir, name, preview, width, height in subdirs %}
-  <div style="border-bottom: 0.5px solid; height: 100%; display: grid; align-items: center">
-    <div>
-      <div style="display: inline; width: 120px; padding-left: 10px; height: 130px; text-align: center">
-        <a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" style="vertical-align: middle"></a>
+  <div style="border-bottom: 0.5px solid; height: 100%; align-items: center; display: grid; grid-template-columns: 120px 200px">
+    <div style="padding-left: 10px; height: 130px; text-align: center">
+      <div style="height: 100%; display: grid; align-items: center; justify-items: center">
+        <div>
+          <a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" style="vertical-align: middle"></a>
+        </div>
       </div>
-      <div style="display: inline; width: 200px; padding-left: 10px; text-align: center">
-        <a href="{{ dir }}">{{ name }}</a>
-      </div>
+    </div>
+    <div style="padding-left: 10px; text-align: left">
+      <a href="{{ dir }}">{{ name }}</a>
     </div>
   </div>
 {% endfor %}
