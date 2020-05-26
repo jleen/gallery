@@ -1,6 +1,7 @@
 {# vim: set ft=htmldjango sw=4 ts=4: #}
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css">
 <style>
 .footer_section {
@@ -8,6 +9,42 @@
 	border-right:2px;
 	margin-top:2em;
 }
+
+.container {
+    display: grid;
+    grid-template-columns: 100px 750px 100px;
+    justify-content: center;
+    align-items: top;
+}
+
+.top {
+    display: none;
+}
+
+@media only screen and (max-width: 1000px) {
+    .top {
+        display: grid;
+    }
+
+    .side {
+        display: none;
+    }
+
+    .container {
+        grid-template-columns: 750px;
+    }
+}
+
+@media only screen and (max-width: 750px) {
+    .container {
+        grid-template-columns: 100%;
+    }
+
+    .itself {
+        width: 100%;
+    }
+}
+
 </style>
 </head>
 
@@ -34,17 +71,30 @@
 <b>{{ bread_title }}</b>
 </p>
 {% endif %}
-<table width="100%">
-<tr>
-<td class="prev">
+
+<div class="container">
+<div class="side" style="padding-top: 20px; justify-self: left">
 {% if prev %}
 <a href="{{ prev }}">&lt;&lt; Previous</a>
 {% endif %}
-</td>
+</div>
 
-<td align="center" width="*">
+<div>
 <div align="center">
-<a href="{{ full_img_url }}"><img src="{{ framed_img_url }}" border="2" vspace="10" align="middle"></a>
+<div class="top" style="grid-template-columns: 1fr 1fr">
+<div style="justify-self: left">
+{% if prev %}
+<a href="{{ prev }}">&lt;&lt; Previous</a>
+{% endif %}
+</div>
+<div style="justify-self: right">
+{% if next %}
+<a href="{{ next }}">Next &gt;&gt;</a>
+{% endif %}
+</div>
+</div>
+
+<a href="{{ full_img_url }}"><img class="itself" src="{{ framed_img_url }}" border="2" vspace="10" align="middle"></a>
 <div class="phototitle"><b>{{ photo_title }}</b></div><br>
 {% if from_url %}
 From <a class="fromlink" href="{{ from_url }}">{{ from_caption }}</a><br>
@@ -69,14 +119,14 @@ From <a class="fromlink" href="{{ from_url }}">{{ from_caption }}</a><br>
 </div>
 {% endif %}
 </div>
-</td>
+</div>
 
-<td class="next">
+<div class="side" style="padding-top: 20px; justify-self: right">
 {% if next %}
 <a href="{{ next }}">Next &gt;&gt;</a>
 {% endif %}
-</td>
-</table>
+</div>
+</div>
 
 {% if footer_message %}
 <div style="clear: both" class="footer_section">
