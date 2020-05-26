@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css">
 {% if whatsnew_rss %}
 <link href="{{ whatsnew_rss }}" rel="alternate" type="application/rss+xml" title="{{ title }}"/>
@@ -96,16 +97,18 @@
 
 
 
-<div class="directory_section">
+<div class="directory_section" style="display: grid; grid-template-columns: repeat(auto-fill, 320px); grid-auto-rows: 130px; justify-content: center; align-items: center">
 {% for dir, name, preview, width, height in subdirs %}
-<table width="320" frame="below" style="float: left">
-<tr>
-<td width="120" height="130" align="center">
-<a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}"></a>
-</td>
-<td align="left" width="200">
+<div style="border-bottom: 0.5px solid; height: 100%; display: grid; align-items: center">
+<div>
+<div style="display: inline; width: 120px; padding-left: 10px; height: 130px; text-align: center">
+<a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" style="vertical-align: middle"></a>
+</div>
+<div style="display: inline; width: 200px; padding-left: 10px; text-align: center">
 <a href="{{ dir }}">{{ name }}</a>
-</td></tr></table>
+</div>
+</div>
+</div>
 {% endfor %}
 </div>
 
