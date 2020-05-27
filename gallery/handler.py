@@ -49,7 +49,7 @@ def application(environ, start_response, config):
             return whatsnew.spew_whats_new_rss(
                     environ, start_response, config, tuple_cache, jenv)
         elif os.path.split(reqpath)[1] in ['gallery.css', 'css']:
-            return css(environ, start_response, config)
+            return css(environ, start_response, reqpath, config, tuple_cache)
         elif extn.lower() in paths.IMG_EXTNS:
             return photo(environ, start_response, reqpath, config, tuple_cache)
         elif extn == '.html':
@@ -154,7 +154,7 @@ def photopage(environ, start_response, url, config, tuples):
     return [template.render(a).encode('utf-8')]
 
 
-def css(environ, start_response, config):
+def css(environ, start_response, url, config, tuple_cache):
     ctime = cache.lctime(GALLERY_CSS)
     server_date = cache.check_client_cache(environ, ctime, config)
     start_response('200 OK', cache.add_cache_headers(

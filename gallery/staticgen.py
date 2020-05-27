@@ -68,6 +68,11 @@ def staticgen():
     config = config_data['gallery']
     tuples = paths.new_tuple_cache()
 
+    target_css = target_filename('gallery.css', config, tuples)
+    ctime_css = cache.lmtime(handler.GALLERY_CSS)
+    generate(handler.css, 'gallery.css',
+             target_css, ctime_css, args, config, tuples)
+
     for photodir, _, photos in os.walk(config['img_prefix']):
         dirtime = cache.lmtime(photodir)
 
