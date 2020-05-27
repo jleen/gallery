@@ -1,59 +1,55 @@
-{# vim: set ft=htmldjango sw=4 ts=4: #}
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css">
-</head>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css">
+    <title>{{ bread_title }} - {{ gallery_title }}</title>
+  </head>
 
-<title>{{ bread_title }} - {{ gallery_title }}</title>
-{% if breadcrumbs %}
-<p>
-{% for is_link, dir, name in breadcrumbs %}
-<b><a href="{{ dir }}">{{ name }}</a></b>
- &gt;&gt; 
-{% endfor %}
-<b>{{ bread_title }}</b>
-</p>
-{% endif %}
+  <body>
+    {% if breadcrumbs %}
+    <p>
+      {% for is_link, dir, name in breadcrumbs %}
+      <b><a href="{{ dir }}">{{ name }}</a></b>
+      &gt;&gt; 
+      {% endfor %}
+      <b>{{ bread_title }}</b>
+    </p>
+    {% endif %}
 
-<div class="container">
-<div class="side_left">
-{% if prev %}
-<a href="{{ prev }}">&lt;&lt; Previous</a>
-{% endif %}
-</div>
+    <div class="container">
+      <div class="side_left">
+        {% if prev %}
+        <a href="{{ prev }}">&lt;&lt; Previous</a>
+        {% endif %}
+      </div>
 
-<div>
-<div align="center">
-<div class="top">
-<div class="top_left">
-{% if prev %}
-<a href="{{ prev }}">&lt;&lt; Previous</a>
-{% endif %}
-</div>
-<div class="top_right">
-{% if next %}
-<a href="{{ next }}">Next &gt;&gt;</a>
-{% endif %}
-</div>
-</div>
+      <div>
+        <div align="center">
+          <div class="top">
+            <div class="top_left">
+              {% if prev %}
+              <a href="{{ prev }}">&lt;&lt; Previous</a>
+              {% endif %}
+            </div>
+            <div class="top_right">
+              {% if next %}
+              <a href="{{ next }}">Next &gt;&gt;</a>
+              {% endif %}
+            </div>
+          </div>
 
-<a href="{{ full_img_url }}"><img class="itself" src="{{ framed_img_url }}" border="2" vspace="10" align="middle"></a>
-<div class="phototitle"><b>{{ photo_title }}</b></div><br>
-{% if from_url %}
-From <a class="fromlink" href="{{ from_url }}">{{ from_caption }}</a><br>
-{% endif %}
-{% if description %}
-{{ description }}<br>
-{% endif %}
+          <a href="{{ full_img_url }}"><img class="itself" src="{{ framed_img_url }}" border="2" vspace="10" align="middle"></a>
+          <div class="phototitle"><b>{{ photo_title }}</b></div><br>
+        </div>
+      </div>
 
-</div>
-</div>
-
-<div class="side_right">
-{% if next %}
-<a href="{{ next }}">Next &gt;&gt;</a>
-{% endif %}
-</div>
-</div>
-
+      <div class="side_right">
+        {% if next %}
+        <a href="{{ next }}">Next &gt;&gt;</a>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

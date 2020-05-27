@@ -1,82 +1,66 @@
-{# vim: set ft=htmldjango sw=4 ts=4: #}
+<!DOCTYPE html>
 <html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="{{ browse_prefix }}gallery.css" />
 
-{% if breadcrumbs|length > 1 %}
-<title>{{ thisdir }} - {{ title }}</title>
-{% else %}
-<title>{{ title }}</title>
-{% endif %}
-</head>
+    {% if breadcrumbs|length > 1 %}
+    <title>{{ thisdir }} - {{ title }}</title>
+    {% else %}
+    <title>{{ title }}</title>
+    {% endif %}
+  </head>
 
-<body>
+  <body>
 
-{% if not index_html %}
-<p>
-{% for is_link, dir, name in breadcrumbs %}
-{% if not loop.first %}
- &gt;&gt; 
-{% endif %}
-{% if is_link %}
-<b><a href="{{ dir }}">{{ name }}</a></b>
-{% else %}
-<b>{{ name }}</b>
-{% endif %}
-{% endfor %}
-</p>
+    {% if not index_html %}
+    <p>
+      {% for is_link, dir, name in breadcrumbs %}
+      {% if not loop.first %}
+      &gt;&gt;
+      {% endif %}
+      {% if is_link %}
+      <b><a href="{{ dir }}">{{ name }}</a></b>
+      {% else %}
+      <b>{{ name }}</b>
+      {% endif %}
+      {% endfor %}
+    </p>
+    {% else %}
+    {{ index_html }}
+    {% endif %}
 
-{% if whatsnew_name %}
-<a href="{{ whatsnew_url }}">{{ whatsnew_name }}</a>
-{% endif %}
-
-{% else %}
-{{ index_html }}
-{% endif %}
-
-
-
-<div class="directory_section">
-{% for dir, name, preview, width, height in subdirs %}
-  <div class="directory_entry">
-    <div class="directory_inner">
-      <div class="directory_innerer">
-        <div>
-          <a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" class="dir_thumb"></a>
+    <div class="directory_section">
+      {% for dir, name, preview, width, height in subdirs %}
+      <div class="directory_entry">
+        <div class="directory_inner">
+          <div class="directory_innerer">
+            <div>
+              <a href="{{ dir }}"><img src="{{ preview }}" border="2" align="middle" height="{{ height }}" width="{{ width }}" class="dir_thumb" /></a>
+            </div>
+          </div>
+        </div>
+        <div class="directory_name">
+          <a href="{{ dir }}">{{ name }}</a>
         </div>
       </div>
+      {% endfor %}
     </div>
-    <div class="directory_name">
-      <a href="{{ dir }}">{{ name }}</a>
-    </div>
-  </div>
-{% endfor %}
-</div>
 
-{% if imgurls|length > 0 and subdirs|length > 2 %}
-
-{% else %}
-{% if imgurls|length > 0 %}
-<div class="terminus_est">
-{% endif %}
-{% endif %}
-
-{% if imgurls|length > 0 %}
-<div class="image_section">
-{% for medurl, bigurl, thumburl, caption, width, height in imgurls %}
-  <div class="image_entry">
-    <div>
-      <div class="image_inner">
-        <a href="{{ medurl }}"><img src="{{ thumburl }}" border="2" class="thumbnail" height="{{ height }}" width="{{ width }}"></a>
-        <div class="caption"><a href="{{ bigurl }}">{{ caption }}</a></div>
+    {% if imgurls|length > 0 %}
+    <div class="image_section">
+      {% for medurl, bigurl, thumburl, caption, width, height in imgurls %}
+      <div class="image_entry">
+        <div>
+          <div class="image_inner">
+            <a href="{{ medurl }}"><img src="{{ thumburl }}" border="2" class="thumbnail" height="{{ height }}" width="{{ width }}" /></a>
+            <div class="caption"><a href="{{ bigurl }}">{{ caption }}</a></div>
+          </div>
+        </div>
       </div>
+      {% endfor %}
     </div>
-  </div>
-{% endfor %}
-</div>
-{% endif %}
-
-</body>
+    {% endif %}
+  </body>
 </html>

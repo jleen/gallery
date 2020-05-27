@@ -20,7 +20,8 @@ GALLERY_CSS = os.path.join(os.path.dirname(__file__),
 THUMB_SIZE_INT = int(THUMB_SIZE)
 PREVIEW_SIZE_INT = int(PREVIEW_SIZE)
 
-jenv = Environment(loader=PackageLoader('gallery', 'templates'))
+jenv = Environment(loader=PackageLoader('gallery', 'templates'),
+                   lstrip_blocks=True, trim_blocks=True)
 
 
 def application(environ, start_response, config):
