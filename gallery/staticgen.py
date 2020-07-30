@@ -66,6 +66,18 @@ def staticgen():
     config_data.read(os.environ.get('GALLERY_RC',
                                     os.path.expanduser('~/gallery.rc',)))
     config = config_data['gallery']
+
+    # Accept settings in a more sensible form, and translate them into what
+    # the legacy code expects to see.
+    config['short_name'] = config['title']
+    config['long_name'] = config['banner']
+    config['apply_rotation'] = config.get('apply_rotation', 'True')
+    config['ignore_client_cache'] = 'True'
+    config['img_prefix'] = config['repository']
+    config['cache_prefix'] = config['target']
+    config['target_prefix'] = config['target']
+    config['browse_prefix'] = config['url']
+
     tuples = paths.new_tuple_cache()
 
     target_css = target_filename('gallery.css', config, tuples)
