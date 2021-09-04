@@ -230,6 +230,7 @@ def format_for_url(fn):
 boring_filenames = [
         re.compile(r) for r in
         [r'^DSC_.*', r'^_DSC.*', r'^DSCF.*', r'^CIMG.*', r'^IMG_.*',
+         r'^[A-Z][A-Za-z\-]*-20\d{2}-\d{2}$',
          r'^JL\d_\d{4}', r'^_JL\d{5}', r'^[A-Z][a-z]*-\d{8}']]
 
 
