@@ -230,6 +230,7 @@ def format_for_url(fn):
 boring_filenames = [
         re.compile(r) for r in
         [r'^DSC_.*', r'^_DSC.*', r'^DSCF.*', r'^CIMG.*', r'^IMG_.*',
+         r'^[A-Z][A-Za-z\-]*-20\d{2}-\d{2}$',
          r'^JL\d_\d{4}', r'^_JL\d{5}', r'^[A-Z][a-z]*-\d{8}']]
 
 
@@ -345,13 +346,18 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
                 'displayname': dirinfo_entries[fname][1], 'urlname': urlname
             }
         else:
-            if os.path.isdir(os.path.join(path, fname)):
-                for_display = fname
+            full_path = os.path.join(path, fname)
+            if is_common_prefix(full_path):
+                displayname = ''
             else:
-                for_display = os.path.splitext(fname)[0]
+                if os.path.isdir(os.path.join(path, fname)):
+                    for_display = fname
+                else:
+                    for_display = os.path.splitext(fname)[0]
+                displayname = format_for_display(for_display)
             dirtuple = {
                 'sortkey': format_for_sort(fname), 'filename': fname,
-                'displayname': format_for_display(for_display),
+                'displayname': displayname,
                 'urlname': format_for_url(fname)
             }
         tuples.append(dirtuple)
@@ -382,7 +388,32 @@ def get_urlname_for_file(full_fname, tuples):
                              use_ext=1)
 
 
+common_prefix_regex = re.compile(r'(^[A-Z][A-Za-z0-9\-]*-)\d{2}\.[a-zA-Z]*$')
+
+def is_common_prefix(full_fname):
+    (dirname, fname) = os.path.split(full_fname)
+    m = common_prefix_regex.match(fname)
+    if not m:
+        return False
+    prefix = m.group(1)
+    for f in os.listdir(dirname):
+        ext = os.path.splitext(f)
+        # Only consider prefixes of image files.
+        if not ext in IMG_EXTNS:
+            continue
+        mm = common_prefix_regex.match(fname)
+        # If a sibling doesn't even have a prefix, bail.
+        if not mm:
+            return False
+        # If a sibling has a non-matching prefix, bail.
+        if not mm.group(1) == prefix:
+            return False
+    return True
+
+
 def get_displayname_for_file(full_fname, tuples):
+    if is_common_prefix(full_fname):
+        return ''
     return get_name_for_file(full_fname, 'displayname', format_for_display,
                              tuples, use_ext=0)
 

@@ -2,6 +2,7 @@
 
 import exifread
 import logging
+import struct
 
 logging.getLogger('exifread').setLevel(logging.ERROR)
 
@@ -78,7 +79,7 @@ def exif_tags_raw(img_fname, details=True):
     try:
         with open(img_fname, 'rb') as f:
             tags = exifread.process_file(f, details=details)
-    except (IOError, TypeError):
+    except (IOError, TypeError, struct.error):
         tags = None
     return tags
 
