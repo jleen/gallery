@@ -111,8 +111,9 @@ def staticgen():
             rel_photo_url = paths.url_to_os(
                     paths.abs_to_relurl(photopath, '', config, tuples))
             target_photo = target_filename(rel_photo_url, config, tuples)
-            generate(handler.photo, rel_photo_url, target_photo,
-                     ctime, args, config, tuples)
+
+            if not os.path.exists(target_photo):
+                os.link(photopath, target_photo)
 
             gen_photo(rel_photo_url, '200', ctime, args, config, tuples)
             gen_photo(rel_photo_url, '700x500', ctime, args, config, tuples)
