@@ -346,15 +346,15 @@ def get_directory_tuples_internal(path, ignore_dotfiles):
                 'displayname': dirinfo_entries[fname][1], 'urlname': urlname
             }
         else:
-            if os.path.isdir(os.path.join(path, fname)):
-                for_display = fname
-            else:
-                for_display = os.path.splitext(fname)[0]
             full_path = os.path.join(path, fname)
             if is_common_prefix(full_path):
                 displayname = ''
             else:
-                displayname = format_for_display(fname)
+                if os.path.isdir(os.path.join(path, fname)):
+                    for_display = fname
+                else:
+                    for_display = os.path.splitext(fname)[0]
+                displayname = format_for_display(for_display)
             dirtuple = {
                 'sortkey': format_for_sort(fname), 'filename': fname,
                 'displayname': displayname,
