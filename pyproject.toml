@@ -7,7 +7,7 @@ authors = ["John Leen <jleen@saturnvalley.org>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 Jinja2 = "^3.0.1"
-Pillow = "^8.3.2"
+Pillow = "^9.0.0"
 ExifRead = "^2.3.2"
 imagesize = "^1.2.0"
 MarkupSafe = "^2.0.1"
