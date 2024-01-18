@@ -1,7 +1,7 @@
 import argparse
 import configparser
 import os
-import sys
+import shutil
 
 from gallery import cache
 from gallery import handler
@@ -63,8 +63,11 @@ def staticgen():
     args = argparser.parse_args()
 
     config_data = configparser.ConfigParser()
-    config_data.read(os.environ.get('GALLERY_RC',
-                                    os.path.expanduser('~/gallery.rc',)))
+    if os.path.isfile('gallery.rc'):
+        config_file = 'gallery.rc'
+    else:
+        config_file = os.environ.get('GALLERY_RC', os.path.expanduser('~/gallery.rc',))
+    config_data.read(config_file)
     config = config_data['gallery']
 
     # Accept settings in a more sensible form, and translate them into what
@@ -73,7 +76,7 @@ def staticgen():
     config['long_name'] = config['banner']
     config['apply_rotation'] = config.get('apply_rotation', 'True')
     config['ignore_client_cache'] = 'True'
-    config['img_prefix'] = config['repository']
+    config['img_prefix'] = config.get('repository', os.path.join(os.getcwd(), ''))
     config['cache_prefix'] = config['target']
     config['target_prefix'] = config['target']
     config['browse_prefix'] = config['url']
@@ -113,7 +116,7 @@ def staticgen():
             target_photo = target_filename(rel_photo_url, config, tuples)
 
             if not os.path.exists(target_photo):
-                os.link(photopath, target_photo)
+                shutil.copyfile(photopath, target_photo)
 
             gen_photo(rel_photo_url, '200', ctime, args, config, tuples)
             gen_photo(rel_photo_url, '700x500', ctime, args, config, tuples)
@@ -122,3 +125,6 @@ def staticgen():
             target_page = hack_extn(target_photo, '.html')
             generate(handler.photopage, rel_page_url, target_page,
                      ctime, args, config, tuples)
+
+if __name__ == "__main__":
+    staticgen()
