@@ -143,7 +143,7 @@ def get_image_for_display(fname, config, width=0, height=0):
     tags = exif.exif_tags_raw(fname)
 
     if width > 0 and height > 0:
-        img.thumbnail((width, height), Image.ANTIALIAS)
+        img.thumbnail((width, height), Image.LANCZOS)
     else:
         (width, height) = img.size
 
